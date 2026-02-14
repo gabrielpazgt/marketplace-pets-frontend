@@ -1,0 +1,90 @@
+<section class="section section--muted memberships">
+  <div class="container">
+    <header class="hero">
+      <h1>Membresías</h1>
+      <p class="muted">Elige el plan que más se adapte a tus compras — upgrade en 2 pasos.</p>
+    </header>
+
+    <div class="grid">
+      <article
+        class="card plan-card"
+        *ngFor="let p of plans"
+        [class.emphasis]="p.id === preselect"
+        [class.active]="isExpanded(p.id)"
+        tabindex="0"
+        role="button"
+        [attr.aria-expanded]="isExpanded(p.id)"
+        (keydown)="onKeyCard($event, p.id)"
+        (click)="toggle(p.id)"
+      >
+        <!-- HEAD -->
+        <div class="head">
+          <span class="badge"
+                [class.badge--free]="p.id==='free'"
+                [class.badge--premium]="p.id==='premium'"
+                [class.badge--vip]="p.id==='vip'">
+            {{ p.name | uppercase }}
+          </span>
+
+          <h3 class="title">{{ p.highlight || 'Plan de membresía' }}</h3>
+
+          <div class="price">
+            <span class="amount">Q{{ p.monthlyPrice }}</span>
+            <span class="unit">/mes</span>
+          </div>
+        </div>
+
+        <!-- CTA (no propaga click) -->
+        <div class="cta" (click)="$event.stopPropagation()">
+          <button
+            class="btn primary"
+            [class.ghost]="p.id === currentPlan"
+            (click)="choose(p.id)">
+            {{ p.id === currentPlan ? 'Plan actual' : 'Elegir ' + p.name }}
+          </button>
+
+          <button class="btn ghost toggle" (click)="toggle(p.id)">
+            {{ isExpanded(p.id) ? 'Ocultar beneficios' : 'Ver beneficios' }}
+            <i class="chev" [class.open]="isExpanded(p.id)"></i>
+          </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- BENEFICIOS: sólo se renderizan si está expandido -->
+        <div class="benefits" *ngIf="isExpanded(p.id)">
+          <ul class="ticks">
+            <li *ngFor="let perk of p.perks">
+              <span class="tick" aria-hidden="true">✓</span>
+              <span class="perk-text">{{ perk }}</span>
+            </li>
+          </ul>
+
+          <div class="foot">
+            <span class="muted note">Yearly: pagas 10 meses y obtienes 2 gratis.</span>
+            <a class="link" (click)="choose(p.id)">Continuar al checkout →</a>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- FAQ -->
+    <section class="faq">
+      <header class="subhead">
+        <h3>Preguntas rápidas</h3>
+      </header>
+      <details>
+        <summary>¿Puedo cambiar de plan cuando quiera?</summary>
+        <p>Sí, el cambio aplica de inmediato. La próxima renovación usa el plan vigente.</p>
+      </details>
+      <details>
+        <summary>¿Yearly tiene descuento?</summary>
+        <p>Sí, pagas 10 meses y obtienes 2 gratis. Verás el total en el checkout.</p>
+      </details>
+      <details>
+        <summary>¿Hay reembolsos?</summary>
+        <p>Para membresías de paga no hay reembolsos parciales. Puedes cancelar la renovación futura.</p>
+      </details>
+    </section>
+  </div>
+</section>

@@ -1,0 +1,5 @@
+<div class="stepper" role="group" aria-label="Cantidad">
+  <button type="button" class="btn" (click)="dec()" [disabled]="value<=min">−</button>
+  <span class="qty" aria-live="polite">{{ value }}</span>
+  <button type="button" class="btn" (click)="inc()" [disabled]="value>=max">+</button>
+</div>

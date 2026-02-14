@@ -1,0 +1,23 @@
+@use '@angular/material' as mat;
+
+// 1. Incluye el core de Material
+@include mat.core();
+
+// 2. Define tus paletas basadas en los colores propuestos
+$market-primary: mat.define-palette(mat.$orange-palette, 600); // #FFA726
+$market-accent:  mat.define-palette(mat.$blue-palette,   400); // #42A5F5
+$market-warn:    mat.define-palette(mat.$green-palette,  500); // #66BB6A
+
+// 3. Crea tu tema ligero
+$market-theme: mat.define-light-theme((
+  color: (
+    primary: $market-primary,
+    accent:  $market-accent,
+    warn:    $market-warn
+  ),
+  typography: mat.define-typography-config(),
+  density: 0
+));
+
+// 4. Incluye todos los estilos de componentes de Material
+@include mat.all-component-themes($market-theme);

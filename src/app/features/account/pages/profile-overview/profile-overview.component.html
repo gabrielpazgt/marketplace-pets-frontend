@@ -1,0 +1,200 @@
+<section class="section">
+  <div class="container profile">
+
+    <!-- ===== Header de Perfil ===== -->
+    <div class="card p profile__header">
+      <div class="avatar" aria-hidden="true">
+        <!-- Imagen por sexo -->
+        <img *ngIf="avatarUrl; else initials"
+             [src]="avatarUrl"
+             alt="Avatar"
+             loading="lazy" />
+        <!-- Fallback a inicial -->
+        <ng-template #initials>{{ user.name.charAt(0) }}</ng-template>
+      </div>
+
+      <div class="id">
+        <h2>{{ user.name }}</h2>
+        <p class="muted email">{{ user.email }}</p>
+        <div class="badges">
+          <span class="badge plan" [class.premium]="user.membership==='Premium'" [class.vip]="user.membership==='VIP'">
+            {{ user.membership }}
+          </span>
+          <a class="link small" routerLink="/account/membership">Ver detalles</a>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <span class="chip"><strong>{{ user.ordersCount }}</strong> {{ kpiLabel(user.ordersCount) }}</span>
+        <span class="chip"><strong>{{ user.petsCount }}</strong> mascotas</span>
+        <span class="chip"><strong>{{ user.points }}</strong> pts</span>
+      </div>
+
+      <div class="actions">
+        <a class="btn primary" routerLink="/account/settings">Editar perfil</a>
+      </div>
+    </div>
+
+    <!-- ===== Acciones rápidas ===== -->
+    <div class="profile__quick card p">
+      <a class="quick" routerLink="/account/pets">🐾 Mis Mascotas</a>
+      <a class="quick" routerLink="/account/orders">🧾 Historial</a>
+      <a class="quick" routerLink="/account/membership">⭐ Membresía</a>
+      <a class="quick" routerLink="/account/settings">⚙️ Configuración</a>
+    </div>
+
+    <!-- ===== Grid de cards ===== -->
+    <div class="profile__grid">
+
+      <!-- Datos personales -->
+      <div class="card p">
+        <h3>Datos personales</h3>
+        <div class="rows">
+          <div><span class="label">Nombre</span><span class="value">{{ user.name }}</span></div>
+          <div><span class="label">Documento</span><span class="value muted">—</span></div>
+          <div><span class="label">Fecha de nacimiento</span><span class="value muted">—</span></div>
+        </div>
+        <a class="btn ghost" routerLink="/account/settings">Editar</a>
+      </div>
+
+      <!-- Contacto -->
+      <div class="card p">
+        <h3>Contacto</h3>
+        <div class="rows">
+          <div><span class="label">Email</span><span class="value">{{ user.email }}</span></div>
+          <div><span class="label">Teléfono</span><span class="value muted">—</span></div>
+        </div>
+        <a class="btn ghost" routerLink="/account/settings">Editar</a>
+      </div>
+
+      <!-- Direcciones -->
+      <div class="card p profile__addresses">
+        <div class="head">
+          <h3>Direcciones</h3>
+          <button class="btn primary" (click)="openCreate()">+ Nueva</button>
+        </div>
+
+        <!-- Lista -->
+        <div *ngIf="addresses.length; else emptyAddrs" class="addr-list">
+          <article *ngFor="let a of addresses" class="addr-item">
+            <header>
+              <span class="tag">{{ a.label }}</span>
+              <span *ngIf="a.isDefault" class="tag default">Predeterminada</span>
+            </header>
+            <div class="addr-body">
+              <div class="line">
+                <strong>{{ a.recipient }}</strong>
+                <span class="muted" *ngIf="a.phone">&nbsp;· {{ a.phone }}</span>
+              </div>
+              <div class="line">{{ a.line1 }} <ng-container *ngIf="a.line2">, {{ a.line2 }}</ng-container></div>
+              <div class="line">{{ a.city }} <ng-container *ngIf="a.state">, {{ a.state }}</ng-container> <ng-container *ngIf="a.zip">, {{ a.zip }}</ng-container></div>
+              <div class="line">{{ a.country }}</div>
+              <div class="line muted" *ngIf="a.instructions">{{ a.instructions }}</div>
+            </div>
+            <div class="addr-actions">
+              <button class="btn ghost" (click)="openEdit(a)">Editar</button>
+              <button class="btn danger" (click)="remove(a)">Eliminar</button>
+              <button class="btn" *ngIf="!a.isDefault" (click)="setDefault(a)">Hacer predeterminada</button>
+            </div>
+          </article>
+        </div>
+
+        <!-- Empty state -->
+        <ng-template #emptyAddrs>
+          <div class="empty card">
+            <div class="art"></div>
+            <div>
+              <h4>Sin direcciones</h4>
+              <p class="muted">Agrega al menos una dirección para agilizar tu checkout.</p>
+              <button class="btn accent" (click)="openCreate()">Crear primera dirección</button>
+            </div>
+          </div>
+        </ng-template>
+
+        <!-- Formulario inline -->
+        <div class="addr-form card" *ngIf="formOpen">
+          <form [formGroup]="addrForm" (ngSubmit)="saveAddress()">
+            <div class="grid">
+              <label class="field">
+                <span class="label">Etiqueta *</span>
+                <input class="input" formControlName="label" placeholder="Casa / Trabajo" />
+              </label>
+              <label class="field">
+                <span class="label">A nombre de *</span>
+                <input class="input" formControlName="recipient" placeholder="Juan Pérez" />
+              </label>
+              <label class="field">
+                <span class="label">Teléfono</span>
+                <input class="input" formControlName="phone" placeholder="+502…" />
+              </label>
+              <label class="field col-2">
+                <span class="label">Dirección (línea 1) *</span>
+                <input class="input" formControlName="line1" placeholder="Calle, número" />
+              </label>
+              <label class="field col-2">
+                <span class="label">Dirección (línea 2)</span>
+                <input class="input" formControlName="line2" placeholder="Apartamento, referencia" />
+              </label>
+              <label class="field">
+                <span class="label">Ciudad *</span>
+                <input class="input" formControlName="city" placeholder="Guatemala City" />
+              </label>
+              <label class="field">
+                <span class="label">Departamento/Estado</span>
+                <input class="input" formControlName="state" />
+              </label>
+              <label class="field">
+                <span class="label">Código Postal</span>
+                <input class="input" formControlName="zip" />
+              </label>
+              <label class="field">
+                <span class="label">País *</span>
+                <input class="input" formControlName="country" />
+              </label>
+              <label class="field col-2">
+                <span class="label">Indicaciones para el repartidor</span>
+                <textarea class="input" formControlName="instructions" rows="2" placeholder="Puerta café, timbre izquierdo…"></textarea>
+              </label>
+            </div>
+
+            <div class="actions">
+              <button type="button" class="btn ghost" (click)="cancelForm()">Cancelar</button>
+              <button type="submit" class="btn primary">{{ formMode==='create' ? 'Guardar dirección' : 'Actualizar' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Preferencias -->
+      <div class="card p">
+        <h3>Preferencias</h3>
+        <div class="rows">
+          <div><span class="label">Idioma</span><span class="value">{{ prefs.locale }}</span></div>
+          <div><span class="label">Moneda</span><span class="value">{{ prefs.currency }}</span></div>
+          <div><span class="label">Newsletter</span><span class="value">{{ prefs.newsletter ? 'Suscrito' : 'No' }}</span></div>
+          <div><span class="label">Notificaciones de pedidos</span><span class="value">{{ prefs.notifyOrders ? 'On' : 'Off' }}</span></div>
+          <div><span class="label">Promociones</span><span class="value">{{ prefs.notifyPromos ? 'On' : 'Off' }}</span></div>
+        </div>
+        <a class="btn ghost" routerLink="/account/settings">Editar</a>
+      </div>
+
+      <!-- Seguridad -->
+      <div class="card p">
+        <h3>Seguridad</h3>
+        <p class="muted">Recomendado: activa la verificación en dos pasos.</p>
+        <div class="actions-row">
+          <a class="btn" routerLink="/account/settings">Cambiar contraseña</a>
+          <a class="btn" routerLink="/account/settings">Configurar 2FA</a>
+        </div>
+      </div>
+
+      <!-- Membresía (resumen) -->
+      <div class="card p">
+        <h3>Membresía</h3>
+        <p class="muted">Plan actual: <strong>{{ user.membership }}</strong></p>
+        <a class="btn primary" routerLink="/account/membership">Ver Membresía</a>
+      </div>
+
+    </div>
+  </div>
+</section>

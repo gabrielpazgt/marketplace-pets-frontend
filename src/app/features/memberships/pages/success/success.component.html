@@ -1,0 +1,24 @@
+<section class="section">
+  <div class="container">
+    <div class="card wrap center">
+      <div class="icon">✓</div>
+      <h1>¡Pago exitoso!</h1>
+      <p class="muted">Tu membresía ha sido activada.</p>
+
+      <p *ngIf="txId" class="tx">Transacción: <strong>{{ txId }}</strong></p>
+
+      <div *ngIf="plan as p" class="resume">
+        <div class="line"><span>Plan</span><strong>{{ p.name }}</strong></div>
+        <div class="line">
+          <span>Total</span>
+          <strong>{{ totalQ | currency:'GTQ':'symbol':'1.0-0' }} / {{ cycle === 'monthly' ? 'mes' : 'año' }}</strong>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="btn primary" routerLink="/account/membership">Ver mi membresía</a>
+        <a class="btn ghost" routerLink="/home">Volver al inicio</a>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,86 @@
+<div class="auth-wrap">
+  <aside class="panel">
+    <div class="content">
+      <h1 class="title-panel">Aumakki Marketplace</h1>
+      <p class="subtitle">Regístrate y compra todo para tu mascota en un solo lugar.</p>
+    </div>
+    <img src="assets/images/login.svg" class="image" alt="register image" />
+  </aside>
+
+  <main class="card form-card">
+    <header class="form-head">
+      <h2>Crear cuenta</h2>
+      <div class="segmented">
+        <button type="button" (click)="switchLanguage('es')" [class.active]="currentLanguage==='es'">ES</button>
+        <button type="button" (click)="switchLanguage('en')" [class.active]="currentLanguage==='en'">EN</button>
+      </div>
+    </header>
+
+    <form [formGroup]="registerForm" (ngSubmit)="signUp()" novalidate>
+      <div class="two-cols">
+        <label class="field">
+          <span class="label">Nombre</span>
+          <input class="input" type="text" formControlName="firstName" placeholder="Nombre" />
+        </label>
+        <label class="field">
+          <span class="label">Apellido</span>
+          <input class="input" type="text" formControlName="lastName" placeholder="Apellido" />
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="label">Correo electrónico</span>
+        <div class="input-wrap">
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 8l8 5 8-5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          <input class="input" type="email" formControlName="email" placeholder="correo@ejemplo.com" />
+        </div>
+        <small class="error-text" *ngIf="fc('email').touched && fc('email').invalid">Ingresa un correo válido</small>
+      </label>
+
+      <div class="two-cols">
+        <label class="field">
+          <span class="label">Contraseña</span>
+          <div class="input-wrap">
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10h12v10H6z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            <input class="input" [type]="hide ? 'password' : 'text'" formControlName="password" placeholder="Mínimo 6 caracteres" />
+            <button type="button" class="eye" (click)="hide = !hide">👁️</button>
+          </div>
+        </label>
+
+        <label class="field">
+          <span class="label">Confirmar contraseña</span>
+          <div class="input-wrap">
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10h12v10H6z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            <input class="input" [type]="hideConfirm ? 'password' : 'text'" formControlName="confirmPassword" placeholder="Repite la contraseña" />
+            <button type="button" class="eye" (click)="hideConfirm = !hideConfirm">👁️</button>
+          </div>
+          <small class="error-text" *ngIf="registerForm.touched && registerForm.errors?.['passwordsMismatch']">
+            Las contraseñas no coinciden
+          </small>
+        </label>
+      </div>
+
+      <label class="terms">
+        <input type="checkbox" formControlName="acceptTerms" />
+        <span>Acepto los <a href="#" target="_blank" class="link brand">términos y condiciones</a></span>
+      </label>
+
+      <button type="submit" class="btn primary full" [disabled]="registerForm.invalid || submitting">
+        <span *ngIf="!submitting">Registrarme</span>
+        <span class="spinner" *ngIf="submitting"></span>
+      </button>
+
+      <p class="muted center mt-2">
+        ¿Ya tienes cuenta?
+        <a class="link brand" routerLink="/auth/login">Inicia sesión</a>
+      </p>
+
+      <div class="divider"><span>o continúa con</span></div>
+
+      <button type="button" class="oauth-btn" (click)="signUpWithGoogle()">
+        <img src="assets/icons/icon_google.webp" alt="Google" class="oauth-logo" width="18" height="18" loading="lazy" />
+        <span>Google</span>
+      </button>
+    </form>
+  </main>
+</div>

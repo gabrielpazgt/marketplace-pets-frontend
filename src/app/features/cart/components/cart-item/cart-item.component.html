@@ -1,0 +1,62 @@
+<article class="row">
+  <div class="cell media">
+    <img [src]="item.image" [alt]="item.name" width="96" height="96" loading="lazy" decoding="async">
+  </div>
+
+  <div class="cell info">
+    <h3 class="title">{{ item.name }}</h3>
+
+    <div class="attrs" *ngIf="item.attrs?.length">
+      <span *ngFor="let a of item.attrs" class="chip">{{ a }}</span>
+    </div>
+
+    <div class="stock" [class.low]="item.stock<=3">
+      {{ item.stock<=3 ? '¡Quedan pocas unidades!' : 'En stock' }}
+    </div>
+  </div>
+
+  <!-- precios por unidad (Normal / Membresía) -->
+  <div class="cell price">
+    <!-- Normal -->
+    <div class="price-chip price--regular" aria-label="Precio normal">
+      <span class="label">Normal</span>
+      <div class="vals">
+        <span *ngIf="item.oldPrice" class="old">
+          {{ item.oldPrice | currency:'GTQ':'symbol-narrow':'1.0-0' }}
+        </span>
+        <span class="now">
+          {{ item.price | currency:'GTQ':'symbol-narrow':'1.0-0' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Membresía -->
+    <div class="price-chip price--member" aria-label="Precio con membresía">
+      <span class="label">Membresía</span>
+      <div class="vals">
+        <span *ngIf="memberOld" class="old">
+          {{ memberOld | currency:'GTQ':'symbol-narrow':'1.0-0' }}
+        </span>
+        <span class="now">
+          {{ memberNow | currency:'GTQ':'symbol-narrow':'1.0-0' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cell qty">
+    <app-quantity-stepper
+      [value]="item.qty"
+      [max]="item.stock"
+      (valueChange)="onQty($event)">
+    </app-quantity-stepper>
+  </div>
+
+  <div class="cell total">
+    {{ lineTotal | currency:'GTQ':'symbol-narrow':'1.0-0' }}
+  </div>
+
+  <div class="cell actions">
+    <button class="link danger" (click)="remove.emit()">Eliminar</button>
+  </div>
+</article>

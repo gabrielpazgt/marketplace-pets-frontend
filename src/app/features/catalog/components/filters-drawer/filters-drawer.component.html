@@ -1,0 +1,57 @@
+<div class="drawer" [class.is-open]="open" (click)="close.emit()"></div>
+
+<aside class="panel" [class.is-open]="open" (click)="$event.stopPropagation()">
+  <header class="panel__header">
+    <div class="title">
+      <span class="dot" aria-hidden="true"></span>
+      <h4>Filtros</h4>
+      <span *ngIf="activeCount" class="badge">{{ activeCount }}</span>
+    </div>
+
+    <button class="icon" (click)="close.emit()" aria-label="Cerrar filtros">✕</button>
+  </header>
+
+  <form (ngSubmit)="onSubmit()" class="panel__body">
+    <!-- Etiquetas -->
+    <section class="group">
+      <h5 id="flt-tags" class="group__title">Etiquetas</h5>
+      <div class="chips" role="group" aria-labelledby="flt-tags">
+        <label
+          *ngFor="let t of availableTags"
+          class="chip chip-toggle"
+          [class.is-active]="form.value.tags?.includes(t)"
+        >
+          <input
+            type="checkbox"
+            [checked]="form.value.tags?.includes(t)"
+            (change)="onTagChange(t, $event)"
+            [attr.aria-label]="t | titlecase"
+          />
+          <span class="check" aria-hidden="true"></span>
+          <span>{{ t | titlecase }}</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Precio -->
+    <section class="group">
+      <h5 id="flt-price" class="group__title">Precio</h5>
+      <div class="price" role="group" aria-labelledby="flt-price">
+        <label class="sr-only" for="pmin">Precio mínimo</label>
+        <input id="pmin" class="input" type="number" placeholder="Mín" [formControl]="form.controls.min" />
+
+        <span aria-hidden="true">–</span>
+
+        <label class="sr-only" for="pmax">Precio máximo</label>
+        <input id="pmax" class="input" type="number" placeholder="Máx" [formControl]="form.controls.max" />
+      </div>
+      <small class="hint muted">Consejo: deja vacío para no limitar.</small>
+    </section>
+
+    <!-- Acciones -->
+    <div class="actions">
+      <button type="button" class="btn ghost" (click)="clear.emit()">Limpiar</button>
+      <button class="btn primary" type="submit">Aplicar</button>
+    </div>
+  </form>
+</aside>

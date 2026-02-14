@@ -1,0 +1,26 @@
+.wrap { padding: var(--sp-6); text-align: center; }
+.center { display: grid; place-items: center; gap: var(--sp-3); }
+.icon {
+  width: 72px; height: 72px; border-radius: 50%;
+  display: grid; place-items: center; font-weight: 900; color: #fff;
+  background: var(--success);
+  font-size: 2rem;
+}
+h1 { margin: 0; }
+.tx { margin: 0; }
+
+.resume {
+  margin-top: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  width: min(100%, 420px);
+  text-align: left;
+}
+.line {
+  display: flex; justify-content: space-between;
+  padding: 8px 0; border-top: 1px solid var(--line);
+}
+.line:first-child { border-top: 0; }
+
+.actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: var(--sp-3); }

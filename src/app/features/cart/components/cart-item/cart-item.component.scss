@@ -1,0 +1,78 @@
+/* Fila estilo tabla */
+.row{
+  display:grid; align-items:center; gap:12px; padding:10px 10px;
+  /* + ancho para dos chips de precio */
+  grid-template-columns: 120px 1fr 170px 140px 110px 80px;
+  border-bottom: 1px dashed var(--line);
+  border-radius: 12px; transition: background .15s, box-shadow .15s, border-color .15s;
+}
+.row:hover{ background:#fff; box-shadow:var(--shadow-card); border-bottom-color:transparent; }
+
+/* Media */
+.media{ display:grid; place-items:center; width:120px; height:100%; }
+.media img{
+  width:96px; height:96px; object-fit:contain;
+  background:#f8fafc; border:1px solid var(--line); border-radius:12px;
+}
+
+/* Info */
+.info .title{ margin:.1rem 0 .2rem; font-size:1rem; color:var(--ink) }
+.attrs{ display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.2rem }
+.chip{ background:var(--chip); border:1px solid var(--line); border-radius:999px; padding:.15rem .5rem; font-size:.8rem }
+.stock{ color:#16a34a; font-size:.85rem }
+.stock.low{ color:#ef4444 }
+
+/* Precios (chips) */
+.price{
+  display:grid; gap:6px; justify-items:start;
+}
+
+.price-chip{
+  display:inline-grid; grid-auto-flow:column; align-items:center; gap:8px;
+  padding:4px 8px; border-radius:var(--r-sm); white-space:nowrap;
+  border:1px solid var(--line); background:#fff; font-weight:800; line-height:1;
+
+  .label{ font-size:.72rem; font-weight:900; opacity:.85; }
+  .vals{ display:inline-grid; grid-auto-flow:column; align-items:baseline; gap:6px; }
+  .old{ font-size:.78rem; color:var(--muted); text-decoration:line-through; }
+  .now{ font-size:.92rem; }
+}
+
+.price--regular{
+  color: var(--brand-600);
+  background: color-mix(in srgb, var(--brand) 8%, transparent);
+  border-color: color-mix(in srgb, var(--brand) 18%, transparent);
+  .now{ color: var(--brand-600); }
+}
+.price--member{
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 18%, transparent);
+  .now{ color: #1e88e5; }
+}
+
+/* Qty / total / acciones */
+.qty{ display:flex; align-items:center; justify-content:flex-start; }
+.total{ font-weight:800; }
+.actions{ display:flex; justify-content:flex-end; }
+.link{ border:0; background:none; color:var(--muted); cursor:pointer; }
+.link.danger{ color:#ef4444; }
+.link:hover{ text-decoration:underline; }
+
+/* Responsive */
+@media (max-width: 900px){
+  .row{
+    grid-template-columns: 100px 1fr;
+    grid-template-areas:
+      "media info"
+      "price qty"
+      "total actions";
+    gap:10px; padding:10px;
+  }
+  .media{ grid-area: media; width:auto; }
+  .info{ grid-area: info; }
+  .price{ grid-area: price; }
+  .qty{ grid-area: qty; }
+  .total{ grid-area: total; }
+  .actions{ grid-area: actions; justify-content:flex-start; }
+}

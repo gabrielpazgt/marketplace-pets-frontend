@@ -1,0 +1,49 @@
+<div class="card summary">
+  <div class="hd">
+    <h3>Resumen</h3>
+    <span class="badge">{{ (state.itemCount$ | async) || 0 }}</span>
+  </div>
+
+  <ul class="mini-list">
+    <li *ngFor="let it of (state.items$ | async)">
+      <img [src]="it.image" [alt]="it.name" />
+      <div class="info">
+        <strong>{{ it.name }}</strong>
+        <span class="muted">x{{ it.qty }}</span>
+      </div>
+      <div class="price">{{ (it.price * it.qty) | currency:'GTQ':'symbol-narrow' }}</div>
+    </li>
+  </ul>
+
+  <div class="line"></div>
+
+  <div class="row">
+    <span>Subtotal</span>
+    <strong>{{ (state.subtotal$ | async) | currency:'GTQ':'symbol-narrow' }}</strong>
+  </div>
+
+  <div class="row">
+    <span>Descuento</span>
+    <strong>- {{ (state.discount$ | async) | currency:'GTQ':'symbol-narrow' }}</strong>
+  </div>
+
+  <div class="row">
+    <span>Envío</span>
+    <strong>{{ (state.shipping$ | async) | currency:'GTQ':'symbol-narrow' }}</strong>
+  </div>
+
+  <div class="total">
+    <span>Total</span>
+    <strong>{{ (state.total$ | async) | currency:'GTQ':'symbol-narrow' }}</strong>
+  </div>
+
+  <details class="coupon">
+    <summary>¿Tienes un cupón?</summary>
+    <div class="coupon__box">
+      <input class="input" [(ngModel)]="code" placeholder="AUMAKKI15" />
+      <button class="btn ghost" (click)="clear()">Limpiar</button>
+      <button class="btn primary" (click)="apply()">Aplicar</button>
+    </div>
+    <small class="muted">Cupón demo: <strong>AUMAKKI15</strong> (15% OFF)</small>
+  </details>
+</div>

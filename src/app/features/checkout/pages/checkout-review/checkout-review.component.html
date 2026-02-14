@@ -1,0 +1,36 @@
+<h2 class="title">4) Revisión</h2>
+<p class="muted">Verifica que todos los datos estén correctos antes de finalizar.</p>
+
+<div class="card box">
+  <h3>Contacto</h3>
+  <p>
+    <strong>{{ state.snapshot.contact?.firstName }} {{ state.snapshot.contact?.lastName }}</strong><br>
+    {{ state.snapshot.contact?.email }}<br>
+    <span *ngIf="state.snapshot.contact?.phone">{{ state.snapshot.contact?.phone }}</span>
+  </p>
+</div>
+
+<div class="card box">
+  <h3>Envío</h3>
+  <p>
+    <ng-container *ngIf="state.snapshot.shippingAddress as a">
+      {{ a.line1 }}<span *ngIf="a.line2">, {{ a.line2 }}</span><br>
+      {{ a.municipality }}, {{ a.department }}, {{ a.country }}<br>
+      <span *ngIf="a.postalCode">CP {{ a.postalCode }}</span><br>
+      <span *ngIf="a.references" class="muted">Ref: {{ a.references }}</span>
+    </ng-container>
+  </p>
+  <p class="muted">Método: {{ shippingMethodLabel() }}</p>
+</div>
+
+<div class="card box" *ngIf="state.snapshot.paymentKind">
+  <h3>Pago</h3>
+  <p *ngIf="state.snapshot.paymentKind==='card'">Tarjeta terminada en <strong>{{ state.snapshot.card?.number?.slice(-4) }}</strong></p>
+  <p *ngIf="state.snapshot.paymentKind==='bank'">Transferencia bancaria</p>
+  <p *ngIf="state.snapshot.paymentKind==='cod'">Contra entrega</p>
+</div>
+
+<div class="actions">
+  <button class="btn ghost" (click)="back()">Atrás</button>
+  <button class="btn success" (click)="confirm()">Confirmar pedido</button>
+</div>

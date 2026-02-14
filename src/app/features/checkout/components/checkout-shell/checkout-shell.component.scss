@@ -1,0 +1,29 @@
+.checkout { padding-block: 24px 40px; }
+.header { margin-bottom: 16px; }
+
+.progress {
+  height: 6px; background: var(--surface-100); border-radius: var(--r-pill);
+  position: relative; overflow: hidden; margin-bottom: 12px;
+}
+.progress .bar {
+  height: 100%; background: linear-gradient(90deg, var(--brand), var(--brand-700));
+  transition: width var(--t-base) var(--timing);
+}
+
+.stepper {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  list-style: none; padding: 0; margin: 0; color: var(--muted); font-size: var(--fs-sm);
+}
+.stepper li { display: flex; align-items: center; gap: 8px; }
+.stepper .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+.stepper li.active .dot { background: var(--brand); }
+.stepper li.active .lbl { color: var(--ink); font-weight: 700; }
+
+.grid { display: grid; grid-template-columns: 1fr min(420px, 35%); gap: 24px; }
+.main { padding: 20px; }
+.aside { position: sticky; top: 16px; align-self: start; }
+
+@media (max-width: 980px) {
+  .grid { grid-template-columns: 1fr; }
+  .aside { position: static; }
+}

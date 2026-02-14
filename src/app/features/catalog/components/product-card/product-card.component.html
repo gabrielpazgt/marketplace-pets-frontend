@@ -1,0 +1,23 @@
+<article class="card" [class.is-loading]="loading">
+  <div class="card__media">
+    <ng-container *ngIf="!loading; else skel">
+      <picture>
+        <img [src]="product.image" [alt]="product.name" width="320" height="320" loading="lazy" decoding="async">
+      </picture>
+      <span *ngIf="product.badge" class="badge" [attr.data-type]="product.badge">{{ product.badge }}</span>
+      <span *ngIf="discount" class="discount">-{{ discount }}%</span>
+    </ng-container>
+    <ng-template #skel><div class="skel skel--media"></div></ng-template>
+  </div>
+
+  <div class="card__body">
+    <h3 class="card__title" title="{{product.name}}" *ngIf="!loading; else skelTitle">{{ product.name }}</h3>
+    <ng-template #skelTitle><div class="skel skel--line"></div></ng-template>
+
+    <div class="price" *ngIf="!loading; else skelPrice">
+      <span class="price__now">{{ product.price | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
+      <span *ngIf="product.oldPrice" class="price__old">{{ product.oldPrice | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
+    </div>
+    <ng-template #skelPrice><div class="skel skel--chip"></div></ng-template>
+  </div>
+</article>

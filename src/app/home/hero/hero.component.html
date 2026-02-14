@@ -1,0 +1,55 @@
+<section class="hero" aria-label="Aumakki Hero">
+  <div class="hero__inner container">
+
+    <!-- Copy -->
+    <div class="hero__copy">
+      <div class="hero__promo" *ngIf="promo?.text">
+        <i class="fa-solid fa-gift" aria-hidden="true"></i>
+        <span>{{ promo.text }}</span>
+      </div>
+
+      <h1 class="hero__title">{{ title }}</h1>
+      <p class="hero__subtitle">{{ subtitle }}</p>
+
+      <!-- Beneficios con tus íconos -->
+      <ul class="hero__features" aria-label="Beneficios de la tienda">
+        <li class="feature" *ngFor="let f of features">
+          <img class="feature__icon" [src]="f.img" [alt]="f.title" width="28" height="28" />
+          <div class="txt">
+            <strong>{{ f.title }}</strong>
+            <small *ngIf="f.caption">{{ f.caption }}</small>
+          </div>
+        </li>
+      </ul>
+
+      <!-- CTAs (alineados al DS: .btn .primary / .ghost) -->
+      <div class="hero__actions">
+        <a
+          *ngFor="let c of ctas"
+          class="btn"
+          [class.primary]="c.variant === 'primary'"
+          [class.ghost]="c.variant === 'ghost'"
+          [routerLink]="c.link">
+          {{ c.label }}
+        </a>
+      </div>
+
+      <!-- Atajos -->
+      <nav class="hero__tags" aria-label="Atajos de categoría">
+        <a *ngFor="let t of quickTags" class="tag" [routerLink]="t.link">{{ t.label }}</a>
+      </nav>
+    </div>
+
+    <!-- Imagen -->
+    <div class="hero__media" aria-hidden="true">
+      <picture>
+        <source *ngIf="image.webpLg" type="image/webp" media="(min-width: 900px)" [srcset]="image.webpLg" />
+        <source *ngIf="image.webp" type="image/webp" [srcset]="image.webp" />
+        <source *ngIf="image.srcLg" media="(min-width: 900px)" [srcset]="image.srcLg" />
+        <img [src]="image.src" [alt]="image.alt" loading="lazy" />
+      </picture>
+      <span class="blob"></span>
+    </div>
+
+  </div>
+</section>

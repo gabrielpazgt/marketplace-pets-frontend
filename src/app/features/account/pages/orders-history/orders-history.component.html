@@ -1,0 +1,132 @@
+<section class="section orders-history">
+  <div class="container">
+    <div class="card p">
+      <header class="head">
+        <h2>Historial de Compras</h2>
+        <p class="muted">
+          Listado de pedidos, estados, totales y acciones (descargar factura, ver detalle, repetir compra).
+        </p>
+      </header>
+
+      <!-- ===== Toolbar compacta (buscador + selects) ===== -->
+      <div class="toolbar toolbar--compact">
+        <!-- Buscador (matInput con ícono propio para no afectar header) -->
+        <mat-form-field appearance="outline" class="search-field">
+          <span class="i i-search" matPrefix aria-hidden="true"></span>
+          <input
+            matInput
+            [(ngModel)]="q"
+            placeholder="Buscar por #orden (ej. #0012)" />
+        </mat-form-field>
+
+        <!-- Estado -->
+        <mat-form-field appearance="outline" class="sel">
+          <mat-label>Estado</mat-label>
+          <mat-select [(value)]="status">
+            <mat-option value="all">Todos</mat-option>
+            <mat-option value="pending">Pendiente</mat-option>
+            <mat-option value="paid">Pagado</mat-option>
+            <mat-option value="shipped">Enviado</mat-option>
+            <mat-option value="delivered">Entregado</mat-option>
+            <mat-option value="cancelled">Cancelado</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Rango -->
+        <mat-form-field appearance="outline" class="sel">
+          <mat-label>Rango</mat-label>
+          <mat-select [(value)]="range">
+            <mat-option value="30">Últimos 30 días</mat-option>
+            <mat-option value="90">Últimos 90 días</mat-option>
+            <mat-option value="365">Últimos 12 meses</mat-option>
+            <mat-option value="all">Todo</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- ===== Tabla (desktop) ===== -->
+      <div class="table-wrap hide-mobile">
+        <table class="table orders">
+          <thead>
+            <tr>
+              <th>Orden</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Total</th>
+              <th>Items</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let o of filtered">
+              <tr class="row" (click)="toggleExpand(o)">
+                <td class="number">{{ o.number }}</td>
+                <td>{{ o.date | date:'mediumDate' }}</td>
+                <td><span class="chip status" [class]="o.status">{{ statusLabel(o.status) }}</span></td>
+                <td>{{ o.total | currency:'GTQ':'symbol-narrow':'1.0-2' }}</td>
+                <td>{{ o.itemsCount }}</td>
+              </tr>
+
+              <tr class="expand" *ngIf="expandedId===o.id">
+                <td colspan="5">
+                  <div class="expand__content">
+                    <div class="col">
+                      <h4>Resumen</h4>
+                      <ul class="dl">
+                        <li><span class="k">Pago</span><span class="v">{{ o.paymentMethod }}</span></li>
+                        <li><span class="k">Envío</span><span class="v">{{ o.addressShort }}</span></li>
+                        <li *ngIf="o.tracking"><span class="k">Tracking</span><span class="v">{{ o.tracking }}</span></li>
+                      </ul>
+                    </div>
+                    <div class="col">
+                      <h4>Timeline</h4>
+                      <ol class="timeline">
+                        <li [class.done]="o.status!=='pending'">Pago confirmado</li>
+                        <li [class.done]="o.status==='shipped' || o.status==='delivered'">Enviado</li>
+                        <li [class.done]="o.status==='delivered'">Entregado</li>
+                      </ol>
+                    </div>
+                    <div class="col actions">
+                      <button class="btn invoice" (click)="downloadInvoice(o)">Descargar factura</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+
+            <tr *ngIf="!filtered.length">
+              <td colspan="5">
+                <div class="empty muted">No hay órdenes que coincidan con los filtros.</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ===== Cards (móvil) ===== -->
+      <div class="cards show-mobile">
+        <article *ngFor="let o of filtered" class="order-card">
+          <header>
+            <strong class="number">{{ o.number }}</strong>
+            <span class="chip status" [class]="o.status">{{ statusLabel(o.status) }}</span>
+          </header>
+          <div class="rows">
+            <div><span class="k">Fecha</span><span class="v">{{ o.date | date:'mediumDate' }}</span></div>
+            <div><span class="k">Total</span><span class="v">{{ o.total | currency:'GTQ':'symbol-narrow' }}</span></div>
+            <div><span class="k">Items</span><span class="v">{{ o.itemsCount }}</span></div>
+          </div>
+          <div class="mini">
+            <span>Pago: <strong>{{ o.paymentMethod }}</strong></span>
+            <span>Envío: <strong>{{ o.addressShort }}</strong></span>
+          </div>
+          <div class="cta">
+            <button class="btn invoice" (click)="downloadInvoice(o)">Descargar factura</button>
+          </div>
+        </article>
+
+        <div class="empty muted" *ngIf="!filtered.length">
+          No hay órdenes que coincidan con los filtros.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

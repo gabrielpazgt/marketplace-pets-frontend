@@ -1,0 +1,14 @@
+.title { margin: 0 0 4px 0; font-size: var(--fs-xl); }
+
+.methods {
+  list-style: none; padding: 0; margin: 12px 0;
+  display: grid; gap: 12px;
+}
+.method { display: flex; align-items: center; justify-content: space-between; padding: 12px; cursor: pointer; }
+.method .left { display: flex; gap: 10px; align-items: center; }
+.method .txt { display: grid; }
+.method .right { font-weight: 800; }
+.dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--brand); background: transparent; display: inline-block; }
+.dot.on { background: var(--brand); }
+.method.active { border-color: var(--brand-600); box-shadow: 0 0 0 4px rgba(255, 167, 38, .12); }
+.actions { display: flex; justify-content: space-between; margin-top: 10px; }

@@ -1,0 +1,21 @@
+<div class="sortbar container">
+  <div class="sortbar__left">
+    <strong>{{ total }}</strong> productos
+  </div>
+
+  <div class="sortbar__right">
+    <button class="btn btn--ghost" (click)="openFilters.emit()">
+      Filtros<span *ngIf="activeFilters>0" class="badge">{{ activeFilters }}</span>
+    </button>
+
+    <label class="sort">
+      <span>Ordenar:</span>
+      <select [value]="sort" (change)="onSortChange($event)">
+        <option value="popular">Más populares</option>
+        <option value="new">Novedades</option>
+        <option value="price-asc">Precio: menor a mayor</option>
+        <option value="price-desc">Precio: mayor a menor</option>
+      </select>
+    </label>
+  </div>
+</div>
