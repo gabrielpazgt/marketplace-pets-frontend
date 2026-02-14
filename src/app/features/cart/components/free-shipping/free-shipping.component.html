@@ -1,0 +1,14 @@
+<div class="fs" [class.done]="isDone" [style.--p]="ratio">
+  <div class="row">
+    <span class="msg" *ngIf="!isDone">
+      Te faltan <b>Q{{ remaining }}</b> para envío gratis
+    </span>
+    <span class="msg ok" *ngIf="isDone">
+      ¡Tienes <b>envío gratis</b>! 🎉
+    </span>
+  </div>
+
+  <div class="bar">
+    <div class="fill" [class.complete]="isDone"></div>
+  </div>
+</div>

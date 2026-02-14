@@ -1,0 +1,31 @@
+<article class="pet-card">
+  <header class="head">
+    <div class="avatar" [style.--hex]="pet.avatarHex || computedColor(pet.name)">
+      <span class="emoji">{{ emoji(pet.species) }}</span>
+    </div>
+    <div class="id">
+      <h3>{{ pet.name }}</h3>
+      <p class="muted">
+        {{ speciesLabel[pet.species] }}
+        <ng-container *ngIf="pet.breed"> • {{ pet.breed }}</ng-container>
+      </p>
+    </div>
+
+    <div class="actions">
+      <button class="btn ghost xs" (click)="edit.emit(pet)">Editar</button>
+      <button class="btn danger xs" (click)="remove.emit(pet)">Eliminar</button>
+    </div>
+  </header>
+
+  <div class="meta">
+    <span class="chip" *ngIf="pet.size">Tamaño: {{ sizeLabel[pet.size!] }}</span>
+    <span class="chip" *ngIf="pet.ageYears !== undefined">{{ ageText(pet.ageYears) }}</span>
+    <span class="chip" *ngIf="pet.sex">Sexo: {{ sexLabel[pet.sex!] }}</span>
+    <span class="chip" *ngIf="pet.color">Color: {{ pet.color }}</span>
+
+    <!-- NUEVOS -->
+    <span class="chip" *ngIf="pet.lifeStage">Etapa: {{ lifeLabel[pet.lifeStage!] }}</span>
+    <span class="chip" *ngIf="pet.sterilized !== undefined">Esterilizado: {{ pet.sterilized ? 'Sí' : 'No' }}</span>
+    <span class="chip" *ngIf="pet.activity">Actividad: {{ actLabel[pet.activity!] }}</span>
+  </div>
+</article>

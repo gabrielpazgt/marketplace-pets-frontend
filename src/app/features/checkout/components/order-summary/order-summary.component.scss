@@ -1,0 +1,19 @@
+.summary { padding: 16px; }
+
+.hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.hd h3 { margin: 0; font-size: var(--fs-lg); }
+.badge { background: var(--accent); }
+
+.mini-list { list-style: none; padding: 0; margin: 0 0 8px 0; display: grid; gap: 10px; }
+.mini-list li { display: grid; grid-template-columns: 56px 1fr auto; gap: 10px; align-items: center; }
+.mini-list img { width: 56px; height: 56px; object-fit: cover; border-radius: var(--r-sm); border: 1px solid var(--line); }
+.mini-list .info { display: grid; }
+.mini-list .price { font-weight: 700; }
+
+.line { height: 1px; background: var(--line); margin: 12px 0; }
+
+.row { display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--ink); }
+.total { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: var(--fs-lg); }
+
+.coupon summary { cursor: pointer; padding: 6px 0; }
+.coupon__box { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; margin-top: 8px; }

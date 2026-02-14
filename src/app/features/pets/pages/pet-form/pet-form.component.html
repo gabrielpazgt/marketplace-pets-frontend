@@ -1,0 +1,143 @@
+<section class="section">
+  <div class="container">
+    <header class="head"><h2>{{ id ? 'Editar mascota' : 'Nueva mascota' }}</h2></header>
+
+    <div class="layout">
+      <form [formGroup]="form" (ngSubmit)="save()" class="card form">
+
+        <div class="form-alert danger" *ngIf="submitAttempted && form.invalid">
+          Completa los campos obligatorios marcados con *.
+        </div>
+
+        <div class="grid">
+          <!-- Nombre -->
+          <label class="field">
+            <span class="label">Nombre *</span>
+            <input class="input" formControlName="name" placeholder="Manchitas" />
+            <small class="error-text" *ngIf="hasError('name','required')">Este campo es obligatorio.</small>
+            <small class="error-text" *ngIf="hasError('name','maxlength')">Máximo 40 caracteres.</small>
+          </label>
+
+          <!-- Especie -->
+          <label class="field">
+            <span class="label">Especie *</span>
+            <select class="input" formControlName="species">
+              <option *ngFor="let s of speciesOptions" [value]="s.v">{{ s.emoji }} {{ s.label }}</option>
+            </select>
+            <small class="error-text" *ngIf="hasError('species','required')">Selecciona una especie.</small>
+          </label>
+
+          <!-- Raza -->
+          <label class="field">
+            <span class="label">Raza</span>
+            <select class="input" formControlName="breed">
+              <option [ngValue]="''">—</option>
+              <option *ngFor="let b of breedOptions" [ngValue]="b">{{ b }}</option>
+            </select>
+          </label>
+
+          <!-- (Se quitó el select de Color de la mascota) -->
+
+          <!-- Favorito (preview) -->
+          <label class="field">
+            <span class="label">Color favorito (preview)</span>
+            <div class="color-field">
+              <input type="color" class="sr-only" #fav [formControl]="form.controls.avatarHex" />
+              <button type="button" class="swatch-btn" (click)="fav.click()">
+                <span class="swatch" [style.--hex]="form.value.avatarHex"></span>
+                <span class="hex">{{ form.value.avatarHex }}</span>
+              </button>
+            </div>
+          </label>
+
+          <!-- Tamaño -->
+          <label class="field">
+            <span class="label">Tamaño *</span>
+            <select class="input" formControlName="size">
+              <option [ngValue]="undefined">—</option>
+              <option *ngFor="let s of sizeOptions" [ngValue]="s.v">{{ s.label }}</option>
+            </select>
+            <small class="error-text" *ngIf="hasError('size','required')">Selecciona un tamaño.</small>
+          </label>
+
+          <!-- Edad -->
+          <label class="field">
+            <span class="label">Edad (años) *</span>
+            <div class="range-wrap">
+              <input class="range" type="range" min="0" max="30" step="1" formControlName="ageYears" aria-label="Edad (slider)">
+              <output class="age-pill">{{ ageDisplay }}</output>
+            </div>
+            <small class="error-text" *ngIf="hasError('ageYears','required')">Indica la edad.</small>
+          </label>
+
+          <!-- Sexo -->
+          <label class="field">
+            <span class="label">Sexo *</span>
+            <select class="input" formControlName="sex">
+              <option [ngValue]="undefined">—</option>
+              <option *ngFor="let s of sexOptions" [ngValue]="s.v">{{ s.label }}</option>
+            </select>
+            <small class="error-text" *ngIf="hasError('sex','required')">Selecciona el sexo.</small>
+          </label>
+
+          <!-- ===== NUEVOS CAMPOS ===== -->
+          <label class="field">
+            <span class="label">Etapa de vida</span>
+            <select class="input" formControlName="lifeStage">
+              <option [ngValue]="undefined">—</option>
+              <option *ngFor="let l of lifeStages" [ngValue]="l.v">{{ l.label }}</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span class="label">Esterilizado</span>
+            <select class="input" formControlName="sterilized">
+              <option [ngValue]="false">No</option>
+              <option [ngValue]="true">Sí</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span class="label">Nivel de actividad</span>
+            <select class="input" formControlName="activity">
+              <option [ngValue]="undefined">—</option>
+              <option *ngFor="let a of activityLevels" [ngValue]="a.v">{{ a.label }}</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span class="label">Alergias (separadas por coma)</span>
+            <input class="input" formControlName="allergies" placeholder="Pollo, maíz, res..." />
+          </label>
+
+          <label class="field col-2">
+            <span class="label">Preferencias de dieta</span>
+            <div class="diet-grid">
+              <label *ngFor="let d of dietOptions" class="diet-opt">
+                <input
+                  type="checkbox"
+                  [checked]="(form.value.diet || []).includes(d.v)"
+                  (change)="onDietToggle($event, d.v)"
+                />
+                <span>{{ d.label }}</span>
+              </label>
+            </div>
+          </label>
+
+          <!-- Notas -->
+          <label class="field col-2">
+            <span class="label">Notas</span>
+            <textarea class="input" formControlName="notes" rows="3" placeholder="Le gusta el pollo, sensible a maíz..."></textarea>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn ghost" (click)="cancel()">Cancelar</button>
+          <button type="submit" class="btn primary">Guardar</button>
+        </div>
+      </form>
+
+      <mp-pet-preview class="preview" [draft]="draft"></mp-pet-preview>
+    </div>
+  </div>
+</section>

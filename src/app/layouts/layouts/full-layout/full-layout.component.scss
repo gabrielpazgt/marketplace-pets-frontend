@@ -1,0 +1,32 @@
+:host {
+  display: block;            /* el host participa como bloque normal */
+}
+
+/* Layout a prueba de balas: header arriba, contenido que crece, footer abajo */
+.layout {
+  min-height: 100dvh;        /* ocupa toda la ventana */
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+/* Header (si lo quieres pegado arriba al hacer scroll, usa sticky) */
+.layout__header {
+  position: sticky;          /* opcional; quítalo si no lo quieres sticky */
+  top: 0;
+  z-index: 100;
+}
+
+/* El contenido ocupa la fila central y puede crecer/scroll */
+.layout__main {
+  min-height: 0;             /* permite que el contenido haga scroll dentro */
+}
+
+/* Footer en la última fila (no necesitamos margin-top:auto) */
+.layout__footer {
+  /* nada especial */
+}
+
+/* Si tu header es fixed en vez de sticky, descomenta y ajusta: */
+/*
+.layout__main { padding-top: 72px; } // altura real del header
+*/

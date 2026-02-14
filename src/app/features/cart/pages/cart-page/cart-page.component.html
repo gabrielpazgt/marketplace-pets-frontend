@@ -1,0 +1,62 @@
+<section class="cart">
+  <div class="container">
+    <h1 class="title">
+      Carrito
+      <span class="count">({{ (itemCount$ | async) ?? 0 }})</span>
+    </h1>
+
+    <a class="continue" routerLink="/catalog" aria-label="Seguir comprando">
+      <span aria-hidden="true">←</span> Seguir comprando
+    </a>
+  </div>
+
+  <div class="container layout">
+    <ng-container *ngIf="(items$ | async) as items; else loading">
+      <ng-container *ngIf="items.length; else empty">
+
+        <div class="left">
+          <app-free-shipping
+            class="surface surface--banner"
+            [target]="threshold"
+            [subtotal]="(subtotal$ | async) ?? 0">
+          </app-free-shipping>
+
+          <!-- Tabla -->
+          <div class="surface surface--table">
+            <header class="table-head" aria-hidden="true">
+              <div class="th product">Producto</div>
+              <div class="th price">Precio</div>
+              <div class="th qty">Cant.</div>
+              <div class="th total">Total</div>
+              <div class="th actions"></div>
+            </header>
+
+            <div class="list">
+              <app-cart-item
+                *ngFor="let it of items"
+                [item]="it"
+                (qtyChange)="setQty(it.id, $event)"
+                (remove)="remove(it.id)">
+              </app-cart-item>
+            </div>
+          </div>
+        </div>
+
+        <div class="right">
+          <app-order-summary></app-order-summary>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <ng-template #empty>
+      <app-cart-empty></app-cart-empty>
+    </ng-template>
+
+    <ng-template #loading>
+      <div class="skeleton container">Cargando…</div>
+    </ng-template>
+  </div>
+
+  <!-- Recomendaciones al final -->
+  <app-cart-recommendations></app-cart-recommendations>
+</section>

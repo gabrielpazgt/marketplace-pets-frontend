@@ -1,0 +1,73 @@
+<section class="preview card">
+  <h4>Preview</h4>
+
+  <div class="canvas" [style.--bg]="displayColor">
+    <div class="ring"></div>
+    <div class="blob"></div>
+
+    <img class="pet-img" [src]="speciesImg" alt="Mascota" />
+
+    <div class="paws"></div>
+  </div>
+
+  <dl class="facts">
+    <div><dt>Nombre</dt><dd>{{ draft.name || '—' }}</dd></div>
+
+    <div>
+      <dt>Especie</dt>
+      <dd>{{ speciesLabel[draft.species || 'dog'] }}</dd>
+    </div>
+
+    <div *ngIf="draft.breed">
+      <dt>Raza</dt><dd>{{ draft.breed }}</dd>
+    </div>
+
+    <div *ngIf="draft.color">
+      <dt>Color</dt><dd>{{ draft.color }}</dd>
+    </div>
+
+    <div *ngIf="draft.avatarHex">
+      <dt>Favorito</dt>
+      <dd>
+        <span class="swatch" [style.--hex]="draft.avatarHex"></span>{{ draft.avatarHex }}
+      </dd>
+    </div>
+
+    <div *ngIf="draft.size">
+      <dt>Tamaño</dt><dd>{{ sizeLabel[draft.size!] }}</dd>
+    </div>
+
+    <div>
+      <dt>Edad</dt>
+      <dd>
+        {{ draft.ageYears ?? '—' }}
+        <ng-container *ngIf="draft.ageYears !== undefined"> años</ng-container>
+      </dd>
+    </div>
+
+    <div *ngIf="draft.sex">
+      <dt>Sexo</dt><dd>{{ sexLabel[draft.sex!] }}</dd>
+    </div>
+
+    <!-- NUEVOS -->
+    <div *ngIf="draft.lifeStage">
+      <dt>Etapa</dt><dd>{{ lifeLabel[draft.lifeStage!] }}</dd>
+    </div>
+
+    <div *ngIf="draft.sterilized !== undefined">
+      <dt>Esterilizado</dt><dd>{{ draft.sterilized ? 'Sí' : 'No' }}</dd>
+    </div>
+
+    <div *ngIf="draft.activity">
+      <dt>Actividad</dt><dd>{{ actLabel[draft.activity!] }}</dd>
+    </div>
+
+    <div *ngIf="draft.allergies?.length">
+      <dt>Alergias</dt><dd>{{ allergiesDisplay }}</dd>
+    </div>
+
+    <div *ngIf="draft.diet?.length">
+      <dt>Dieta</dt><dd>{{ dietDisplay }}</dd>
+    </div>
+  </dl>
+</section>

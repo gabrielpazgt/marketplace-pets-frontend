@@ -1,0 +1,84 @@
+<section class="deals container" aria-labelledby="deals-title">
+  <div class="head">
+    <h2 id="deals-title" class="title">Destacados</h2>
+
+    <!-- CTA estandarizado con botón del DS -->
+    <a class="btn ghost" routerLink="/c/perros" aria-label="Ver todos los productos destacados">
+      Ver todo <span aria-hidden="true">→</span>
+    </a>
+  </div>
+
+  <ng-container *ngIf="view?.length; else skeleton">
+    <div class="grid" role="list">
+      <a
+        class="prod"
+        role="listitem"
+        *ngFor="let p of view"
+        [routerLink]="['/p', p.slug]"
+        [title]="p.name"
+      >
+        <span
+          class="badge"
+          *ngIf="p.badge"
+          [ngClass]="'badge--' + (p.badge || '').toLowerCase()"
+        >
+          {{ p.badge }}
+        </span>
+
+        <!-- media -->
+        <figure class="media">
+          <img [src]="p.image" [alt]="p.name" loading="lazy" />
+          <span class="glow" aria-hidden="true"></span>
+        </figure>
+
+        <!-- info -->
+        <div class="info">
+          <div class="name line-clamp">{{ p.name }}</div>
+
+          <div class="prices">
+            <!-- Normal -->
+            <div class="price-chip price--regular" aria-label="Precio normal">
+              <span class="label">Normal</span>
+              <div class="vals">
+                <span *ngIf="p.reg.old" class="old">
+                  {{ p.reg.old | currency:'GTQ':'symbol-narrow':'1.0-0' }}
+                </span>
+                <span class="now">
+                  {{ p.reg.now | currency:'GTQ':'symbol-narrow':'1.0-0' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Membresía -->
+            <div class="price-chip price--member" aria-label="Precio con membresía">
+              <span class="label">Membresía</span>
+              <div class="vals">
+                <span *ngIf="p.mem.old" class="old">
+                  {{ p.mem.old | currency:'GTQ':'symbol-narrow':'1.0-0' }}
+                </span>
+                <span class="now">
+                  {{ p.mem.now | currency:'GTQ':'symbol-narrow':'1.0-0' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </ng-container>
+
+  <ng-template #skeleton>
+    <div class="grid">
+      <div class="prod skel" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+        <div class="media skel"></div>
+        <div class="info">
+          <div class="name skel skel--text"></div>
+          <div class="prices">
+            <div class="price-chip skel skel--pill"></div>
+            <div class="price-chip skel skel--pill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</section>

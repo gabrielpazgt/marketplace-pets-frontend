@@ -1,0 +1,37 @@
+<section class="categories container" aria-labelledby="cat-title">
+  <h2 id="cat-title" class="title">Explora por categoría</h2>
+
+  <ng-container *ngIf="data?.length; else skeleton">
+    <div class="grid" role="list">
+      <a
+        class="card"
+        role="listitem"
+        *ngFor="let c of data"
+        [routerLink]="['/c', c.slug]"
+        [title]="c.name"
+      >
+        <figure class="media">
+          <img [src]="c.image" [alt]="c.name" loading="lazy" />
+          <span class="glow" aria-hidden="true"></span>
+        </figure>
+
+        <div class="meta">
+          <span class="name">{{ c.name }}</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </div>
+      </a>
+    </div>
+  </ng-container>
+
+  <ng-template #skeleton>
+    <div class="grid">
+      <div class="card skel" *ngFor="let i of [1,2,3,4,5,6]">
+        <div class="media skel"></div>
+        <div class="meta">
+          <div class="name skel skel--text"></div>
+          <span class="arrow skel skel--icon"></span>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</section>

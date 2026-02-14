@@ -1,0 +1,26 @@
+<section class="checkout">
+  <div class="container">
+    <div class="header">
+      <div class="progress">
+        <div class="track"></div>
+        <div class="bar" [style.width.%]="progressPct()"></div>
+      </div>
+      <ul class="stepper" aria-label="Progreso del checkout">
+        <li *ngFor="let s of steps" [class.active]="isActive(s.key)">
+          <span class="dot"></span>
+          <span class="lbl">{{ s.label }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="grid">
+      <main class="main card">
+        <router-outlet></router-outlet>
+      </main>
+
+      <aside class="aside">
+        <mp-order-summary></mp-order-summary>
+      </aside>
+    </div>
+  </div>
+</section>

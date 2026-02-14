@@ -1,0 +1,47 @@
+<section class="plp">
+  <div class="container">
+    <h1 class="plp__title">{{ slug ? (slug | titlecase) : 'Tienda' }}</h1>
+  </div>
+
+  <app-sort-bar class="plp__sort container"
+                [total]="total"
+                [sort]="sort"
+                [activeFilters]="filters.tags.length + (filters.min!==null?1:0) + (filters.max!==null?1:0)"
+                (sortChange)="onSortChange($event)"
+                (openFilters)="onOpenFilters()">
+  </app-sort-bar>
+
+  <div class="plp__content container">
+    <div class="plp__sidebar">
+      <app-filters-drawer
+        [open]="filtersOpen"
+        [state]="filters"
+        (apply)="onApplyFilters($event)"
+        (clear)="onClearFilters()"
+        (close)="onCloseFilters()">
+      </app-filters-drawer>
+    </div>
+
+    <div class="plp__grid">
+      <ng-container *ngIf="!loading && items.length; else loadingOrEmpty">
+        <div class="grid">
+          <app-product-card *ngFor="let p of items" [product]="p"></app-product-card>
+        </div>
+
+        <app-pagination [total]="total" [page]="page" [pageSize]="pageSize"
+                        (pageChange)="onPageChange($event)"></app-pagination>
+      </ng-container>
+
+      <ng-template #loadingOrEmpty>
+        <div class="grid" *ngIf="loading">
+          <app-product-card *ngFor="let _ of [1,2,3,4,5,6,7,8,9,10,11,12]" [loading]="true"></app-product-card>
+        </div>
+
+        <div class="empty" *ngIf="!loading && !items.length">
+          <p>No encontramos productos con esos filtros.</p>
+          <button class="btn btn--ghost" (click)="onClearFilters()">Limpiar filtros</button>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</section>

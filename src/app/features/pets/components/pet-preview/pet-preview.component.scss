@@ -1,0 +1,47 @@
+.preview{ padding: var(--sp-4); }
+.preview h4{ margin: 0 0 var(--sp-3); }
+
+.canvas{
+  --r: 18px;
+  position:relative; height:260px; border:1px dashed var(--line); border-radius: var(--r);
+  background:#fff; overflow:hidden; display:grid; place-items:center; margin-bottom: var(--sp-3);
+}
+.ring{
+  position:absolute; width:220px; height:220px; border-radius:50%;
+  background: conic-gradient(from 0deg, var(--brand), var(--accent));
+  filter: blur(12px); opacity:.18;
+}
+.blob{
+  position:absolute; width:240px; height:240px; border-radius:50%;
+  background: radial-gradient(120px 120px at 50% 50%, color-mix(in srgb, var(--bg,#ffd9a6), #fff 65%) 0, #fff 70%);
+  opacity:.9;
+}
+
+/* Sustituimos la silueta por imagen */
+.pet-img{
+  position:relative; width:128px; height:128px; object-fit:contain;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,.12));
+  animation: breathe 3s ease-in-out infinite;
+}
+@keyframes breathe { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-2px) } }
+
+.paws{
+  position:absolute; inset:0; opacity:.12;
+  background-image:
+    radial-gradient(circle at 10% 20%, #000 1px, transparent 2px),
+    radial-gradient(circle at 20% 80%, #000 1px, transparent 2px),
+    radial-gradient(circle at 85% 35%, #000 1px, transparent 2px);
+  background-size: 120px 120px;
+}
+
+/* Facts */
+.facts{
+  margin:0; padding:0; display:grid; gap:8px;
+  & > div{ display:grid; grid-template-columns: 92px 1fr; gap:8px; align-items:center; }
+  dt{ color: var(--muted); font-size: var(--fs-sm); }
+  dd{ margin:0; font-weight: 800; display:flex; align-items:center; gap:8px; }
+  .swatch{
+    width:14px; height:14px; border-radius:50%; display:inline-block;
+    background: var(--hex, #000); border:1px solid #e5e7eb;
+  }
+}

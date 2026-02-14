@@ -1,0 +1,25 @@
+<section class="section">
+  <div class="container">
+    <header class="list-head">
+      <div>
+        <h2>Mis Mascotas</h2>
+        <p class="muted">Crea perfiles para personalizar recomendaciones y filtros.</p>
+      </div>
+      <button class="btn primary" routerLink="/account/pets/new">+ Nueva mascota</button>
+    </header>
+
+    <div class="empty card" *ngIf="pets.length === 0">
+      <div class="art"></div>
+      <div class="empty__body">
+        <h3>Sin mascotas aún</h3>
+        <p class="muted">Agrega tu primera mascota para obtener recomendaciones a su medida.</p>
+        <button class="btn accent" routerLink="/account/pets/new">Crear primera mascota</button>
+      </div>
+    </div>
+
+    <div class="grid" *ngIf="pets.length > 0">
+      <mp-pet-card *ngFor="let p of pets" [pet]="p"
+        (edit)="onEdit($event)" (remove)="onRemove($event)"></mp-pet-card>
+    </div>
+  </div>
+</section>

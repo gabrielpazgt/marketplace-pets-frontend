@@ -1,0 +1,17 @@
+<nav class="pager" aria-label="Paginación">
+  <button class="btn" [disabled]="page === 1" (click)="prev()">Anterior</button>
+
+  <ng-container *ngFor="let p of pages">
+    <span *ngIf="p === 'gap'" class="gap">…</span>
+
+    <button *ngIf="p !== 'gap'"
+            class="num"
+            [class.is-active]="isActive(p)"
+            [attr.aria-current]="ariaCurrent(p)"
+            (click)="goPage(p)">
+      {{ p }}
+    </button>
+  </ng-container>
+
+  <button class="btn" [disabled]="page === totalPages" (click)="next()">Siguiente</button>
+</nav>

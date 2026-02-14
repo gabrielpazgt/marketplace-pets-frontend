@@ -1,0 +1,10 @@
+.plp{padding-block: 16px 40px;}                   /* 👈 respiración superior e inferior */
+.plp__title{font-size:clamp(1.3rem,2.4vw,2rem);margin:8px 0 12px}
+.plp__content{display:grid;grid-template-columns:1fr;gap:1.25rem}
+@media(min-width:1000px){.plp__content{grid-template-columns:300px 1fr;align-items:start}}
+.plp__sidebar{position:relative}
+.plp__grid .grid{--cols:2;display:grid;gap:1rem;grid-template-columns:repeat(var(--cols),minmax(0,1fr))}
+@media(min-width:640px){.plp__grid .grid{--cols:2}}
+@media(min-width:900px){.plp__grid .grid{--cols:3}}
+@media(min-width:1200px){.plp__grid .grid{--cols:4}}
+.empty{text-align:center;color:var(--muted);display:grid;gap:.75rem;padding:2rem 0}

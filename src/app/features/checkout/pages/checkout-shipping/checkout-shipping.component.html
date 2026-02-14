@@ -1,0 +1,24 @@
+<h2 class="title">2) Método de Envío</h2>
+<p class="muted">Elige cómo quieres recibir tu pedido. Los costos se actualizan en el resumen.</p>
+
+<ul class="methods" *ngIf="(state.subtotal$ | async) as sub">
+  <li *ngFor="let m of state.shippingMethods" class="card method"
+      [class.active]="state.snapshot.shippingMethodId === m.id"
+      (click)="select(m.id)">
+    <div class="left">
+      <span class="dot" [class.on]="state.snapshot.shippingMethodId === m.id"></span>
+      <div class="txt">
+        <strong>{{ m.label }}</strong>
+        <small class="muted">{{ m.description }} · {{ m.eta }}</small>
+      </div>
+    </div>
+    <div class="right">
+      <span>{{ getPrice(m.id, sub) | currency:'GTQ':'symbol-narrow' }}</span>
+    </div>
+  </li>
+</ul>
+
+<div class="actions">
+  <button class="btn ghost" (click)="back()">Atrás</button>
+  <button class="btn primary" (click)="next()">Continuar</button>
+</div>

@@ -1,0 +1,143 @@
+/* ====== Categorías (alineado a Design System) ====== */
+.categories {
+  /* Aire vertical */
+  padding-block: clamp(26px, 4vw, 44px);
+
+  /* GUTTERS laterales solo aquí */
+  &.container { padding-inline: clamp(16px, 4vw, 36px); }
+
+  .title {
+    font-size: clamp(1.1rem, 2vw, 1.35rem);
+    margin: 0 0 18px;
+    color: var(--ink);
+    position: relative;
+    display: inline-block;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: -8px;
+      height: 4px; border-radius: var(--r-pill);
+      background: linear-gradient(90deg, var(--brand), var(--brand-600));
+      opacity: .18;
+    }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: clamp(14px, 2.2vw, 22px);
+  }
+
+  .card {
+    display: flex; flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    color: var(--ink);
+    box-shadow: var(--shadow-card);
+    transition: transform var(--t-base) var(--timing), box-shadow var(--t-base) var(--timing), border-color var(--t-base) var(--timing);
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--elev-4);
+      border-color: #d7dbe3;
+
+      .media img { transform: translateY(-1px) scale(1.03); }
+      .meta .arrow {
+        transform: translateX(2px);
+        background: var(--brand);
+        color: #fff;
+        border-color: transparent;
+      }
+    }
+
+    &:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--brand) 35%, transparent);
+      outline-offset: 4px;
+    }
+
+    /* Accesibilidad: cuando la card tiene foco, estilo de flecha como en hover */
+    &:focus-visible .meta .arrow {
+      transform: translateX(2px);
+      background: var(--brand);
+      color: #fff;
+      border-color: transparent;
+    }
+  }
+
+  .media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: var(--surface-50);
+    padding: clamp(12px, 1.8vw, 22px);
+    display: grid; place-items: center; overflow: hidden;
+
+    img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      object-position: center;
+      transform: scale(1);
+      transition: transform .35s var(--timing);
+      backface-visibility: hidden;
+    }
+
+    .glow {
+      position: absolute;
+      inset: auto -20% -24% -20%;
+      height: 42%;
+      background: radial-gradient(60% 60% at 50% 50%, color-mix(in srgb, var(--brand) 18%, transparent) 0%, rgba(0,0,0,0) 60%);
+      filter: blur(8px);
+      pointer-events: none;
+    }
+  }
+
+  .meta {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; gap: 10px; border-top: 1px solid #eef2f7;
+
+    .name { font-weight: 800; letter-spacing: .2px; }
+
+    /* 👉 Flecha con el mismo look del “Ver todo” */
+    .arrow {
+      width: 28px; height: 28px;
+      display: grid; place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--r-pill);
+      font-weight: 900;
+      background: #fff;
+      transition:
+        transform var(--t-fast) var(--timing),
+        background var(--t-fast) var(--timing),
+        border-color var(--t-fast) var(--timing),
+        color var(--t-fast) var(--timing);
+      will-change: transform;
+      /* estado base igual que el botón “Ver todo” */
+    }
+  }
+
+  /* Skeleton */
+  .skel {
+    position: relative; overflow: hidden; background: #eef2f7;
+    &::after {
+      content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent);
+      animation: shimmer 1.2s infinite;
+    }
+  }
+  .skel--text { height: 18px; border-radius: var(--r-sm); width: 40%; }
+  .skel--icon { border-radius: var(--r-pill); width: 28px; height: 28px; background: #e9eef5; }
+  @keyframes shimmer { 100% { transform: translateX(100%);} }
+
+  /* Responsive */
+  @media (max-width: 1200px){ .grid { grid-template-columns: repeat(5, 1fr); } }
+  @media (max-width: 1024px){ .grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 768px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+
+  @media (min-width: 1440px) { &.container { padding-inline: 48px; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card, .media img, .meta .arrow { transition: none !important; }
+  }
+}

@@ -1,0 +1,106 @@
+<section class="section membership">
+  <div class="container">
+    <div class="card wrap">
+      <header class="head">
+        <h2>Membresía</h2>
+        <p class="muted">Consulta y administra tu plan (Free / Premium / VIP).</p>
+      </header>
+
+      <!-- Top: plan actual + beneficios destacados -->
+      <div class="top">
+        <!-- Plan actual -->
+        <article class="card panel current">
+          <div class="panel__head">
+            <span class="chip plan" [style.background]="userPlan.badgeColor">{{ userPlan.name }}</span>
+            <strong class="price">{{ userPlan.price }}</strong>
+          </div>
+
+          <div class="panel__body">
+            <ul class="ticks">
+              <li *ngFor="let perk of userPlan.perks">
+                <span class="tick" aria-hidden="true">✓</span> {{ perk }}
+              </li>
+            </ul>
+
+            <div class="progress" *ngIf="currentPlan !== 'vip'">
+              <div class="labels">
+                <span>Progreso a <strong> Oro </strong></span>
+                <span>{{ progressPct }}%</span>
+              </div>
+              <div class="bar">
+                <span class="fill" [style.width.%]="progressPct"></span>
+              </div>
+              <small class="muted">{{ points }} pts / {{ nextTier.target }} pts</small>
+            </div>
+
+            <div class="cta">
+              <button class="btn primary" (click)="goUpgrade()">Mejorar plan</button>
+              <a class="btn ghost" (click)="goUpgrade()">Ver beneficios completos</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Beneficios (resumen) -->
+        <article class="card panel benefits">
+          <h3>Beneficios</h3>
+          <ul class="ticks">
+            <li><span class="tick">✓</span> 5% de descuento (Premium)</li>
+            <li><span class="tick">✓</span> 7% de descuento (VIP)</li>
+            <li><span class="tick">✓</span> Puntos de lealtad acumulables</li>
+            <li><span class="tick">✓</span> Acceso anticipado a ofertas</li>
+          </ul>
+          <div class="hint muted">
+            Los beneficios pueden variar por país o temporada.
+          </div>
+        </article>
+      </div>
+
+      <!-- Comparativa rápida -->
+      <section class="compare">
+        <header class="subhead">
+          <h3>Comparativa rápida de planes</h3>
+          <p class="muted">Elige el plan que más se adapte a tus compras.</p>
+        </header>
+
+        <div class="grid">
+          <article class="plan-card" *ngFor="let p of plans">
+            <div class="badge" [style.background]="p.badgeColor">{{ p.name }}</div>
+            <div class="price">{{ p.price }}</div>
+            <ul class="bullets">
+              <li *ngFor="let perk of p.perks">{{ perk }}</li>
+            </ul>
+            <button
+              class="btn"
+              [class.primary]="p.id !== currentPlan"
+              [class.ghost]="p.id === currentPlan"
+              (click)="goUpgrade(p.id)">
+              {{ p.id === currentPlan ? 'Plan actual' : 'Elegir ' + p.name }}
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <!-- FAQ breve -->
+      <section class="faq">
+        <header class="subhead">
+          <h3>Preguntas rápidas</h3>
+        </header>
+
+        <details>
+          <summary>¿Cómo funciona la renovación?</summary>
+          <p>Los planes de paga se renuevan automáticamente cada mes. Puedes cancelarlo cuando quieras desde tu panel de membresías.</p>
+        </details>
+
+        <details>
+          <summary>¿Los descuentos aplican a todo?</summary>
+          <p>Aplica a la mayoría de productos; podrían existir excepciones por marca o categoría. Las verás indicadas durante tu compra.</p>
+        </details>
+
+        <details>
+          <summary>¿Los puntos vencen?</summary>
+          <p>Actualmente no caducan, pero podría cambiar en el futuro. Te avisaremos con anticipación.</p>
+        </details>
+      </section>
+    </div>
+  </div>
+</section>

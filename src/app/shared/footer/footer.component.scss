@@ -1,0 +1,233 @@
+/* ======================= Footer Styles (Aumakki) ======================= */
+.footer {
+  --brand: #ff9f1a;
+  --brand-600: #e98c00;
+  --brand-700: #c87400;
+
+  --ink: #0f172a;
+  --muted: #64748b;
+
+  --footer-bg: #ffffff;
+  --footer-bottom: #f3f4f6;
+  --line: #e5e7eb;
+  --chip: #f1f5f9;
+}
+
+/* Utilidades locales */
+.container { width: min(1120px, 92vw); margin-inline: auto; }
+.sr-only { position: absolute; width:1px; height:1px; margin:-1px; padding:0; border:0; overflow:hidden; clip:rect(0,0,0,0); }
+
+/* ======================= FOOTER ======================= */
+.footer {
+  color: var(--ink);
+  background: var(--footer-bg);
+  border-top: 1px solid var(--line);
+  position: relative;
+
+  /* -------- Promo / Wave -------- */
+  .promo {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg, var(--brand) 0%, var(--brand-600) 60%, var(--brand-700) 100%);
+    color: #fff;
+
+    .promo__inner {
+      position: relative;
+      z-index: 2;
+      width: min(1120px, 92vw);
+      margin: 0 auto;
+      padding: 12px 0 64px;
+      display: flex; gap: 16px; align-items: center; justify-content: center;
+      text-align: center; font-weight: 800; letter-spacing: .2px;
+    }
+    .promo__text { text-shadow: 0 2px 6px rgba(0,0,0,.25); }
+    .promo__code {
+      display: inline-flex; gap: 8px; align-items: center;
+      padding: 6px 12px;
+      border: 2px dashed rgba(255,255,255,.95);
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      box-shadow: 0 4px 16px rgba(0,0,0,.15) inset, 0 6px 16px rgba(0,0,0,.18);
+    }
+
+    .promo__wave {
+      position: absolute; left: 0; right: 0; bottom: -1px;
+      width: 100%; height: 80px; pointer-events: none; z-index: 1;
+      transform: scaleY(-1);
+      path { fill: var(--footer-bg, #ffffff); }
+    }
+  }
+
+  /* -------- Grid principal -------- */
+  .footer__content {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr 1.2fr;
+    gap: 40px;
+    padding: 56px 0 28px;
+  }
+
+  .footer__title {
+    font-size: 1rem; font-weight: 800; margin: 0 0 12px;
+    color: var(--ink);
+  }
+
+  /* -------- Marca / About -------- */
+  .footer__brand .brand {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    &__logo { width: 44px; height: 44px; object-fit: contain; }
+    &__name { font-weight: 900; letter-spacing: .3px; font-size: 1.12rem; }
+  }
+  .footer__brand p { color: var(--muted); line-height: 1.55; }
+
+  /* -------- Redes -------- */
+  .social {
+    display: flex; gap: 10px; margin-top: 14px;
+
+    &__link {
+      width: 36px; height: 36px; display: grid; place-items: center;
+      border-radius: 999px; background: var(--chip);
+      color: var(--brand-700); text-decoration: none; border: 1px solid var(--line);
+      box-shadow: 0 4px 10px rgba(0,0,0,.06);
+      transition: transform .15s ease, background .15s ease, border-color .15s ease, color .15s ease;
+
+      .social__icon {
+        width: 18px; height: 18px; object-fit: contain; display: block;
+        filter: grayscale(1) contrast(.9) opacity(.9);
+        transition: filter .18s ease, transform .18s ease;
+        user-select: none;
+      }
+
+      &:hover {
+        transform: translateY(-2px);
+        background: #fff; border-color: #d1d5db; color: var(--brand-600);
+      }
+
+      &:hover .social__icon,
+      &:focus-visible .social__icon {
+        filter: grayscale(0) contrast(1) opacity(1);
+        transform: translateY(-1px);
+      }
+
+      &:focus-visible {
+        outline: 3px solid rgba(255,159,26,.35);
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  /* -------- Enlaces -------- */
+  .list { list-style: none; padding: 0; margin: 0;
+    li { margin: 10px 0; }
+    a {
+      color: var(--ink); text-decoration: none; opacity: .9;
+      transition: color .15s ease, opacity .15s ease, transform .15s ease;
+      &:hover { opacity: 1; color: var(--brand-700); transform: translateX(2px); }
+      &:focus-visible { outline: 3px solid rgba(255,159,26,.35); outline-offset: 2px; border-radius: 6px; }
+    }
+  }
+
+  /* -------- Contacto (texto alineado con el título) -------- */
+  .contact {
+    --ico: 22px;
+    --gap: 10px;
+    list-style: none; padding: 0; margin: 0;
+  }
+
+  .contact li {
+    /* La columna del icono no ocupa ancho; el texto arranca flush con el título */
+    display: grid;
+    grid-template-columns: 0 1fr;
+    align-items: center;
+    column-gap: var(--gap);
+    margin: 0px 0;
+    position: relative;
+  }
+
+  .contact i {
+    grid-column: 1;
+    justify-self: start;
+    width: var(--ico);
+    color: var(--brand-600);
+    /* desplazamos visualmente el icono a la izquierda sin empujar el texto */
+    transform: translateX(calc(-1 * (var(--ico) + var(--gap))));
+  }
+
+  .contact a,
+  .contact span {
+    grid-column: 2;
+    color: var(--ink);
+    text-decoration: none;
+    line-height: 1.5;
+  }
+  .contact a:hover { color: var(--brand-700); }
+  .contact a:focus-visible {
+    outline: 3px solid rgba(255,159,26,.35);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* -------- Newsletter -------- */
+  .newsletter {
+    display: flex; gap: 10px; margin-top: 10px;
+
+    input {
+      flex: 1; background: #fff;
+      border: 1px solid var(--line); color: var(--ink);
+      border-radius: 12px; padding: 12px 14px; outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+      &::placeholder { color: #94a3b8; }
+      &:focus { border-color: var(--brand-600); box-shadow: 0 0 0 4px rgba(255,159,26,.18); }
+    }
+
+    /* botón DS */
+    .btn {
+      align-self: stretch;
+      padding-inline: 16px;
+      font-weight: 800;
+      display: inline-grid; place-items: center;
+    }
+  }
+
+  /* -------- Chips -------- */
+  .tags {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; padding: 0; list-style: none;
+    li a {
+      display: inline-block; padding: 6px 12px; border-radius: 999px;
+      background: var(--chip); color: var(--ink); text-decoration: none; font-size: .85rem;
+      border: 1px solid var(--line);
+      box-shadow: 0 4px 10px rgba(0,0,0,.06);
+      transition: background .15s ease, border-color .15s ease;
+      &:hover { background: #fff; border-color: #d1d5db; }
+      &:focus-visible { outline: 3px solid rgba(255,159,26,.35); outline-offset: 2px; }
+    }
+  }
+
+  /* -------- Bottom -------- */
+  .footer__bottom {
+    border-top: 1px solid var(--line);
+    background: var(--footer-bottom);
+    .bottom__inner {
+      display: flex; justify-content: space-between; align-items: center; padding: 16px 0; gap: 12px;
+      p { margin: 0; color: #475569; }
+      .bottom__links { display: flex; align-items: center; gap: 12px;
+        a { color: #475569; text-decoration: none;
+          &:hover { color: var(--brand-700); }
+          &:focus-visible { outline: 3px solid rgba(255,159,26,.35); outline-offset: 2px; border-radius: 6px; }
+        }
+        span { color: #94a3b8; }
+      }
+    }
+  }
+}
+
+/* ======================= Responsive ======================= */
+@media (max-width: 980px) {
+  .footer .footer__content { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 620px) {
+  .footer .promo .promo__inner { padding-bottom: 48px; flex-direction: column; }
+  .footer .footer__content { grid-template-columns: 1fr; }
+  .footer .newsletter { flex-direction: column; }
+  .footer .newsletter .btn { align-self: auto; }
+  /* en móvil mantenemos el mismo alineado */
+}

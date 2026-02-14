@@ -1,0 +1,83 @@
+<h2 class="title">1) Contacto y Envío</h2>
+<p class="muted">Ingresa tus datos de contacto y dirección de envío para continuar.</p>
+
+<form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+  <div class="field">
+    <label>Email *</label>
+    <input class="input" formControlName="email" placeholder="tucorreo@ejemplo.com" />
+    <small *ngIf="form.get('email')?.invalid && form.get('email')?.touched" class="err">Ingresa un email válido</small>
+  </div>
+
+  <div class="field">
+    <label>Teléfono (opcional)</label>
+    <input class="input" formControlName="phone" placeholder="+502 5555-5555" />
+  </div>
+
+  <div class="field">
+    <label>Nombres *</label>
+    <input class="input" formControlName="firstName" placeholder="Gabriel" />
+    <small *ngIf="form.get('firstName')?.invalid && form.get('firstName')?.touched" class="err">Campo requerido</small>
+  </div>
+
+  <div class="field">
+    <label>Apellidos *</label>
+    <input class="input" formControlName="lastName" placeholder="Paz" />
+    <small *ngIf="form.get('lastName')?.invalid && form.get('lastName')?.touched" class="err">Campo requerido</small>
+  </div>
+
+  <div formGroupName="address" class="address">
+    <div class="field">
+      <label>País *</label>
+      <input class="input" formControlName="country" readonly />
+    </div>
+
+    <div class="field">
+      <label>Departamento *</label>
+      <select class="input" formControlName="department" (change)="onDepartmentChange()">
+        <option value="">Selecciona…</option>
+        <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
+      </select>
+      <small *ngIf="form.get('address.department')?.invalid && form.get('address.department')?.touched" class="err">Campo requerido</small>
+    </div>
+
+    <div class="field">
+      <label>Municipio *</label>
+      <select class="input" formControlName="municipality">
+        <option value="">Selecciona…</option>
+        <option *ngFor="let m of municipalities" [value]="m">{{ m }}</option>
+      </select>
+      <small *ngIf="form.get('address.municipality')?.invalid && form.get('address.municipality')?.touched" class="err">Campo requerido</small>
+    </div>
+
+    <div class="field col-span-2">
+      <label>Dirección *</label>
+      <input class="input" formControlName="line1" placeholder="Calle, número, colonia…" />
+      <small *ngIf="form.get('address.line1')?.invalid && form.get('address.line1')?.touched" class="err">Campo requerido</small>
+    </div>
+
+    <div class="field">
+      <label>Complemento</label>
+      <input class="input" formControlName="line2" placeholder="Apartamento, interior, etc." />
+    </div>
+
+    <div class="field">
+      <label>Referencias</label>
+      <input class="input" formControlName="references" placeholder="Punto de referencia" />
+    </div>
+
+    <div class="field">
+      <label>Código Postal</label>
+      <input class="input" formControlName="postalCode" placeholder="00000" />
+    </div>
+  </div>
+
+  <label class="check">
+    <input type="checkbox" formControlName="saveInfo" />
+    <span>Guardar esta información para la próxima compra</span>
+  </label>
+
+  <div class="actions">
+    <a routerLink="/cart" class="btn ghost">Volver al carrito</a>
+    <button class="btn primary" type="submit">Continuar</button>
+  </div>
+</form>

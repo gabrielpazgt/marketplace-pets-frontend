@@ -1,0 +1,16 @@
+<section class="recs container">
+  <h4>También te puede gustar</h4>
+
+  <div class="grid">
+    <div class="rec" *ngFor="let it of items">
+      <div class="media">
+        <img [src]="it.image" [alt]="it.name" width="220" height="220" loading="lazy">
+      </div>
+      <div class="name">{{ it.name }}</div>
+      <div class="row">
+        <span class="price">Q {{ it.price }}</span>
+        <button class="btn">Añadir</button>
+      </div>
+    </div>
+  </div>
+</section>

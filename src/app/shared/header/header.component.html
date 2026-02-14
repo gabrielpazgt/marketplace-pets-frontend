@@ -1,0 +1,143 @@
+<header class="app-header">
+
+  <!-- Top Bar (gradiente como el footer) -->
+  <div class="top-bar">
+    <!-- Mensajes promocionales -->
+    <div class="promo-container">
+      <div class="promo-track">
+        <div class="promo-slide">
+          <span class="promo-item" *ngFor="let msg of promoMessages">{{ msg }}</span>
+        </div>
+        <div class="promo-slide">
+          <span class="promo-item" *ngFor="let msg of promoMessages">{{ msg }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- Idioma -->
+    <div class="lang-dropdown" (click)="toggleLangDropdown()">
+      <span class="lang-selected">{{ selectedLanguage }}</span>
+      <i class="arrow" [class.open]="langOpen"></i>
+      <ul *ngIf="langOpen" class="lang-list">
+        <li *ngFor="let lang of languages"
+            (click)="selectLanguage(lang.code)"
+            [class.active]="lang.code === selectedLanguage">
+          {{ lang.code }}
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Main Navigation -->
+  <nav class="main-nav">
+    <div class="nav-content container">
+      <!-- Logo -->
+      <a class="logo" routerLink="/">
+        <img src="../../../assets/images/logo_marketpets_alargado.png" alt="MarketPets Logo" />
+      </a>
+
+      <!-- Links -->
+      <ul class="menu">
+        <li *ngFor="let link of navLinks">
+          <a
+            [routerLink]="link.path"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: !!link.exact }"
+          >
+            {{ link.label }}
+          </a>
+        </li>
+      </ul>
+
+      <!-- Acciones -->
+      <div class="actions">
+        <!-- Buscar -->
+        <div class="search-wrapper" [class.open]="showSearch">
+          <input
+            *ngIf="showSearch"
+            type="text"
+            [(ngModel)]="searchQuery"
+            placeholder="¿Qué buscas?"
+            class="input search-input"
+            autofocus
+          />
+          <button aria-label="Search" class="icon-btn search-btn" (click)="toggleSearch()">
+            <mat-icon>search</mat-icon>
+          </button>
+        </div>
+
+        <!-- Usuario -->
+        <div class="user-menu-container">
+          <button aria-label="Account" class="icon-btn" (click)="onUserIconClick()">
+            <mat-icon>person_outline</mat-icon>
+          </button>
+
+          <ul class="user-menu" *ngIf="userMenuOpen">
+            <li (click)="onUserMenuSelect('profile')">Ver Perfil</li>
+            <li (click)="onUserMenuSelect('orders')">Historial de Compras</li>
+            <li (click)="onUserMenuSelect('pets')">Mis Mascotas</li>
+            <li (click)="onUserMenuSelect('membership')">Membresía</li>
+            <li (click)="onUserMenuSelect('logout')">Cerrar Sesión</li>
+          </ul>
+        </div>
+
+        <!-- Carrito + Mini Cart -->
+        <div class="cart" (click)="$event.stopPropagation()">
+          <button aria-label="Cart" class="icon-btn cart-btn" (click)="toggleMiniCart()">
+            <mat-icon>shopping_cart</mat-icon>
+            <span class="badge">{{ (count$ | async) || 0 }}</span>
+          </button>
+
+          <!-- Mini-carrito -->
+          <div class="mini-cart" *ngIf="miniCartOpen" (click)="$event.stopPropagation()" role="dialog" aria-label="Mini carrito">
+            <div class="mini-cart__head">
+              <strong>Carrito</strong>
+              <span class="muted">({{ (count$ | async) || 0 }})</span>
+            </div>
+
+            <ng-container *ngIf="(items$ | async) as items; else emptyCart">
+              <ul class="mini-cart__list" *ngIf="items.length; else emptyCart">
+                <li class="mini-cart__item" *ngFor="let it of items">
+                  <img class="thumb" [src]="it.image || ('assets/images/products/' + (it.slug || 'placeholder') + '.png')"
+                       [alt]="it.title || 'Producto'" loading="lazy" />
+                  <div class="info">
+                    <div class="title">{{ it.title }}</div>
+                    <div class="meta">
+                      <span class="qty">x{{ it.qty }}</span>
+                      <span class="dot">•</span>
+                      <span class="price">{{ it.price | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
+                    </div>
+                  </div>
+                  <button class="remove" (click)="remove(it); $event.stopPropagation()" aria-label="Eliminar">
+                    &times;
+                  </button>
+                </li>
+              </ul>
+            </ng-container>
+
+            <ng-template #emptyCart>
+              <div class="mini-cart__empty">
+                <img src="assets/illustrations/sleeping-pet.svg" alt="" aria-hidden="true" />
+                <p>Tu carrito está vacío</p>
+              </div>
+            </ng-template>
+
+            <div class="mini-cart__footer">
+              <div class="total">
+                <span>Total</span>
+                <strong>{{ (total$ | async) | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
+              </div>
+              <div class="actions">
+                <a routerLink="/cart" class="btn ghost">Ver carrito</a>
+                <a routerLink="/checkout" class="btn primary">Pagar</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /cart -->
+      </div>
+    </div>
+  </nav>
+</header>

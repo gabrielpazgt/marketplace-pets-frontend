@@ -1,0 +1,280 @@
+/* ==========================================================================
+   Global Styles / Design System Tokens
+   ========================================================================== */
+
+/* 1) Angular Material theme (tu archivo) */
+@import 'theme';
+
+/* 2) Base document sizing */
+html, body, app-root { height: 100%; }
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  color: var(--ink);
+  background: #fff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* app-root como layout vertical (Header / Main / Footer) */
+app-root {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+}
+
+/* 3) CSS Reset suave */
+*, *::before, *::after { box-sizing: border-box; }
+img, svg, video, canvas { display: block; max-width: 100%; }
+button, input, select, textarea { font: inherit; }
+a { color: inherit; text-decoration: none; }
+
+/* 4) Tokens globales (CSS variables) */
+:root {
+  /* ---- Marca y acentos ---- */
+  --brand:        #ffa726;   /* Naranja cálido */
+  --brand-600:    #e98c00;
+  --brand-700:    #c87400;
+  --accent:       #42a5f5;   /* Azul claro */
+  --success:      #66bb6a;   /* Verde natural */
+  --warning:      #f59e0b;
+  --danger:       #ef4444;
+  --info:         #3b82f6;
+
+  /* ---- Neutrales / texto / superficies ---- */
+  --ink:          #0f172a;   /* Texto principal */
+  --ink-2:        #1f2937;
+  --muted:        #64748b;   /* Texto secundario */
+  --line:         #e5e7eb;   /* Bordes sutiles */
+  --chip:         #f1f5f9;   /* Fondos chip */
+  --surface-50:   #fafafa;
+  --surface-100:  #f5f5f5;
+
+  /* ---- Tipografía (clamp para responsivo suave) ---- */
+  --fs-xs: clamp(.72rem, .67rem + .2vw, .78rem);
+  --fs-sm: clamp(.84rem, .8rem + .2vw, .9rem);
+  --fs-md: clamp(1rem, .96rem + .2vw, 1.06rem);
+  --fs-lg: clamp(1.12rem, 1.03rem + .35vw, 1.25rem);
+  --fs-xl: clamp(1.35rem, 1.18rem + .6vw, 1.6rem);
+  --lh-tight: 1.25;
+  --lh-normal: 1.45;
+
+  /* ---- Spacing scale ---- */
+  --sp-0: 0;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 28px;
+  --sp-8: 32px;
+
+  /* ---- Radios ---- */
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 16px;  /* default */
+  --r-lg: 20px;
+  --r-pill: 999px;
+
+  /* ---- Elevaciones ---- */
+  --elev-1: 0 2px 6px rgba(0,0,0,.08);
+  --elev-2: 0 6px 16px rgba(0,0,0,.10);
+  --elev-3: 0 10px 24px rgba(0,0,0,.12);
+  --elev-4: 0 20px 44px rgba(0,0,0,.14);
+
+  /* Compat con lo que ya venías usando */
+  --radius: var(--r-md);
+  --shadow-card: var(--elev-3);
+
+  /* ---- Transiciones ---- */
+  --t-fast: 120ms;
+  --t-base: 180ms;
+  --timing: ease;
+
+  /* ---- Layout ---- */
+  --container-w: 1200px;   /* ancho máx contenedores */
+  --container-px: 16px;    /* padding horizontal container */
+}
+
+/* 5) Accesibilidad y comportamiento */
+:focus-visible {
+  outline: 3px solid rgba(255, 167, 38, .35); /* anillo de foco naranja suave */
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* 6) Utilidades globales (se reutilizan en módulos) */
+
+/* Contenedor principal */
+.container {
+  width: min(var(--container-w), calc(100% - 2 * var(--container-px)));
+  margin-inline: auto;
+}
+
+/* Texto secundario */
+.muted { color: var(--muted); }
+
+/* Visually hidden (para accesibilidad) */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* Enlaces con hover de marca */
+a.link {
+  color: var(--ink);
+  text-decoration: none;
+  transition: color var(--t-base) var(--timing);
+}
+a.link:hover { color: var(--brand); }
+
+/* 7) Patrones base de componentes */
+
+/* Cards */
+.card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+/* Chips / Pills */
+.chip {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: var(--r-pill);
+  background: var(--chip);
+  border: 1px solid var(--line);
+  font-size: var(--fs-sm);
+}
+
+/* Inputs */
+.input,
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+select,
+textarea {
+  width: 100%;
+  padding: .6rem .8rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 0 0 0 transparent;
+  transition: border-color var(--t-base) var(--timing), box-shadow var(--t-base) var(--timing), background var(--t-base) var(--timing);
+  outline: none;
+  font-size: var(--fs-md);
+}
+.input:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--brand-600);
+  box-shadow: 0 0 0 4px rgba(255, 167, 38, .18);
+}
+.input::placeholder,
+input::placeholder,
+textarea::placeholder { color: #94a3b8; }
+
+/* Badges */
+.badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: .65rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  background: var(--accent);
+  border-radius: var(--r-pill);
+}
+
+/* Botones */
+.btn {
+  --btn-bg: #fff;
+  --btn-fg: var(--ink);
+  --btn-bd: var(--line);
+
+  display: inline-grid;
+  place-items: center;
+  gap: 8px;
+  padding: .6rem .9rem;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--btn-bd);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter var(--t-fast) var(--timing), transform var(--t-fast) var(--timing), background var(--t-base) var(--timing), border-color var(--t-base) var(--timing);
+  text-decoration: none;
+  user-select: none;
+}
+.btn:hover { filter: saturate(1.06); transform: translateY(-1px); }
+.btn:active { transform: none; }
+
+/* Variantes */
+.btn.primary {
+  --btn-bg: linear-gradient(90deg, var(--brand), var(--brand-700));
+  --btn-fg: #fff;
+  --btn-bd: transparent;
+  border: 0;
+}
+.btn.ghost {
+  --btn-bg: #fff;
+  --btn-fg: var(--ink);
+  --btn-bd: var(--line);
+}
+.btn.accent {
+  --btn-bg: linear-gradient(90deg, var(--accent), #1e88e5);
+  --btn-fg: #fff;
+  --btn-bd: transparent;
+  border: 0;
+}
+.btn.success {
+  --btn-bg: linear-gradient(90deg, var(--success), #2ea44f);
+  --btn-fg: #fff;
+  --btn-bd: transparent;
+  border: 0;
+}
+.btn.danger {
+  --btn-bg: linear-gradient(90deg, var(--danger), #dc2626);
+  --btn-fg: #fff;
+  --btn-bd: transparent;
+  border: 0;
+}
+
+/* Secciones / contenedores suaves */
+.section {
+  padding-block: 48px;
+  background: #fff;
+}
+.section--muted { background: var(--surface-50); }
+
+/* Tablas sencillas (cuando las necesites) */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-md);
+}
+.table th, .table td {
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+.table thead th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 700;
+  border-top: 0;
+}
+
+/* 8) Helpers condicionales */
+.hide { display: none !important; }
+.show { display: block !important; }
+

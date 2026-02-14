@@ -1,0 +1,16 @@
+.title { margin: 0 0 4px 0; font-size: var(--fs-xl); }
+
+.pay-kind { display: flex; gap: 8px; margin: 10px 0; }
+.pill { padding: 6px 12px; border-radius: var(--r-pill); background: var(--chip); border: 1px solid var(--line); cursor: pointer; }
+.pill.on { background: #fff; border-color: var(--brand-600); box-shadow: 0 0 0 4px rgba(255, 167, 38, .12); }
+
+.box { padding: 12px; margin-top: 10px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.col-span-2 { grid-column: span 2; }
+.field label { display: block; font-weight: 700; margin-bottom: 6px; }
+.err { color: var(--danger); }
+
+.check { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
+.actions { display: flex; justify-content: space-between; margin-top: 10px; }
+
+@media (max-width: 720px) { .grid { grid-template-columns: 1fr; } .col-span-2 { grid-column: span 1; } }

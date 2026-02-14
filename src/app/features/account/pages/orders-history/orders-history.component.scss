@@ -1,0 +1,142 @@
+/* Encapsulamos TODO bajo .orders-history para no tocar header ni otros módulos */
+.orders-history {
+  .p { padding: var(--sp-4); }
+  .head { margin-bottom: var(--sp-4); }
+  h2 { margin: 0 0 4px; }
+
+  /* ===== Toolbar compacta ===== */
+  .toolbar{
+    display:grid; gap: var(--sp-3); margin-bottom: var(--sp-4);
+  }
+  .toolbar--compact{
+    grid-template-columns: 1fr 220px 220px;
+    align-items: end;
+    @media (max-width: 980px){ grid-template-columns: 1fr 1fr; }
+    @media (max-width: 640px){ grid-template-columns: 1fr; }
+  }
+
+  /* MatInput y MatSelect con estética pill y foco brand */
+  .search-field,
+  .sel {
+    --outline-radius: var(--r-pill);
+
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__trailing { border-radius: var(--outline-radius); }
+    .mdc-notched-outline__notch { border-radius: var(--outline-radius); }
+    .mat-mdc-text-field-wrapper { border-radius: var(--outline-radius); }
+
+    .mat-mdc-form-field-flex { align-items: center; }
+    .mat-mdc-form-field-infix { padding: .4rem .6rem; }
+    .mat-mdc-form-field-subscript-wrapper { display: none; }
+    .mat-mdc-form-field-focus-overlay { background: transparent; }
+    .mdc-notched-outline { transition: box-shadow var(--t-base) var(--timing); }
+    .mat-mdc-form-field.mat-focused .mdc-notched-outline {
+      box-shadow: 0 0 0 4px rgba(255, 167, 38, .18);
+      border-color: var(--brand-600);
+    }
+  }
+
+  /* +++ Espacio a la izquierda del ícono de la lupa +++ */
+  .search-field .mat-mdc-form-field-icon-prefix {
+    padding-left: 8px; /* separa el ícono del borde del campo */
+  }
+
+  /* Ícono del buscador (SVG enmascarado para no usar mat-icon) */
+  .i.i-search{
+    width: 18px;
+    height: 18px;
+    margin-right: 8px; /* más aire entre ícono y texto */
+    display:inline-block;
+    background: currentColor;
+    color: var(--muted);
+    mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23000' d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5Zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  /* Panel desplegado (SOLO en este componente) */
+  :host ::ng-deep .mat-mdc-select-panel {
+    border-radius: var(--r-md) !important;
+    box-shadow: var(--elev-3) !important;
+    border: 1px solid var(--line);
+    padding-block: 6px;
+  }
+  :host ::ng-deep .mat-mdc-option {
+    --opt-radius: 10px;
+    margin: 2px 6px;
+    border-radius: var(--opt-radius);
+  }
+  :host ::ng-deep .mat-mdc-option:hover,
+  :host ::ng-deep .mat-mdc-option.mat-mdc-option-active {
+    background: rgba(255,167,38,.10) !important;
+  }
+  :host ::ng-deep .mat-mdc-option.mdc-list-item--selected
+    .mdc-list-item__primary-text { font-weight: 800; }
+
+  /* ===== Tabla ===== */
+  .table-wrap{ overflow:auto; }
+  .table.orders{ width:100%; }
+  .table.orders th, .table.orders td{ vertical-align: middle; }
+  .table.orders .row{ cursor: pointer; }
+  .table.orders .row:hover{ background: var(--surface-100); }
+  .table.orders .number{ font-weight: 800; }
+
+  /* Fila expandida */
+  .expand td{ background: #fff; }
+  .expand__content{
+    display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: var(--sp-4); padding: 12px 0 4px;
+  }
+  .expand__content .col h4{ margin: 0 0 8px; }
+  .dl{ list-style:none; padding:0; margin:0; display:grid; gap:6px; }
+  .dl .k{ color: var(--muted); display:inline-block; min-width: 92px; }
+  .timeline{ list-style: none; padding:0; margin:0; display:grid; gap:6px; }
+  .timeline li{ position:relative; padding-left: 18px; }
+  .timeline li::before{
+    content:''; position:absolute; left:0; top:.4em; width:10px; height:10px; border-radius:50%;
+    background:#e5e7eb; border:1px solid var(--line);
+  }
+  .timeline li.done::before{ background: var(--success); border-color: transparent; }
+
+  /* Estados (chips) */
+  .chip.status{
+    padding: 6px 10px; border-radius: var(--r-pill); font-size: var(--fs-sm); font-weight: 800;
+    border: 1px solid var(--line); background: var(--chip);
+  }
+  .chip.status.pending{ background:#fff7ed; border-color:#fed7aa; color:#9a3412; }
+  .chip.status.paid{ background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8; }
+  .chip.status.shipped{ background:#ecfeff; border-color:#a5f3fc; color:#0e7490; }
+  .chip.status.delivered{ background:#ecfdf5; border-color:#bbf7d0; color:#166534; }
+  .chip.status.cancelled{ background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+
+  /* ===== Botón factura (azul) ===== */
+  .btn.invoice{
+    --btn-bg: linear-gradient(90deg, var(--accent), #1e88e5);
+    --btn-fg: #fff;
+    --btn-bd: transparent;
+    border: 0;
+  }
+
+  /* ===== Cards móviles ===== */
+  .hide-mobile{ display:block; }
+  .show-mobile{ display:none; }
+
+  .order-card{
+    border:1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: var(--sp-4);
+    background:#fff;
+    display:grid; gap:10px;
+    box-shadow: var(--elev-1);
+  }
+  .order-card header{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .order-card .number{ font-size: var(--fs-lg); }
+  .order-card .rows{ display:grid; gap:6px; }
+  .order-card .rows .k{ color: var(--muted); min-width: 80px; display:inline-block; }
+  .order-card .mini{ display:flex; gap:12px; flex-wrap: wrap; color: var(--muted); }
+  .order-card .cta{ display:flex; gap:8px; flex-wrap: wrap; }
+
+  .empty{ padding: 16px; }
+
+  @media (max-width: 720px){
+    .hide-mobile{ display:none; }
+    .show-mobile{ display:grid; gap: var(--sp-3); }
+  }
+}

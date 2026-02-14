@@ -1,0 +1,237 @@
+/* src/app/features/memberships/pages/plans/plans.component.scss */
+.memberships {
+  .hero { margin-bottom: var(--sp-4); }
+
+  /* ===== GRID responsivo ===== */
+  .grid {
+    display: grid;
+    gap: var(--sp-4);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+
+    @media (max-width: 1080px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (max-width: 720px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ===== CARD ===== */
+  .plan-card {
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: #fff;
+    padding: var(--sp-4);
+    box-shadow: var(--elev-1);
+
+    /* 4 filas: head / spacer / cta / divider  */
+    display: grid;
+    gap: 14px;
+    grid-template-rows: auto 1fr auto auto;
+
+    transition:
+      transform var(--t-fast) var(--timing),
+      box-shadow var(--t-base) var(--timing),
+      border-color var(--t-base) var(--timing);
+
+    min-height: 250px; /* altura base cerrada */
+    align-content: start;
+
+    &:hover { transform: translateY(-1px); box-shadow: var(--elev-2); }
+    &:focus-visible { box-shadow: 0 0 0 4px rgba(66,165,245,.25), var(--elev-2); }
+    &.emphasis { border-color: var(--brand-600); box-shadow: var(--elev-3); }
+    &.active   { border-color: var(--accent);  box-shadow: var(--elev-3); }
+
+    /* ===== HEAD (fila 1): 2x2 -> badge ocupa fila completa ===== */
+    .head {
+      grid-row: 1;
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+      grid-template-areas:
+        "badge badge"
+        "title price";
+      align-items: center;
+    }
+
+    .badge {
+      grid-area: badge;
+      justify-self: stretch;
+      text-align: center;
+
+      min-height: 36px;
+      padding: 10px 16px;
+      border-radius: var(--r-pill);
+      font-weight: 900;
+      letter-spacing: .3px;
+      font-size: clamp(.9rem, .85rem + .45vw, 1rem);
+      text-transform: uppercase;
+      user-select: none;
+
+      &.badge--free {
+        background: linear-gradient(90deg, #cbd5e1 0%, #94a3b8 100%);
+        color: #0f172a;
+      }
+      &.badge--premium {
+        background: linear-gradient(90deg, var(--brand) 0%, var(--brand-700) 100%);
+        color: #fff;
+        text-shadow: 0 1px 0 rgba(0,0,0,.25);
+      }
+      &.badge--vip {
+        background: linear-gradient(90deg, var(--accent) 0%, #1e88e5 100%);
+        color: #fff;
+        text-shadow: 0 1px 0 rgba(0,0,0,.25);
+      }
+    }
+
+    .title {
+      grid-area: title;
+      margin: 0;
+      font-weight: 800;
+      color: var(--ink);
+      font-size: clamp(1rem, .95rem + .3vw, 1.1rem);
+      align-self: end;
+    }
+
+    .price {
+      grid-area: price;
+      justify-self: end;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      align-self: end;
+
+      .amount {
+        font-size: clamp(1.6rem, 1.2rem + 1.1vw, 2rem);
+        font-weight: 900;
+        color: var(--ink);
+      }
+      .unit {
+        font-size: .85rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+    }
+
+    /* ===== SPACER (fila 2) ===== */
+    /* No requiere clase: es el 1fr del grid-template-rows */
+
+    /* ===== CTA (fila 3) – pegada abajo gracias al spacer ===== */
+    .cta {
+      grid-row: 3;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-self: end;
+
+      .btn { font-weight: 800; }
+
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .chev {
+        width: 10px;
+        height: 10px;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(-45deg);
+        transition: transform var(--t-fast) var(--timing);
+
+        &.open { transform: rotate(135deg); }
+      }
+    }
+
+    /* ===== Divider (fila 4) – al borde inferior ===== */
+    .divider {
+      grid-row: 4;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--line), transparent);
+      align-self: end;
+    }
+
+    /* ===== BENEFICIOS (debajo del divider al expandir) ===== */
+    .benefits {
+      .ticks {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0 0;
+        display: grid;
+        gap: 10px; /* vertical */
+      }
+
+      .ticks li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .tick {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-weight: 900;
+        background: linear-gradient(90deg, var(--success), #2ea44f);
+        color: #fff;
+        font-size: 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,.15);
+      }
+
+      .perk-text {
+        font-size: var(--fs-md);
+        background: var(--chip);
+        border: 1px solid var(--line);
+        border-radius: var(--r-pill);
+        padding: 8px 12px;
+      }
+
+      .foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+        gap: 10px;
+        flex-wrap: wrap;
+
+        .note { font-size: var(--fs-sm); }
+      }
+    }
+
+    /* ===== Ajuste en móviles ===== */
+    @media (max-width: 720px) {
+      min-height: 230px;
+      .badge { min-height: 34px; }
+    }
+  }
+
+  /* ===== FAQ ===== */
+  .faq { margin-top: var(--sp-4); }
+
+  .faq details {
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: #fff;
+    padding: 12px 14px;
+    box-shadow: var(--elev-1);
+    margin-bottom: 10px;
+  }
+
+  .faq summary {
+    cursor: pointer;
+    font-weight: 800;
+    list-style: none;
+
+    &::-webkit-details-marker { display: none; }
+  }
+
+  .faq p {
+    margin: 10px 0 0;
+    color: var(--ink);
+  }
+}

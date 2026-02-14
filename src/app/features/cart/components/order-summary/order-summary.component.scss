@@ -1,0 +1,149 @@
+.summary{
+  position: sticky;
+  top: 96px;
+  display: grid;
+  gap: 1rem;
+}
+
+.panel{
+  border: 1px solid var(--line, #e5e7eb);
+  border-radius: var(--radius, 16px);
+  background: #fff;
+  box-shadow: var(--shadow-card, 0 10px 24px rgba(0,0,0,.06));
+}
+
+/* Totales */
+.totals{
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: .75rem;
+  padding: 16px;
+}
+h4{ margin: 0 0 .25rem }
+.split{ display:flex; justify-content:space-between; align-items:center; }
+.total{
+  padding:.35rem .5rem; border-radius:10px;
+  background:#fff7ed; border:1px solid #ffe7c2;
+}
+.total strong{ font-size:1.25rem; }
+
+/* 👇 NUEVO: fila para total de membresía (estética azul/accent del DS) */
+.member-total{
+  padding:.35rem .5rem; border-radius:10px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--ink);
+}
+.member-total strong{
+  color: var(--accent);
+  font-size:1.15rem;
+  font-weight: 900;
+}
+
+/* Ahorro */
+.save{
+  margin: .1rem 0 0;
+  font-size: .85rem;
+  color: var(--muted);
+}
+
+/* ===========================
+   CTA (igual que tenías)
+   =========================== */
+.cta,
+.button_pay{
+  display:flex; align-items:center; justify-content:center; gap:.5rem;
+  width:100%;
+  min-height:44px;
+  margin-top:.5rem;
+  padding:.78rem 1rem;
+
+  border:0; border-radius:999px;
+  -webkit-appearance:none; appearance:none;
+
+  font:inherit;
+  font-size:1rem; line-height:1; font-weight:800;
+
+  color:#fff;
+  background: linear-gradient(90deg, var(--brand, #ff9f1a), var(--brand-700, #c87400));
+
+  box-shadow:0 12px 28px rgba(0,0,0,.08);
+  transition: transform .12s ease, filter .12s ease, opacity .12s ease, box-shadow .12s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cta:hover:not(:disabled),
+.cta:focus-visible:not(:disabled),
+.button_pay:hover:not(:disabled),
+.button_pay:focus-visible:not(:disabled){
+  filter: saturate(1.06);
+  transform: translateY(-1px);
+  outline: none;
+  box-shadow: 0 14px 28px rgba(255,159,26,.22), 0 6px 12px rgba(0,0,0,.04);
+}
+
+.cta:active:not(:disabled),
+.button_pay:active:not(:disabled){ transform: translateY(0); }
+
+.cta:disabled,
+.button_pay:disabled{
+  background: var(--chip, #f1f5f9);
+  color: var(--muted, #64748b);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+  opacity: .9;
+}
+
+.hint{ color: var(--muted, #64748b); font-size:.85rem; margin:0; }
+
+/* Promo (igual) */
+.promo{
+  display:grid; gap:.7rem; padding:0; overflow:hidden;
+  background: linear-gradient(180deg, #fff, #fff8ed 140px);
+}
+.promo__header{
+  padding:10px 16px; background: linear-gradient(90deg,#fff9ed,#fff);
+  border-bottom:1px solid var(--line, #e5e7eb);
+}
+.promo__header h5{ margin:0; font-size:1rem; }
+.promo .row{ display:flex; gap:.5rem; padding:12px 16px 0 16px; margin-bottom: 16px; }
+.promo .row input{
+  flex:1; border:1px dashed var(--brand-600, #e98c00);
+  border-radius:12px; padding:.55rem .7rem;
+  transition:border .15s, box-shadow .15s, background .15s;
+  background:#fffbf2; color: var(--ink, #0f172a);
+  &::placeholder{ color:#9aa4b2; }
+}
+.promo .row input:focus{
+  outline:none; background:#fff; border-style:solid; box-shadow:0 0 0 3px rgba(255,159,26,.28);
+}
+.promo .btn{
+  border:0; border-radius:12px; padding:.55rem .9rem;
+  background: linear-gradient(90deg, var(--brand, #ff9f1a), var(--brand-700, #c87400));
+  color:#fff; font-weight:800; box-shadow: 0 6px 16px rgba(255,159,26,.25);
+  cursor:pointer; transition: transform .12s ease, filter .12s ease, box-shadow .12s ease; white-space: nowrap;
+}
+.promo .btn:hover{
+  filter:saturate(1.06);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(255,159,26,.32);
+}
+.promo .btn:active{ transform: translateY(0); }
+.promo .btn:focus-visible{ outline: 3px solid rgba(255,159,26,.35); outline-offset: 2px; }
+.coupon{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:.5rem; padding:0 16px 12px 16px;
+}
+.ticket{
+  display:inline-block; padding:.35rem .7rem;
+  background: linear-gradient(90deg, rgba(255,159,26,.08), rgba(200,116,0,.08));
+  border:2px dashed var(--brand-600, #e98c00);
+  border-radius:999px; font-weight:800; letter-spacing:.4px;
+  color: var(--brand-700, #c87400);
+}
+.link{ background:none; border:none; color: var(--muted, #64748b); cursor:pointer; }
+.link:hover{ text-decoration: underline; }

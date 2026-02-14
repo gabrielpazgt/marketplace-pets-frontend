@@ -1,0 +1,35 @@
+.pager {
+  display: flex;
+  gap: .5rem;
+  justify-content: center;
+  align-items: center;
+  padding: 1.25rem 0 2.25rem;
+}
+
+.btn {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: .5rem .85rem;
+  background: #fff;
+  transition: background .15s;
+}
+.btn:hover:not(:disabled) { background: var(--chip); }
+.btn:disabled { opacity: .5; }
+
+.num {
+  min-width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  transition: all .15s;
+}
+.num:hover { background: var(--chip); }
+.num.is-active {
+  background: var(--brand);
+  border-color: var(--brand-600);
+  color: #fff;
+  font-weight: 800;
+  transform: translateY(-1px);
+}
+.gap { padding: 0 .3rem; color: var(--muted); }

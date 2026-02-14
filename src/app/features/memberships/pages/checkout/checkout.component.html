@@ -1,0 +1,110 @@
+<section class="section">
+  <div class="container">
+    <div class="card wrap">
+      <header class="head">
+        <h1>Checkout de membresía</h1>
+        <p class="muted">Completa tus datos para activar tu plan.</p>
+      </header>
+
+      <div class="grid">
+        <!-- Form -->
+        <form class="form" [formGroup]="form" (ngSubmit)="pay()">
+          <!-- Datos -->
+          <div class="row">
+            <label>Nombre completo</label>
+            <input class="input" type="text" formControlName="fullName" placeholder="Tu nombre" />
+            <small class="err" *ngIf="form.get('fullName')?.touched && form.get('fullName')?.invalid">
+              Ingresa un nombre válido.
+            </small>
+          </div>
+
+          <div class="row">
+            <label>Correo</label>
+            <input class="input" type="email" formControlName="email" placeholder="tucorreo@dominio.com" />
+            <small class="err" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">
+              Ingresa un correo válido.
+            </small>
+          </div>
+
+          <!-- Pago -->
+          <div class="grid-2">
+            <div class="row">
+              <label>Número de tarjeta</label>
+              <input class="input" inputmode="numeric" maxlength="16" formControlName="cardNumber" placeholder="1234123412341234" />
+              <small class="err" *ngIf="form.get('cardNumber')?.touched && form.get('cardNumber')?.invalid">
+                Debe tener 16 dígitos.
+              </small>
+            </div>
+            <div class="row">
+              <label>Expiración (MM/YY)</label>
+              <input class="input" formControlName="exp" placeholder="05/28" />
+              <small class="err" *ngIf="form.get('exp')?.touched && form.get('exp')?.invalid">
+                Formato MM/YY.
+              </small>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="row">
+              <label>CVV</label>
+              <input class="input" inputmode="numeric" maxlength="4" formControlName="cvv" placeholder="123" />
+              <small class="err" *ngIf="form.get('cvv')?.touched && form.get('cvv')?.invalid">
+                3 o 4 dígitos.
+              </small>
+            </div>
+
+            <div class="row">
+              <label>Ciclo de cobro</label>
+              <select class="input" formControlName="cycle">
+                <option value="monthly">Mensual (Q{{ plan.monthlyPrice }})</option>
+                <option value="yearly">Anual (Q{{ yearlyPriceQ }} / año)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Términos -->
+          <label class="accept">
+            <input type="checkbox" formControlName="accept" />
+            <span>Acepto términos y condiciones</span>
+          </label>
+          <small class="err" *ngIf="form.get('accept')?.touched && form.get('accept')?.invalid">
+            Debes aceptar los términos.
+          </small>
+
+          <!-- Acciones -->
+          <div class="actions">
+            <button class="btn primary pay" type="submit" [disabled]="loading || form.invalid">
+              <span *ngIf="!loading">Pagar {{ totalQ | currency:'GTQ':'symbol':'1.0-0' }}</span>
+              <span *ngIf="loading">Procesando…</span>
+            </button>
+            <a class="btn ghost" routerLink="/memberships/plans">Cambiar plan</a>
+            <span class="secure muted">Pago seguro • Datos encriptados</span>
+          </div>
+
+          <p class="err" *ngIf="errorMsg">{{ errorMsg }}</p>
+        </form>
+
+        <!-- Summary -->
+        <aside class="summary card" *ngIf="plan as p">
+          <h3>Resumen</h3>
+          <div class="line"><span>Plan</span><strong>{{ p.name }}</strong></div>
+          <div class="line">
+            <span>Subtotal</span>
+            <strong>{{ subtotalQ | currency:'GTQ':'symbol':'1.0-0' }} / {{ form.get('cycle')?.value === 'monthly' ? 'mes' : 'año' }}</strong>
+          </div>
+          <div class="line total">
+            <span>Total a pagar</span>
+            <strong>{{ totalQ | currency:'GTQ':'symbol':'1.0-0' }}</strong>
+          </div>
+
+          <ul class="ticks" *ngIf="p.perks?.length">
+            <li *ngFor="let perk of p.perks">
+              <span class="tick" aria-hidden="true">✓</span> {{ perk }}
+            </li>
+          </ul>
+          <small class="muted">Yearly = pagas 10 meses (2 gratis).</small>
+        </aside>
+      </div>
+    </div>
+  </div>
+</section>
