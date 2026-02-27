@@ -1,3 +1,8 @@
+:host{
+  display:block;
+  width:100%;
+}
+
 /* Superficie tipo banner */
 .fs{
   display:grid; gap:.6rem;
@@ -62,3 +67,8 @@
 .fill.complete::after{ animation: none; opacity: 0; }
 .fs.done .bar{ border-color:#86efac; background:#ecfdf5; }
 .fs.done .fill{ box-shadow: 0 0 0 2px rgba(34,197,94,.15) inset; }
+
+@media (prefers-reduced-motion: reduce){
+  .fill{ transition: none; }
+  .fill::after{ animation: none; opacity: .35; }
+}

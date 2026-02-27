@@ -1,51 +1,88 @@
-.sortbar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding-block:1rem;
-  gap:1rem
+﻿.sortbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: .9rem 1rem;
+  gap: .9rem;
 }
 
-.sortbar__right{
-  display:flex;
-  align-items:center;
-  gap:.75rem
+.sortbar__left {
+  color: var(--color-text-primary);
+  font-size: .98rem;
 }
 
-.btn{
-  border:1px solid var(--line);
-  padding:.5rem .75rem;
-  border-radius:999px;
-  background:#fff
+.sortbar__right {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.btn:hover{
-  background:var(--chip)
+.sort-btn {
+  border: 1px solid var(--line);
+  padding: .52rem .8rem;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
 }
 
-.btn:focus-visible{
-  outline:3px solid #ffedd5;
-  outline-offset:2px
+.sort-btn:hover {
+  background: var(--chip);
+  border-color: #d1d5db;
 }
 
-.badge{
-  margin-left:.5rem;
-  background:var(--brand);
-  color:#fff;
-  border-radius:999px;
-  font-weight:800;
-  padding:.05rem .45rem;
-  font-size:.75rem
+.sort-btn:focus-visible {
+  outline: 3px solid rgba(255, 167, 38, .24);
+  outline-offset: 2px;
 }
 
-.sort{
-  display:inline-flex;
-  align-items:center;
-  gap:.5rem
+.badge {
+  margin-left: .5rem;
+  background: var(--brand);
+  color: #fff;
+  border-radius: 999px;
+  font-weight: 800;
+  padding: .05rem .45rem;
+  font-size: .75rem;
 }
 
-.sort select{
-  border:1px solid var(--line);
-  border-radius:999px;
-  padding:.35rem .65rem
+.sort {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font-weight: 600;
+}
+
+.sort select {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: .42rem .7rem;
+  min-width: 190px;
+  background: #fff;
+}
+
+@media (max-width: 720px) {
+  .sortbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sortbar__right {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .sort {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .sort select {
+    min-width: 0;
+    width: min(72vw, 240px);
+  }
 }

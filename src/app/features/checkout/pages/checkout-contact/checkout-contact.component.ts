@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CheckoutStateService } from '../../services/checkout-state.service';
@@ -31,7 +31,11 @@ export class CheckoutContactComponent implements OnInit {
     saveInfo: [false]
   });
 
-  constructor(private fb: FormBuilder, private state: CheckoutStateService, private router: Router) {}
+  constructor(
+    private fb: FormBuilder,
+    private state: CheckoutStateService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     const snap = this.state.snapshot;
@@ -44,6 +48,7 @@ export class CheckoutContactComponent implements OnInit {
         saveInfo: !!snap.contact.saveInfo,
       });
     }
+
     if (snap.shippingAddress) {
       this.form.get('address')?.patchValue({
         country: snap.shippingAddress.country,
@@ -55,24 +60,50 @@ export class CheckoutContactComponent implements OnInit {
         postalCode: snap.shippingAddress.postalCode ?? ''
       });
     }
+
     this.onDepartmentChange();
   }
 
   onDepartmentChange() {
     const dep = this.form.get('address.department')?.value || '';
     this.municipalities = this.muniMap[dep] || [];
-    if (!this.municipalities.includes(this.form.get('address.municipality')?.value as string)) {
+    const current = this.form.get('address.municipality')?.value as string;
+    if (!this.municipalities.includes(current)) {
       this.form.get('address.municipality')?.setValue('');
     }
   }
 
+  onPhoneInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 12);
+    let formatted = digits;
+    if (digits.startsWith('502')) {
+      const local = digits.slice(3, 11);
+      formatted = local.length > 4
+        ? `+502 ${local.slice(0, 4)}-${local.slice(4)}`
+        : `+502 ${local}`;
+    }
+    this.form.get('phone')?.setValue(formatted, { emitEvent: false });
+  }
+
   submit() {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
     const val = this.form.getRawValue();
-    this.state.setContactAndShipping({
-      email: val.email!, phone: val.phone || undefined,
-      firstName: val.firstName!, lastName: val.lastName!, saveInfo: !!val.saveInfo
-    }, val.address as any);
+    this.state.setContactAndShipping(
+      {
+        email: val.email!,
+        phone: val.phone || undefined,
+        firstName: val.firstName!,
+        lastName: val.lastName!,
+        saveInfo: !!val.saveInfo
+      },
+      val.address as any
+    );
+
     this.router.navigate(['checkout/shipping']);
   }
 }

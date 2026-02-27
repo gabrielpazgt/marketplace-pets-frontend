@@ -23,6 +23,7 @@ export interface CardInfo {
   number: string; // #### #### #### ####
   exp: string;    // MM/YY
   cvc: string;    // 3-4 digits
+  brand?: 'visa' | 'mastercard' | 'amex' | 'other';
 }
 
 export interface ShippingMethod {

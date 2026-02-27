@@ -1,12 +1,12 @@
-<section class="section">
+﻿<section class="section">
   <div class="container account">
-    <aside class="account__nav card">
+    <aside class="account__nav card" aria-label="Navegacion de cuenta">
       <nav>
-        <a routerLink="profile" routerLinkActive="active">Mi Perfil</a>
+        <a routerLink="profile" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Mi Perfil</a>
         <a routerLink="orders" routerLinkActive="active">Historial de Compras</a>
         <a routerLink="pets" routerLinkActive="active">Mis Mascotas</a>
-        <a routerLink="membership" routerLinkActive="active">Membresía</a>
-        <a routerLink="settings" routerLinkActive="active">Configuración</a>
+        <a routerLink="membership" routerLinkActive="active">Membresia</a>
+        <a routerLink="settings" routerLinkActive="active">Configuracion</a>
       </nav>
     </aside>
 

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+﻿import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
   selector: 'mp-account-settings',
@@ -7,12 +7,10 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsComponent {
-  // Mock de datos del usuario (edición local)
   model = {
     name: 'Aumakki User',
     email: 'hola@aumakki.com',
     phone: '',
-    language: 'ES',
     currency: 'GTQ',
     timezone: 'America/Guatemala',
     newsletter: true,
@@ -25,7 +23,7 @@ export class SettingsComponent {
 
   saveProfile() {
     this.saving = true;
-    setTimeout(() => (this.saving = false), 600); // maqueta
+    setTimeout(() => (this.saving = false), 600);
   }
 
   savePrefs() {
@@ -34,7 +32,7 @@ export class SettingsComponent {
   }
 
   changePassword() {
-    alert('Abrir modal de cambio de contraseña (maqueta)');
+    alert('Abrir modal de cambio de contrasena (maqueta)');
   }
 
   toggle2FA() {
@@ -42,7 +40,7 @@ export class SettingsComponent {
   }
 
   deleteAccount() {
-    const ok = confirm('¿Eliminar tu cuenta? Esta acción no se puede deshacer.');
-    if (ok) alert('Cuenta marcada para eliminación (maqueta).');
+    const ok = confirm('¿Eliminar tu cuenta? Esta accion no se puede deshacer.');
+    if (ok) alert('Cuenta marcada para eliminacion (maqueta).');
   }
 }

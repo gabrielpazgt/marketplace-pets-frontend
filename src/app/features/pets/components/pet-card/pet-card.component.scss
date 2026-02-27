@@ -51,4 +51,35 @@
     display:flex; flex-wrap:wrap; gap:6px 8px; margin-top:12px;
     .chip{ background: var(--chip); border-color: #e2e8f0; }
   }
+
+  @media (max-width: 640px){
+    .head{
+      grid-template-columns: 56px 1fr;
+      grid-template-areas:
+        "avatar id"
+        "actions actions";
+      align-items: start;
+      row-gap: 10px;
+    }
+
+    .avatar{
+      --size: 56px;
+      border-radius: 16px;
+      &::before{ border-radius: 18px; }
+      &::after{ border-radius: 16px; }
+      .emoji{ font-size: 24px; }
+    }
+
+    .id{ min-width: 0; }
+    .id h3{ font-size: 1.06rem; }
+    .id p{ font-size: .85rem; line-height: 1.3; }
+
+    .actions{
+      grid-area: actions;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      .btn.xs{ width: 100%; }
+    }
+  }
 }

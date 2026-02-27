@@ -1,5 +1,4 @@
-<div class="auth-wrap">
-  <!-- HERO -->
+﻿<div class="auth-wrap">
   <aside class="panel">
     <div class="content">
       <h1 class="title-panel">Aumakki Marketplace</h1>
@@ -8,18 +7,12 @@
     <img src="assets/images/login.svg" class="image" alt="login image" />
   </aside>
 
-  <!-- FORM CARD -->
   <main class="card form-card">
     <header class="form-head">
-      <h2>Iniciar sesión</h2>
-      <div class="segmented">
-        <button type="button" (click)="switchLanguage('es')" [class.active]="currentLanguage==='es'">ES</button>
-        <button type="button" (click)="switchLanguage('en')" [class.active]="currentLanguage==='en'">EN</button>
-      </div>
+      <h2>Iniciar sesion</h2>
     </header>
 
     <form [formGroup]="loginForm" (ngSubmit)="login()" novalidate>
-      <!-- Usuario -->
       <label class="field">
         <span class="label">Correo o usuario</span>
         <div class="input-wrap">
@@ -28,18 +21,17 @@
         </div>
       </label>
 
-      <!-- Password -->
       <label class="field">
-        <span class="label">Contraseña</span>
+        <span class="label">Contrasena</span>
         <div class="input-wrap">
           <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10h12v10H6z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-          <input class="input" [type]="hide ? 'password' : 'text'" formControlName="password" placeholder="Ingresa tu contraseña" />
-          <button type="button" class="eye" (click)="togglePasswordVisibility()" aria-label="Mostrar/ocultar contraseña">👁️</button>
+          <input class="input" [type]="hide ? 'password' : 'text'" formControlName="password" placeholder="Ingresa tu contrasena" />
+          <button type="button" class="eye" (click)="togglePasswordVisibility()" aria-label="Mostrar u ocultar contrasena">Ver</button>
         </div>
       </label>
 
       <div class="row-between">
-        <a routerLink="/auth/forgot" class="link small">Olvidé mi contraseña</a>
+        <a routerLink="/auth/forgot" class="link small">Olvide mi contrasena</a>
       </div>
 
       <button type="submit" class="btn primary full" [disabled]="!loginForm.valid || submitting">
@@ -48,11 +40,11 @@
       </button>
 
       <p class="muted center mt-2">
-        ¿No tienes cuenta?
-        <a class="link brand" routerLink="/auth/register">Regístrate</a>
+        No tienes cuenta?
+        <a class="link brand" routerLink="/auth/register">Registrate</a>
       </p>
 
-      <div class="divider"><span>o continúa con</span></div>
+      <div class="divider"><span>o continua con</span></div>
 
       <div class="oauth-grid">
         <button type="button" class="oauth-btn" (click)="loginWithGoogle()">

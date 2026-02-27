@@ -1,10 +1,6 @@
-<section class="home">
-  <app-hero></app-hero>
-
-  <app-categories></app-categories>
-
-  <app-deals [products]="featured$ | async"></app-deals>
-
-  <app-features></app-features>
-
+<section class="home" aria-label="Inicio MarketPets">
+  <app-hero class="home__block home__block--hero"></app-hero>
+  <app-categories class="home__block"></app-categories>
+  <app-deals class="home__block" [products]="featured$ | async"></app-deals>
+  <app-features class="home__block home__block--last"></app-features>
 </section>

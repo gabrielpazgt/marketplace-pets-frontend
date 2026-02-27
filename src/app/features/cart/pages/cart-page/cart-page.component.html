@@ -1,4 +1,4 @@
-<section class="cart">
+﻿<section class="cart">
   <div class="container">
     <h1 class="title">
       Carrito
@@ -10,18 +10,19 @@
     </a>
   </div>
 
+  <div class="container" *ngIf="(items$ | async) as items">
+    <app-free-shipping
+      *ngIf="items.length"
+      class="full-banner"
+      [target]="threshold"
+      [subtotal]="(subtotal$ | async) ?? 0">
+    </app-free-shipping>
+  </div>
+
   <div class="container layout">
     <ng-container *ngIf="(items$ | async) as items; else loading">
       <ng-container *ngIf="items.length; else empty">
-
         <div class="left">
-          <app-free-shipping
-            class="surface surface--banner"
-            [target]="threshold"
-            [subtotal]="(subtotal$ | async) ?? 0">
-          </app-free-shipping>
-
-          <!-- Tabla -->
           <div class="surface surface--table">
             <header class="table-head" aria-hidden="true">
               <div class="th product">Producto</div>
@@ -53,10 +54,12 @@
     </ng-template>
 
     <ng-template #loading>
-      <div class="skeleton container">Cargando…</div>
+      <div class="skeleton container">Cargando...</div>
     </ng-template>
   </div>
 
-  <!-- Recomendaciones al final -->
-  <app-cart-recommendations></app-cart-recommendations>
+  <section class="cart-recos" aria-label="Recomendaciones para tu carrito">
+    <app-cart-recommendations></app-cart-recommendations>
+  </section>
 </section>
+

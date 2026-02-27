@@ -1,18 +1,17 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Router } from '@angular/router';
+﻿import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 type OrderStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
 
 interface Order {
-  id: string;            // interno
-  number: string;        // visible, ej. #0001
-  date: string;          // ISO
+  id: string;
+  number: string;
+  date: string;
   status: OrderStatus;
-  total: number;         // en GTQ (por ahora)
+  total: number;
   itemsCount: number;
   paymentMethod: 'Tarjeta' | 'Transferencia' | 'Contra-entrega';
-  addressShort: string;  // para listado
-  tracking?: string;     // guía si aplica
+  addressShort: string;
+  tracking?: string;
 }
 
 @Component({
@@ -22,10 +21,6 @@ interface Order {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OrdersHistoryComponent {
-
-  constructor(private router: Router) {}
-
-  // ====== Datos demo (luego conectar a servicio real) ======
   private mock(): Order[] {
     return [
       {
@@ -85,8 +80,7 @@ export class OrdersHistoryComponent {
 
   orders: Order[] = this.mock();
 
-  // ====== Filtros & UI ======
-  q = '';                         // búsqueda por número
+  q = '';
   status: OrderStatus | 'all' = 'all';
   range: '30' | '90' | '365' | 'all' = '30';
   expandedId: string | null = null;
@@ -99,7 +93,7 @@ export class OrdersHistoryComponent {
       this.range === '365' ? now - 365 * 864e5 : 0;
 
     return this.orders
-      .filter(o =>
+      .filter((o) =>
         (this.status === 'all' || o.status === this.status) &&
         (!this.q || o.number.toLowerCase().includes(this.q.trim().toLowerCase())) &&
         (this.range === 'all' || new Date(o.date).getTime() >= cutoff)
@@ -113,24 +107,18 @@ export class OrdersHistoryComponent {
     this.range = '30';
   }
 
-  // ====== Acciones ======
   toggleExpand(order: Order) {
     this.expandedId = this.expandedId === order.id ? null : order.id;
   }
 
-  viewDetails(order: Order) {
-    // Cuando exista detalle real:
-    // this.router.navigate(['/account/orders', order.id]);
-    alert(`Ver detalle de ${order.number} (demo)`);
-  }
   downloadInvoice(order: Order) {
     alert(`Descargar factura de ${order.number} (demo)`);
   }
+
   reorder(order: Order) {
     alert(`Repetir compra de ${order.number} (demo)`);
   }
 
-  // ====== Helpers de UI ======
   statusLabel(s: OrderStatus) {
     return {
       pending: 'Pendiente',

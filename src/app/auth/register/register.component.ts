@@ -1,8 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-
 
 function passwordsMatchValidator(group: AbstractControl) {
   const pass = group.get('password')?.value;
@@ -20,7 +19,6 @@ export class RegisterComponent implements OnInit {
   hide = true;
   hideConfirm = true;
   submitting = false;
-  currentLanguage: 'es' | 'en' = 'es';
 
   constructor(
     private fb: FormBuilder,
@@ -31,27 +29,31 @@ export class RegisterComponent implements OnInit {
   ngOnInit(): void {
     this.registerForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2)]],
-      lastName:  ['', [Validators.required, Validators.minLength(2)]],
-      email:     ['', [Validators.required, Validators.email]],
-      password:  ['', [Validators.required, Validators.minLength(6)]],
+      lastName: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
       acceptTerms: [false, [Validators.requiredTrue]]
     }, { validators: passwordsMatchValidator });
   }
 
-  switchLanguage(lang: 'es' | 'en') { this.currentLanguage = lang; }
-  fc(name: string) { return this.registerForm.get(name)!; }
+  fc(name: string) {
+    return this.registerForm.get(name)!;
+  }
 
   signUp(): void {
-    if (this.registerForm.invalid || this.submitting) { this.registerForm.markAllAsTouched(); return; }
-    this.submitting = true;
+    if (this.registerForm.invalid || this.submitting) {
+      this.registerForm.markAllAsTouched();
+      return;
+    }
 
-    const v = this.registerForm.value;
-    // MOCK: “crea” cuenta y entra logueado
+    this.submitting = true;
+    const value = this.registerForm.value;
+
     this.auth.loginMock({
-      id: 'u_' + (v.email as string).split('@')[0],
-      name: `${v.firstName} ${v.lastName}`,
-      email: v.email
+      id: 'u_' + (value.email as string).split('@')[0],
+      name: `${value.firstName} ${value.lastName}`,
+      email: value.email
     });
 
     setTimeout(() => {
@@ -60,5 +62,7 @@ export class RegisterComponent implements OnInit {
     }, 450);
   }
 
-  signUpWithGoogle(): void { console.log('Google Sign-Up clicked'); }
+  signUpWithGoogle(): void {
+    console.log('Google Sign-Up clicked');
+  }
 }

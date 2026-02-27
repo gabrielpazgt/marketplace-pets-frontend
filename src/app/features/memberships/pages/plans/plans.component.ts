@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MembershipsService, Plan, PlanId } from '../../services/memberships.service';
 
@@ -11,6 +11,7 @@ export class PlansComponent implements OnInit {
   plans: Plan[] = [];
   currentPlan!: PlanId;
   preselect?: PlanId;
+  annualDiscountPercent = 17;
 
   /** id de la card expandida (beneficios visibles) */
   expanded: PlanId | null = null;
@@ -36,6 +37,18 @@ export class PlansComponent implements OnInit {
   }
 
   isExpanded(id: PlanId) { return this.expanded === id; }
+
+  yearlyEquivalent(planId: PlanId): number {
+    const plan = this.plans.find((p) => p.id === planId);
+    if (!plan) return 0;
+    return plan.monthlyPrice * 10;
+  }
+
+  planTheme(id: PlanId): 'free' | 'premium' | 'vip' {
+    if (id === 'vip') return 'vip';
+    if (id === 'premium') return 'premium';
+    return 'free';
+  }
 
   choose(planId: PlanId) {
     if (planId === this.currentPlan) {

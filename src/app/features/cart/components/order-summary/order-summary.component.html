@@ -1,5 +1,4 @@
-<aside class="summary">
-  <!-- Totales + Checkout -->
+﻿<aside class="summary">
   <div class="panel totals">
     <h4>Resumen</h4>
 
@@ -9,10 +8,10 @@
     </div>
     <div class="split">
       <span>Descuento</span>
-      <strong>−{{ discount$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
+      <strong>-{{ discount$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
     </div>
     <div class="split">
-      <span>Envío</span>
+      <span>Envio</span>
       <strong>{{ shipping$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
     </div>
 
@@ -23,22 +22,19 @@
       <strong>{{ total$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
     </div>
 
-    <!-- 👇 NUEVO: solo mostramos el total con membresía -->
     <div class="split member-total">
-      <span>Total membresía</span>
+      <span>Total membresia</span>
       <strong>{{ memberTotal$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
     </div>
 
-    <!-- Ahorro (solo si aplica) -->
     <ng-container *ngIf="(total$ | async) as t">
       <ng-container *ngIf="(memberTotal$ | async) as mt">
         <p class="save" *ngIf="t > mt">
-          Ahorras <strong class="save__amount">{{ (t - mt) | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong> con tu membresía.
+          Ahorras <strong class="save__amount">{{ (t - mt) | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong> con tu membresia.
         </p>
       </ng-container>
     </ng-container>
 
-    <!-- CTA -->
     <button
       class="cta button_pay"
       [disabled]="!(hasItems$ | async)"
@@ -50,19 +46,18 @@
     <p class="hint">Pagos seguros con tarjetas y transferencias.</p>
   </div>
 
-  <!-- Promo code -->
   <div class="panel promo">
     <div class="promo__header">
-      <h5>¿Tienes un código?</h5>
+      <h5>¿Tienes un codigo?</h5>
     </div>
 
     <div class="row">
-      <input type="text" placeholder="Código de descuento" [formControl]="form.controls.code">
+      <input type="text" placeholder="Codigo de descuento" [formControl]="form.controls.code">
       <button class="btn" (click)="apply()">Aplicar</button>
     </div>
 
     <div class="coupon" *ngIf="(coupon$ | async) as c">
-      <span class="ticket">CUPÓN: {{ c }}</span>
+      <span class="ticket">CUPON: {{ c }}</span>
       <button class="link" (click)="clearCoupon()">Quitar</button>
     </div>
   </div>

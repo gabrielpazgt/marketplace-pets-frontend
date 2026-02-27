@@ -32,12 +32,12 @@ export class HeroComponent {
     { img: 'assets/icons/hero/payment.png',  title: 'Pago 100% seguro', caption: 'Protección en compras' },
   ];
 
-  /** Imagen del hero (usa la que te generé arriba) */
+  /** Imagen del hero */
   @Input() image = {
-    alt: 'Aumakki – mascotas felices',
-    webpLg: 'assets/images/hero/hero-pets.jpg', // desktop/webp
-    webp:   'assets/images/hero/hero-pets.jpg', // mobile/webp (mismo archivo ok)
-    srcLg:  'assets/images/hero/hero-pets.jpg',  // desktop fallback
-    src:    'assets/images/hero/hero-pets.jpg'   // mobile fallback
+    alt: 'Mascota descansando con productos premium',
+    webpLg: 'assets/images/cart/dog-sleep.webp',
+    webp:   'assets/images/cart/dog-sleep.webp',
+    srcLg:  'assets/images/cart/dog-sleep.png',
+    src:    'assets/images/cart/dog-sleep.png'
   };
 }

@@ -1,89 +1,105 @@
-<section class="section section--muted memberships">
-  <div class="container">
-    <header class="hero">
-      <h1>Membresías</h1>
-      <p class="muted">Elige el plan que más se adapte a tus compras — upgrade en 2 pasos.</p>
+﻿<section class="memberships">
+  <div class="container memberships__container">
+    <header class="memberships-hero">
+      <span class="kicker">MEMBRESIAS</span>
+      <h1>Sube de nivel tu experiencia de compra</h1>
+      <p>
+        Elige un plan, recibe mejores precios y desbloquea beneficios en cada pedido.
+        Puedes cambiar de plan cuando quieras.
+      </p>
+
+      <div class="hero-meta" aria-label="Ventajas de membresia">
+        <span class="meta-chip">Ahorro anual hasta {{ annualDiscountPercent }}%</span>
+        <span class="meta-chip">Checkout en 2 pasos</span>
+        <span class="meta-chip">Sin permanencia obligatoria</span>
+      </div>
     </header>
 
-    <div class="grid">
+    <section class="plans-section" aria-label="Planes disponibles">
       <article
-        class="card plan-card"
+        class="plan-card"
         *ngFor="let p of plans"
         [class.emphasis]="p.id === preselect"
         [class.active]="isExpanded(p.id)"
+        [class.current]="p.id === currentPlan"
+        [class.theme-free]="planTheme(p.id) === 'free'"
+        [class.theme-premium]="planTheme(p.id) === 'premium'"
+        [class.theme-vip]="planTheme(p.id) === 'vip'"
         tabindex="0"
         role="button"
         [attr.aria-expanded]="isExpanded(p.id)"
         (keydown)="onKeyCard($event, p.id)"
         (click)="toggle(p.id)"
       >
-        <!-- HEAD -->
-        <div class="head">
-          <span class="badge"
-                [class.badge--free]="p.id==='free'"
-                [class.badge--premium]="p.id==='premium'"
-                [class.badge--vip]="p.id==='vip'">
-            {{ p.name | uppercase }}
-          </span>
-
-          <h3 class="title">{{ p.highlight || 'Plan de membresía' }}</h3>
-
-          <div class="price">
-            <span class="amount">Q{{ p.monthlyPrice }}</span>
-            <span class="unit">/mes</span>
-          </div>
+        <div class="plan-top">
+          <span class="plan-label">{{ p.name | uppercase }}</span>
+          <span class="plan-state" *ngIf="p.id === currentPlan">Tu plan actual</span>
         </div>
 
-        <!-- CTA (no propaga click) -->
-        <div class="cta" (click)="$event.stopPropagation()">
-          <button
-            class="btn primary"
-            [class.ghost]="p.id === currentPlan"
-            (click)="choose(p.id)">
-            {{ p.id === currentPlan ? 'Plan actual' : 'Elegir ' + p.name }}
+        <div class="plan-main">
+          <h3>{{ p.highlight || 'Plan para tu tienda' }}</h3>
+
+          <div class="price-wrap">
+            <span class="currency">Q</span>
+            <span class="amount">{{ p.monthlyPrice }}</span>
+            <span class="unit">/mes</span>
+          </div>
+
+          <p class="yearly-info" *ngIf="p.monthlyPrice > 0">
+            Anual: Q{{ yearlyEquivalent(p.id) }} (pagas 10 meses)
+          </p>
+          <p class="yearly-info" *ngIf="p.monthlyPrice === 0">
+            Empieza gratis y mejora cuando quieras.
+          </p>
+        </div>
+
+        <ul class="perk-preview" aria-label="Resumen de beneficios">
+          <li *ngFor="let perk of p.perks | slice:0:3">{{ perk }}</li>
+        </ul>
+
+        <div class="plan-actions" (click)="$event.stopPropagation()">
+          <button class="btn primary" [class.ghost]="p.id === currentPlan" (click)="choose(p.id)">
+            {{ p.id === currentPlan ? 'Administrar plan' : 'Elegir ' + p.name }}
           </button>
 
           <button class="btn ghost toggle" (click)="toggle(p.id)">
-            {{ isExpanded(p.id) ? 'Ocultar beneficios' : 'Ver beneficios' }}
+            {{ isExpanded(p.id) ? 'Ocultar detalles' : 'Ver detalles' }}
             <i class="chev" [class.open]="isExpanded(p.id)"></i>
           </button>
         </div>
 
-        <div class="divider"></div>
-
-        <!-- BENEFICIOS: sólo se renderizan si está expandido -->
         <div class="benefits" *ngIf="isExpanded(p.id)">
           <ul class="ticks">
             <li *ngFor="let perk of p.perks">
-              <span class="tick" aria-hidden="true">✓</span>
-              <span class="perk-text">{{ perk }}</span>
+              <span class="tick" aria-hidden="true">&#10003;</span>
+              <span>{{ perk }}</span>
             </li>
           </ul>
 
-          <div class="foot">
-            <span class="muted note">Yearly: pagas 10 meses y obtienes 2 gratis.</span>
-            <a class="link" (click)="choose(p.id)">Continuar al checkout →</a>
+          <div class="footnote">
+            <span class="muted">Sin cargos ocultos. Puedes cambiar o cancelar renovacion futura.</span>
+            <a class="link" (click)="choose(p.id)">Continuar al checkout</a>
           </div>
         </div>
       </article>
-    </div>
+    </section>
 
-    <!-- FAQ -->
-    <section class="faq">
-      <header class="subhead">
-        <h3>Preguntas rápidas</h3>
-      </header>
+    <section class="faq" aria-label="Preguntas frecuentes de membresias">
+      <h2>Preguntas rapidas</h2>
+
       <details>
         <summary>¿Puedo cambiar de plan cuando quiera?</summary>
-        <p>Sí, el cambio aplica de inmediato. La próxima renovación usa el plan vigente.</p>
+        <p>Si. El cambio aplica de inmediato y la proxima renovacion usa el plan vigente.</p>
       </details>
+
       <details>
-        <summary>¿Yearly tiene descuento?</summary>
-        <p>Sí, pagas 10 meses y obtienes 2 gratis. Verás el total en el checkout.</p>
+        <summary>¿El plan anual tiene descuento?</summary>
+        <p>Si. Pagas 10 meses y recibes 2 meses adicionales sin costo.</p>
       </details>
+
       <details>
-        <summary>¿Hay reembolsos?</summary>
-        <p>Para membresías de paga no hay reembolsos parciales. Puedes cancelar la renovación futura.</p>
+        <summary>¿Hay reembolsos en planes pagados?</summary>
+        <p>No hay reembolsos parciales. Puedes cancelar la renovacion futura en cualquier momento.</p>
       </details>
     </section>
   </div>

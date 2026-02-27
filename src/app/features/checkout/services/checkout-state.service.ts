@@ -1,9 +1,7 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { BehaviorSubject, combineLatest, map, Observable } from 'rxjs';
 import { Address, CardInfo, ContactInfo, PaymentKind, ShippingMethod } from '../models/checkout.models';
 import { CartStateService } from '../../cart/services/cart-state.service';
-
-// ⚠️ AJUSTA ESTE PATH a donde tengas tu CartStateService real
 
 interface CheckoutSnapshot {
   contact?: ContactInfo;
@@ -19,17 +17,23 @@ interface CheckoutSnapshot {
   orderNumber?: string;
 }
 
+interface LastOrderSnapshot {
+  orderNumber: string;
+  createdAt: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CheckoutStateService {
-
   readonly shippingMethods: ShippingMethod[] = [
-    { id: 'standard', label: 'Estándar', description: '3–5 días hábiles', price: 25, eta: '3–5 días' },
-    { id: 'express',  label: 'Express',  description: '1–2 días hábiles', price: 45, eta: '1–2 días' },
-    { id: 'pickup',   label: 'Retiro en tienda', description: 'Retiro en sucursal', price: 0, eta: 'Mismo día' },
+    { id: 'standard', label: 'Estandar', description: '3-5 dias habiles', price: 25, eta: '3-5 dias' },
+    { id: 'express', label: 'Express', description: '1-2 dias habiles', price: 45, eta: '1-2 dias' },
+    { id: 'pickup', label: 'Retiro en tienda', description: 'Retiro en sucursal', price: 0, eta: 'Mismo dia' },
   ];
 
   private readonly FREE_THRESHOLD = 500;
   private storeKey = 'mp_checkout_v1';
+  private lastOrderKey = 'mp_last_order_v1';
+  private cipherKey = 'mp_front_checkout_key';
 
   private _state = new BehaviorSubject<CheckoutSnapshot>(this.load() ?? {
     shippingMethodId: 'standard',
@@ -43,36 +47,35 @@ export class CheckoutStateService {
 
   constructor(private cart: CartStateService) {}
 
-  // ---- Cart passthroughs (tipados explícitos para templates estrictos) ----
-  readonly items$      = this.cart.items$ as Observable<any[]>;
-  readonly itemCount$  = this.cart.itemCount$ as Observable<number>;
-  readonly subtotal$   = this.cart.subtotal$ as Observable<number>;
-  readonly discount$   = this.cart.discount$ as Observable<number>;
+  // Cart passthroughs with explicit types for strict templates.
+  readonly items$ = this.cart.items$ as Observable<any[]>;
+  readonly itemCount$ = this.cart.itemCount$ as Observable<number>;
+  readonly subtotal$ = this.cart.subtotal$ as Observable<number>;
+  readonly discount$ = this.cart.discount$ as Observable<number>;
   readonly freeThreshold = this.cart.freeThreshold;
-  readonly freeProgress$  = this.cart.freeProgress$ as Observable<number>;
+  readonly freeProgress$ = this.cart.freeProgress$ as Observable<number>;
   readonly freeRemaining$ = this.cart.freeRemaining$ as Observable<number>;
 
-  // ---- Shipping calc (con generics para evitar errores de tuplas) ----
   readonly shipping$ = combineLatest([this.subtotal$, this.state$] as const).pipe(
-    map(([subtotal, st]) => {
-      const method = this.shippingMethods.find(m => m.id === st.shippingMethodId)!;
+    map(([subtotal, state]) => {
+      if (subtotal <= 0) return 0;
+      const method = this.shippingMethods.find((m) => m.id === state.shippingMethodId)!;
       if (method.id === 'standard' && subtotal >= this.FREE_THRESHOLD) return 0;
       return method.price;
     })
   );
 
   readonly total$ = combineLatest([this.subtotal$, this.discount$, this.shipping$] as const).pipe(
-    map(([s, d, sh]) => Math.max(0, s - d) + sh)
+    map(([subtotal, discount, shipping]) => Math.max(0, subtotal - discount) + shipping)
   );
 
-  // ---- State updaters ----
   setContactAndShipping(contact: ContactInfo, shippingAddress: Address) {
     const next = { ...this._state.value, contact, shippingAddress, step1Done: true };
     this.set(next);
   }
 
   setShippingMethod(id: ShippingMethod['id']) {
-    if (!this.shippingMethods.some(m => m.id === id)) return;
+    if (!this.shippingMethods.some((m) => m.id === id)) return;
     const next = { ...this._state.value, shippingMethodId: id, step2Done: true };
     this.set(next);
   }
@@ -87,23 +90,32 @@ export class CheckoutStateService {
     this.set(next);
   }
 
-  setBillingAddress(addr?: Address) {
-    const next = { ...this._state.value, billingAddress: addr };
+  setBillingAddress(address?: Address) {
+    const next = { ...this._state.value, billingAddress: address };
     this.set(next);
   }
 
   setCardInfo(card?: CardInfo) {
-    const next = { ...this._state.value, card, step3Done: !!card };
+    // Step 3 is considered completed once payment step is submitted,
+    // even when payment type does not require card details.
+    const next = { ...this._state.value, card, step3Done: true };
     this.set(next);
   }
 
-  setOrderNumber(ord: string) {
-    const next = { ...this._state.value, orderNumber: ord };
+  setOrderNumber(orderNumber: string) {
+    const next = { ...this._state.value, orderNumber };
     this.set(next);
   }
 
   resetAfterSuccess() {
-    const ord = this._state.value.orderNumber;
+    const order = this._state.value.orderNumber;
+    if (order) {
+      this.saveLastOrder({
+        orderNumber: order,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
     this.cart.clear();
     this.set({
       shippingMethodId: 'standard',
@@ -112,28 +124,93 @@ export class CheckoutStateService {
       step2Done: false,
       step3Done: false,
     });
-    return ord;
+    return order;
   }
 
-  applyCoupon(code: string | null) { this.cart.applyCoupon(code); }
-  clearCoupon() { this.cart.applyCoupon(null); }
+  getLastOrder(): LastOrderSnapshot | null {
+    return this.loadLastOrder();
+  }
 
-  // ---- helpers ----
-  get snapshot(): CheckoutSnapshot { return this._state.value; }
+  applyCoupon(code: string | null) {
+    this.cart.applyCoupon(code);
+  }
+
+  clearCoupon() {
+    this.cart.applyCoupon(null);
+  }
+
+  get snapshot(): CheckoutSnapshot {
+    return this._state.value;
+  }
 
   private set(next: CheckoutSnapshot) {
     this._state.next(next);
     this.save(next);
   }
 
-  private save(snap: CheckoutSnapshot) {
-    try { localStorage.setItem(this.storeKey, JSON.stringify(snap)); } catch {}
+  private save(snapshot: CheckoutSnapshot) {
+    try {
+      const safe: CheckoutSnapshot = {
+        ...snapshot,
+        card: snapshot.card
+          ? {
+              holder: snapshot.card.holder,
+              number: this.maskCard(snapshot.card.number),
+              exp: snapshot.card.exp,
+              cvc: '',
+              brand: snapshot.card.brand,
+            }
+          : undefined,
+      };
+      const encoded = this.encode(JSON.stringify(safe));
+      localStorage.setItem(this.storeKey, encoded);
+    } catch {}
   }
 
   private load(): CheckoutSnapshot | null {
     try {
       const raw = localStorage.getItem(this.storeKey);
-      return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
+      return raw ? JSON.parse(this.decode(raw)) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private saveLastOrder(data: LastOrderSnapshot) {
+    try {
+      localStorage.setItem(this.lastOrderKey, this.encode(JSON.stringify(data)));
+    } catch {}
+  }
+
+  private loadLastOrder(): LastOrderSnapshot | null {
+    try {
+      const raw = localStorage.getItem(this.lastOrderKey);
+      return raw ? JSON.parse(this.decode(raw)) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private maskCard(value: string): string {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (!digits) return '';
+    const last4 = digits.slice(-4);
+    return `**** **** **** ${last4}`;
+  }
+
+  private encode(value: string): string {
+    const mixed = value
+      .split('')
+      .map((ch, i) => String.fromCharCode(ch.charCodeAt(0) ^ this.cipherKey.charCodeAt(i % this.cipherKey.length)))
+      .join('');
+    return btoa(mixed);
+  }
+
+  private decode(value: string): string {
+    const mixed = atob(value);
+    return mixed
+      .split('')
+      .map((ch, i) => String.fromCharCode(ch.charCodeAt(0) ^ this.cipherKey.charCodeAt(i % this.cipherKey.length)))
+      .join('');
   }
 }
