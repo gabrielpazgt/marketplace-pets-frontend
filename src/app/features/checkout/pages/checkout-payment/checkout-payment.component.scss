@@ -1,16 +1,157 @@
-.title { margin: 0 0 4px 0; font-size: var(--fs-xl); }
+﻿.title {
+  margin: 0 0 4px;
+  font-size: var(--fs-xl);
+}
 
-.pay-kind { display: flex; gap: 8px; margin: 10px 0; }
-.pill { padding: 6px 12px; border-radius: var(--r-pill); background: var(--chip); border: 1px solid var(--line); cursor: pointer; }
-.pill.on { background: #fff; border-color: var(--brand-600); box-shadow: 0 0 0 4px rgba(255, 167, 38, .12); }
+.payment-form {
+  display: grid;
+  gap: 12px;
+}
 
-.box { padding: 12px; margin-top: 10px; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.col-span-2 { grid-column: span 2; }
-.field label { display: block; font-weight: 700; margin-bottom: 6px; }
-.err { color: var(--danger); }
+.pay-kind {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
-.check { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
-.actions { display: flex; justify-content: space-between; margin-top: 10px; }
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  background: var(--chip);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  font-weight: 700;
+}
 
-@media (max-width: 720px) { .grid { grid-template-columns: 1fr; } .col-span-2 { grid-column: span 1; } }
+.pill .icon {
+  font-size: .95rem;
+  line-height: 1;
+}
+
+.pill input {
+  margin: 0;
+}
+
+.pill.on {
+  background: #fff;
+  border-color: var(--brand-600);
+  box-shadow: 0 0 0 4px rgba(255, 167, 38, 0.14);
+}
+
+.box {
+  padding: 14px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.card-form {
+  background: linear-gradient(180deg, #ffffff 0%, #fffdf9 100%);
+}
+
+.box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.box-header h3,
+.box h3 {
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+
+.brand-pill {
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: #fff;
+  font-size: .86rem;
+  font-weight: 700;
+}
+
+.brand-visa {
+  color: #1a5fb4;
+  border-color: color-mix(in srgb, #1a5fb4 22%, white);
+}
+
+.brand-mastercard {
+  color: #c66c00;
+  border-color: color-mix(in srgb, #c66c00 25%, white);
+}
+
+.brand-amex {
+  color: #006a9d;
+  border-color: color-mix(in srgb, #006a9d 25%, white);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.col-span-2 {
+  grid-column: span 2;
+}
+
+.field label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.err {
+  color: var(--danger);
+}
+
+.info-box ul {
+  margin: 8px 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.actions {
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+@media (max-width: 840px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .col-span-2 {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions .btn {
+    width: 100%;
+  }
+
+  .pill {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

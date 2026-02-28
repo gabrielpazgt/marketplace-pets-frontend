@@ -2,12 +2,23 @@
   display:flex; justify-content:space-between; align-items:center;
   margin-bottom:var(--sp-4);
   h2{ margin:0; font-size:var(--fs-xl); }
+
+  @media (max-width: 720px){
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+    .btn { width: 100%; }
+  }
 }
 
 .grid{
   display:grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap:16px;
+
+  @media (max-width: 720px){
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Empty state mejorado */
@@ -26,4 +37,12 @@
   }
   h3{ margin:0; }
   p{ margin:0 0 6px; }
+
+  @media (max-width: 720px){
+    padding: 20px;
+    align-items: flex-start;
+    flex-direction: column;
+    .art { width: 84px; height: 84px; border-radius: 18px; }
+    .btn { width: 100%; }
+  }
 }

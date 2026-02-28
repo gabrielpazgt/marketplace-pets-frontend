@@ -45,3 +45,10 @@
     background: var(--hex, #000); border:1px solid #e5e7eb;
   }
 }
+
+@media (max-width: 640px){
+  .preview{ padding: 14px; }
+  .canvas{ height: 210px; }
+  .pet-img{ width: 108px; height: 108px; }
+  .facts > div{ grid-template-columns: 84px 1fr; }
+}

@@ -14,20 +14,6 @@
       </div>
     </div>
 
-    <div class="spacer"></div>
-
-    <!-- Idioma -->
-    <div class="lang-dropdown" (click)="toggleLangDropdown()">
-      <span class="lang-selected">{{ selectedLanguage }}</span>
-      <i class="arrow" [class.open]="langOpen"></i>
-      <ul *ngIf="langOpen" class="lang-list">
-        <li *ngFor="let lang of languages"
-            (click)="selectLanguage(lang.code)"
-            [class.active]="lang.code === selectedLanguage">
-          {{ lang.code }}
-        </li>
-      </ul>
-    </div>
   </div>
 
   <!-- Main Navigation -->
@@ -38,6 +24,14 @@
         <img src="../../../assets/images/logo_marketpets_alargado.png" alt="MarketPets Logo" />
       </a>
 
+      <button
+        aria-label="Menú"
+        class="icon-btn mobile-menu-btn"
+        (click)="toggleMobileMenu()"
+      >
+        <mat-icon>{{ mobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+      </button>
+
       <!-- Links -->
       <ul class="menu">
         <li *ngFor="let link of navLinks">
@@ -45,6 +39,7 @@
             [routerLink]="link.path"
             routerLinkActive="active"
             [routerLinkActiveOptions]="{ exact: !!link.exact }"
+            (click)="closeMobileMenu()"
           >
             {{ link.label }}
           </a>
@@ -130,14 +125,29 @@
                 <strong>{{ (total$ | async) | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
               </div>
               <div class="actions">
-                <a routerLink="/cart" class="btn ghost">Ver carrito</a>
-                <a routerLink="/checkout" class="btn primary">Pagar</a>
+                <a routerLink="/cart" class="btn ghost" (click)="closeMobileMenu()">Ver carrito</a>
+                <a routerLink="/checkout" class="btn primary" (click)="closeMobileMenu()">Pagar</a>
               </div>
             </div>
           </div>
         </div>
         <!-- /cart -->
       </div>
+    </div>
+
+    <div class="mobile-panel" [class.open]="mobileMenuOpen">
+      <ul class="mobile-menu">
+        <li *ngFor="let link of navLinks">
+          <a
+            [routerLink]="link.path"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: !!link.exact }"
+            (click)="closeMobileMenu()"
+          >
+            {{ link.label }}
+          </a>
+        </li>
+      </ul>
     </div>
   </nav>
 </header>

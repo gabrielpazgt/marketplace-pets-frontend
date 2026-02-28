@@ -1,4 +1,4 @@
-import {
+﻿import {
   Component,
   ElementRef,
   HostListener,
@@ -14,30 +14,22 @@ import { CartStateService } from '../../features/cart/services/cart-state.servic
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent implements OnInit {
-
-  // Auth (dummy) → siempre “logueado” para ver el menú
+  // Auth (dummy): siempre logueado para ver el menu
   isLoggedIn = true;
   userMenuOpen = false;
 
   // Search
   showSearch = false;
   searchQuery = '';
+  mobileMenuOpen = false;
 
-  // Idiomas
-  languages = [
-    { code: 'ES', label: 'Español' },
-    { code: 'EN', label: 'English' }
-  ];
-  selectedLanguage = 'EN';
-  langOpen = false;
-
-  // Navegación
+  // Navegacion
   navLinks = [
-    { label: 'INICIO',      path: '/home',    exact: true },
-    { label: 'TIENDA',      path: '/catalog' },
-    { label: 'MEMBRESIAS',  path: '/memberships' },
-    { label: 'BLOG',        path: '/blog'  },
-    { label: 'ACERCA DE',   path: '/about' },
+    { label: 'INICIO', path: '/home', exact: true },
+    { label: 'TIENDA', path: '/catalog' },
+    { label: 'MEMBRESIAS', path: '/memberships' },
+    { label: 'BLOG', path: '/blog' },
+    { label: 'ACERCA DE', path: '/about' },
   ];
 
   // Cart (en vivo)
@@ -50,10 +42,10 @@ export class HeaderComponent implements OnInit {
 
   // Promo (top bar)
   promoMessages: string[] = [
-    '5% de descuento con membresía Premium',
-    'Envío gratis en compras > Q500',
-    'Nueva colección Otoño 2025',
-    '2×1 en accesorios de mascotas'
+    '5% de descuento con membresia Premium',
+    'Envio gratis en compras > Q500',
+    'Nueva coleccion Otono 2025',
+    '2x1 en accesorios de mascotas'
   ];
 
   constructor(
@@ -66,28 +58,29 @@ export class HeaderComponent implements OnInit {
 
   // --- Account ---
   onUserIconClick(): void {
-    this.userMenuOpen = !this.userMenuOpen; // sin redirigir a login
+    this.userMenuOpen = !this.userMenuOpen;
   }
 
   onUserMenuSelect(option: string): void {
     this.userMenuOpen = false;
     switch (option) {
-      case 'profile':     this.router.navigate(['/account/profile']); break;
-      case 'orders':      this.router.navigate(['/account/orders']); break;
-      case 'pets':        this.router.navigate(['/account/pets']); break;
-      case 'membership':  this.router.navigate(['/account/membership']); break;
+      case 'profile':
+        this.router.navigate(['/account/profile']);
+        break;
+      case 'orders':
+        this.router.navigate(['/account/orders']);
+        break;
+      case 'pets':
+        this.router.navigate(['/account/pets']);
+        break;
+      case 'membership':
+        this.router.navigate(['/account/membership']);
+        break;
       case 'logout':
-        this.isLoggedIn = false; // TODO: conectar a AuthService
+        this.isLoggedIn = false;
         this.router.navigate(['/']);
         break;
     }
-  }
-
-  // --- Idioma ---
-  toggleLangDropdown(): void { this.langOpen = !this.langOpen; }
-  selectLanguage(code: string): void {
-    this.selectedLanguage = code;
-    this.langOpen = false;
   }
 
   // --- Buscar ---
@@ -95,27 +88,45 @@ export class HeaderComponent implements OnInit {
     this.showSearch = !this.showSearch;
     if (!this.showSearch) this.searchQuery = '';
   }
-  onSearchSubmit(): void { console.log('Buscando:', this.searchQuery); }
+
+  onSearchSubmit(): void {
+    console.log('Buscando:', this.searchQuery);
+  }
+
+  // --- Mobile nav ---
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuOpen = false;
+  }
 
   // --- Mini cart ---
-  toggleMiniCart(): void { this.miniCartOpen = !this.miniCartOpen; }
-  closeMiniCart(): void { this.miniCartOpen = false; }
+  toggleMiniCart(): void {
+    this.miniCartOpen = !this.miniCartOpen;
+  }
 
-  remove(it: any): void {}
+  closeMiniCart(): void {
+    this.miniCartOpen = false;
+  }
+
+  remove(_it: any): void {}
 
   // Cerrar dropdowns al hacer click afuera o ESC
   @HostListener('document:click', ['$event.target'])
   onClickOutside(target: HTMLElement) {
     if (!this.eRef.nativeElement.contains(target)) {
-      this.langOpen = false;
       this.userMenuOpen = false;
       this.miniCartOpen = false;
+      this.mobileMenuOpen = false;
     }
   }
+
   @HostListener('document:keydown.escape')
   onEsc() {
-    this.langOpen = false;
     this.userMenuOpen = false;
     this.miniCartOpen = false;
+    this.mobileMenuOpen = false;
   }
 }

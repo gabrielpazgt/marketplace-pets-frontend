@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap');
+
 /* ==========================================================================
    Global Styles / Design System Tokens
    ========================================================================== */
@@ -9,11 +11,25 @@
 html, body, app-root { height: 100%; }
 body {
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-family: var(--font-body);
   color: var(--ink);
-  background: #fff;
+  background:
+    radial-gradient(1100px 420px at 14% -12%, rgba(255, 167, 38, 0.14), rgba(255, 167, 38, 0) 70%),
+    radial-gradient(920px 380px at 84% 0%, rgba(66, 165, 245, 0.12), rgba(66, 165, 245, 0) 72%),
+    #fff;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+::selection {
+  color: #fff;
+  background: color-mix(in srgb, var(--brand) 76%, #000 6%);
 }
 
 /* app-root como layout vertical (Header / Main / Footer) */
@@ -31,26 +47,29 @@ a { color: inherit; text-decoration: none; }
 
 /* 4) Tokens globales (CSS variables) */
 :root {
+  --font-body: "Manrope", "Segoe UI", sans-serif;
+  --font-display: "Sora", "Manrope", sans-serif;
+
   /* ---- Marca y acentos ---- */
-  --brand:        #ffa726;   /* Naranja cálido */
+  --brand:        #ffa726;
   --brand-600:    #e98c00;
   --brand-700:    #c87400;
-  --accent:       #42a5f5;   /* Azul claro */
-  --success:      #66bb6a;   /* Verde natural */
+  --accent:       #42a5f5;
+  --success:      #66bb6a;
   --warning:      #f59e0b;
   --danger:       #ef4444;
   --info:         #3b82f6;
 
   /* ---- Neutrales / texto / superficies ---- */
-  --ink:          #0f172a;   /* Texto principal */
+  --ink:          #0f172a;
   --ink-2:        #1f2937;
-  --muted:        #64748b;   /* Texto secundario */
-  --line:         #e5e7eb;   /* Bordes sutiles */
-  --chip:         #f1f5f9;   /* Fondos chip */
+  --muted:        #64748b;
+  --line:         #e5e7eb;
+  --chip:         #f1f5f9;
   --surface-50:   #fafafa;
   --surface-100:  #f5f5f5;
 
-  /* ---- Tipografía (clamp para responsivo suave) ---- */
+  /* ---- Tipografia ---- */
   --fs-xs: clamp(.72rem, .67rem + .2vw, .78rem);
   --fs-sm: clamp(.84rem, .8rem + .2vw, .9rem);
   --fs-md: clamp(1rem, .96rem + .2vw, 1.06rem);
@@ -73,7 +92,7 @@ a { color: inherit; text-decoration: none; }
   /* ---- Radios ---- */
   --r-xs: 8px;
   --r-sm: 12px;
-  --r-md: 16px;  /* default */
+  --r-md: 16px;
   --r-lg: 20px;
   --r-pill: 999px;
 
@@ -83,7 +102,7 @@ a { color: inherit; text-decoration: none; }
   --elev-3: 0 10px 24px rgba(0,0,0,.12);
   --elev-4: 0 20px 44px rgba(0,0,0,.14);
 
-  /* Compat con lo que ya venías usando */
+  /* Compat con lo que ya venias usando */
   --radius: var(--r-md);
   --shadow-card: var(--elev-3);
 
@@ -93,37 +112,43 @@ a { color: inherit; text-decoration: none; }
   --timing: ease;
 
   /* ---- Layout ---- */
-  --container-w: 1200px;   /* ancho máx contenedores */
-  --container-px: 16px;    /* padding horizontal container */
+  --container-w: 1180px;
+  --container-px: 16px;
+
+  /* ---- Tokens semanticos (faciles de mapear por diseño) ---- */
+  --color-page-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f8fafc;
+  --color-border: var(--line);
+  --color-text-primary: var(--ink);
+  --color-text-secondary: var(--muted);
+  --color-accent: var(--accent);
+  --color-brand: var(--brand);
+  --layout-header-offset: 104px;
 }
 
 /* 5) Accesibilidad y comportamiento */
 :focus-visible {
-  outline: 3px solid rgba(255, 167, 38, .35); /* anillo de foco naranja suave */
+  outline: 3px solid rgba(255, 167, 38, .35);
   outline-offset: 2px;
 }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
 
-/* 6) Utilidades globales (se reutilizan en módulos) */
-
-/* Contenedor principal */
+/* 6) Utilidades globales */
 .container {
   width: min(var(--container-w), calc(100% - 2 * var(--container-px)));
   margin-inline: auto;
 }
 
-/* Texto secundario */
 .muted { color: var(--muted); }
 
-/* Visually hidden (para accesibilidad) */
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
 }
 
-/* Enlaces con hover de marca */
 a.link {
   color: var(--ink);
   text-decoration: none;
@@ -132,8 +157,6 @@ a.link {
 a.link:hover { color: var(--brand); }
 
 /* 7) Patrones base de componentes */
-
-/* Cards */
 .card {
   background: #fff;
   border: 1px solid var(--line);
@@ -141,7 +164,6 @@ a.link:hover { color: var(--brand); }
   box-shadow: var(--shadow-card);
 }
 
-/* Chips / Pills */
 .chip {
   display: inline-block;
   padding: 6px 10px;
@@ -151,7 +173,6 @@ a.link:hover { color: var(--brand); }
   font-size: var(--fs-sm);
 }
 
-/* Inputs */
 .input,
 input[type="text"],
 input[type="email"],
@@ -181,7 +202,6 @@ textarea:focus {
 input::placeholder,
 textarea::placeholder { color: #94a3b8; }
 
-/* Badges */
 .badge {
   display: inline-grid;
   place-items: center;
@@ -196,7 +216,6 @@ textarea::placeholder { color: #94a3b8; }
   border-radius: var(--r-pill);
 }
 
-/* Botones */
 .btn {
   --btn-bg: #fff;
   --btn-fg: var(--ink);
@@ -205,25 +224,26 @@ textarea::placeholder { color: #94a3b8; }
   display: inline-grid;
   place-items: center;
   gap: 8px;
-  padding: .6rem .9rem;
+  padding: .62rem 1rem;
   border-radius: var(--r-pill);
   border: 1px solid var(--btn-bd);
   background: var(--btn-bg);
   color: var(--btn-fg);
   font-weight: 800;
   cursor: pointer;
-  transition: filter var(--t-fast) var(--timing), transform var(--t-fast) var(--timing), background var(--t-base) var(--timing), border-color var(--t-base) var(--timing);
+  transition: filter var(--t-fast) var(--timing), transform var(--t-fast) var(--timing), background var(--t-base) var(--timing), border-color var(--t-base) var(--timing), box-shadow var(--t-base) var(--timing);
   text-decoration: none;
   user-select: none;
+  min-height: 42px;
 }
-.btn:hover { filter: saturate(1.06); transform: translateY(-1px); }
+.btn:hover { filter: saturate(1.08); transform: translateY(-1px); }
 .btn:active { transform: none; }
 
-/* Variantes */
 .btn.primary {
-  --btn-bg: linear-gradient(90deg, var(--brand), var(--brand-700));
+  --btn-bg: linear-gradient(110deg, var(--brand), var(--brand-700));
   --btn-fg: #fff;
   --btn-bd: transparent;
+  box-shadow: 0 10px 24px rgba(233, 140, 0, 0.3);
   border: 0;
 }
 .btn.ghost {
@@ -250,14 +270,12 @@ textarea::placeholder { color: #94a3b8; }
   border: 0;
 }
 
-/* Secciones / contenedores suaves */
 .section {
   padding-block: 48px;
   background: #fff;
 }
 .section--muted { background: var(--surface-50); }
 
-/* Tablas sencillas (cuando las necesites) */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -278,3 +296,14 @@ textarea::placeholder { color: #94a3b8; }
 .hide { display: none !important; }
 .show { display: block !important; }
 
+@media (max-width: 1024px) {
+  :root {
+    --container-px: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --container-px: 12px;
+  }
+}

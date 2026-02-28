@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+﻿import { Component } from '@angular/core';
 import { CheckoutStateService } from '../../services/checkout-state.service';
 
 @Component({
@@ -8,8 +8,18 @@ import { CheckoutStateService } from '../../services/checkout-state.service';
 })
 export class OrderSummaryComponent {
   constructor(public state: CheckoutStateService) {}
-  code = '';
 
-  apply() { this.state.applyCoupon(this.code); }
-  clear() { this.code = ''; this.state.clearCoupon(); }
+  code = '';
+  message = '';
+
+  apply() {
+    this.state.applyCoupon(this.code);
+    this.message = this.code.trim() ? 'Cupon aplicado.' : '';
+  }
+
+  clear() {
+    this.code = '';
+    this.state.clearCoupon();
+    this.message = 'Cupon removido.';
+  }
 }

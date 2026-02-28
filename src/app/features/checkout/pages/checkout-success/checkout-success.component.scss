@@ -1,3 +1,105 @@
-.success { padding: 24px; text-align: center; }
-.emoji { font-size: 42px; margin-bottom: 6px; }
-h2 { font-size: var(--fs-xl); margin: 0 0 6px 0; }
+﻿.success {
+  padding: clamp(18px, 3vw, 28px);
+  text-align: center;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.mark {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 12px 26px rgba(34, 197, 94, 0.25);
+}
+
+h2 {
+  margin: 0;
+  font-size: clamp(1.4rem, 2.8vw, 2rem);
+}
+
+.lead {
+  margin: 8px auto 0;
+  max-width: 56ch;
+  color: var(--muted);
+}
+
+.order {
+  margin: 14px auto 0;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  border: 1px dashed var(--line);
+  background: #fff;
+  width: fit-content;
+  display: grid;
+  gap: 4px;
+}
+
+.order span {
+  font-size: .82rem;
+  color: var(--muted);
+}
+
+.order strong {
+  font-size: 1.02rem;
+}
+
+.order-code-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.order-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  letter-spacing: .03em;
+  padding: 5px 8px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, #fff);
+}
+
+.copy-btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.copy-btn:hover {
+  border-color: var(--brand-600);
+  color: var(--brand-700);
+}
+
+.actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .order-code-wrap {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .copy-btn {
+    width: 100%;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions .btn {
+    width: 100%;
+  }
+}

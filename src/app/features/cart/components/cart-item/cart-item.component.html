@@ -1,4 +1,4 @@
-<article class="row">
+﻿<article class="row">
   <div class="cell media">
     <img [src]="item.image" [alt]="item.name" width="96" height="96" loading="lazy" decoding="async">
   </div>
@@ -10,14 +10,14 @@
       <span *ngFor="let a of item.attrs" class="chip">{{ a }}</span>
     </div>
 
-    <div class="stock" [class.low]="item.stock<=3">
-      {{ item.stock<=3 ? '¡Quedan pocas unidades!' : 'En stock' }}
+    <div class="stock" [class.low]="item.stock <= 3">
+      {{ item.stock <= 3 ? 'Quedan pocas unidades' : 'En stock' }}
     </div>
   </div>
 
-  <!-- precios por unidad (Normal / Membresía) -->
   <div class="cell price">
-    <!-- Normal -->
+    <span class="cell-label">Precio</span>
+
     <div class="price-chip price--regular" aria-label="Precio normal">
       <span class="label">Normal</span>
       <div class="vals">
@@ -30,9 +30,8 @@
       </div>
     </div>
 
-    <!-- Membresía -->
-    <div class="price-chip price--member" aria-label="Precio con membresía">
-      <span class="label">Membresía</span>
+    <div class="price-chip price--member" aria-label="Precio con membresia">
+      <span class="label">Membresia</span>
       <div class="vals">
         <span *ngIf="memberOld" class="old">
           {{ memberOld | currency:'GTQ':'symbol-narrow':'1.0-0' }}
@@ -45,6 +44,7 @@
   </div>
 
   <div class="cell qty">
+    <span class="cell-label">Cantidad</span>
     <app-quantity-stepper
       [value]="item.qty"
       [max]="item.stock"
@@ -53,6 +53,7 @@
   </div>
 
   <div class="cell total">
+    <span class="cell-label">Total</span>
     {{ lineTotal | currency:'GTQ':'symbol-narrow':'1.0-0' }}
   </div>
 

@@ -1,6 +1,21 @@
-<div class="success card">
-  <div class="emoji">🎉</div>
-  <h2>¡Pedido realizado!</h2>
-  <p *ngIf="order">Tu número de pedido es <strong>{{ order }}</strong>.</p>
-  <a routerLink="/" class="btn primary">Volver a la tienda</a>
-</div>
+﻿<section class="success card">
+  <div class="mark" aria-hidden="true">OK</div>
+
+  <h2>Pedido realizado</h2>
+  <p class="lead">Gracias por tu compra. Tu pedido ya fue registrado y sera procesado pronto.</p>
+
+  <div class="order" *ngIf="order">
+    <span>Numero de pedido</span>
+    <div class="order-code-wrap">
+      <strong class="order-code">{{ order }}</strong>
+      <button type="button" class="copy-btn" (click)="copyOrder()">
+        {{ copied ? 'Copiado' : 'Copiar' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="actions">
+    <a routerLink="/catalog" class="btn ghost">Seguir comprando</a>
+    <a routerLink="/account/orders" class="btn primary">Ver historial</a>
+  </div>
+</section>

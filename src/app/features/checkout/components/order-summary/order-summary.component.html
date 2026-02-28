@@ -1,18 +1,19 @@
-<div class="card summary">
-  <div class="hd">
+﻿<section class="card summary">
+  <header class="hd" *ngIf="state.itemCount$ | async as count">
     <h3>Resumen</h3>
-    <span class="badge">{{ (state.itemCount$ | async) || 0 }}</span>
-  </div>
+    <span class="count-label">{{ count }} {{ count === 1 ? 'articulo' : 'articulos' }}</span>
+  </header>
 
-  <ul class="mini-list">
+  <ul class="mini-list" *ngIf="state.itemCount$ | async as count">
     <li *ngFor="let it of (state.items$ | async)">
-      <img [src]="it.image" [alt]="it.name" />
+      <img [src]="it.image" [alt]="it.name" loading="lazy" />
       <div class="info">
         <strong>{{ it.name }}</strong>
         <span class="muted">x{{ it.qty }}</span>
       </div>
       <div class="price">{{ (it.price * it.qty) | currency:'GTQ':'symbol-narrow' }}</div>
     </li>
+    <li *ngIf="!count" class="empty muted">Tu carrito esta vacio.</li>
   </ul>
 
   <div class="line"></div>
@@ -28,7 +29,7 @@
   </div>
 
   <div class="row">
-    <span>Envío</span>
+    <span>Envio</span>
     <strong>{{ (state.shipping$ | async) | currency:'GTQ':'symbol-narrow' }}</strong>
   </div>
 
@@ -38,12 +39,13 @@
   </div>
 
   <details class="coupon">
-    <summary>¿Tienes un cupón?</summary>
+    <summary>Tienes un cupon?</summary>
     <div class="coupon__box">
       <input class="input" [(ngModel)]="code" placeholder="AUMAKKI15" />
-      <button class="btn ghost" (click)="clear()">Limpiar</button>
-      <button class="btn primary" (click)="apply()">Aplicar</button>
+      <button class="btn ghost" type="button" (click)="clear()">Limpiar</button>
+      <button class="btn primary" type="button" (click)="apply()">Aplicar</button>
     </div>
-    <small class="muted">Cupón demo: <strong>AUMAKKI15</strong> (15% OFF)</small>
+    <small class="muted hint">Cupon demo: <strong>AUMAKKI15</strong> (15% OFF)</small>
+    <small class="muted status" *ngIf="message">{{ message }}</small>
   </details>
-</div>
+</section>

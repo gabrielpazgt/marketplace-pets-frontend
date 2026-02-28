@@ -1,92 +1,151 @@
-<h2 class="title">3) Pago</h2>
-<p class="muted">Selecciona el método de pago y completa los datos requeridos.</p>
+﻿<h2 class="title">3) Pago</h2>
+<p class="muted">Selecciona tu metodo de pago y completa los datos requeridos.</p>
 
-<form [formGroup]="form" (ngSubmit)="payNow()">
-  <div class="pay-kind">
+<form [formGroup]="form" (ngSubmit)="payNow()" class="payment-form" novalidate>
+  <div class="pay-kind" role="radiogroup" aria-label="Metodo de pago">
     <label class="pill" [class.on]="kind === 'card'">
-      <input type="radio" name="kind" value="card"
-             formControlName="kind" [checked]="kind==='card'"
-             (change)="onKindChange()" />
+      <input
+        type="radio"
+        name="kind"
+        value="card"
+        formControlName="kind"
+        [checked]="kind === 'card'"
+        (change)="onKindChange()" />
+      <span class="icon" aria-hidden="true">💳</span>
       Tarjeta
     </label>
+
     <label class="pill" [class.on]="kind === 'bank'">
-      <input type="radio" name="kind" value="bank"
-             formControlName="kind" (change)="onKindChange()" />
+      <input
+        type="radio"
+        name="kind"
+        value="bank"
+        formControlName="kind"
+        (change)="onKindChange()" />
+      <span class="icon" aria-hidden="true">🏦</span>
       Transferencia
     </label>
+
     <label class="pill" [class.on]="kind === 'cod'">
-      <input type="radio" name="kind" value="cod"
-             formControlName="kind" (change)="onKindChange()" />
+      <input
+        type="radio"
+        name="kind"
+        value="cod"
+        formControlName="kind"
+        (change)="onKindChange()" />
+      <span class="icon" aria-hidden="true">🚚</span>
       Contra entrega
     </label>
   </div>
 
-  <!-- Card form -->
-  <div *ngIf="kind === 'card'" class="card box" formGroupName="card">
+  <section *ngIf="kind === 'card'" class="box card-form" formGroupName="card">
+    <header class="box-header">
+      <h3>Tarjeta</h3>
+      <span class="brand-pill" [ngClass]="brandClass">{{ brandLabel }}</span>
+    </header>
+
     <div class="grid">
       <div class="field col-span-2">
         <label>Nombre en la tarjeta *</label>
-        <input class="input" formControlName="holder" placeholder="Como aparece en la tarjeta" />
-        <small *ngIf="form.get('card.holder')?.invalid && form.get('card.holder')?.touched" class="err">Campo requerido</small>
+        <input
+          class="input"
+          formControlName="holder"
+          placeholder="Como aparece en la tarjeta"
+          autocomplete="cc-name"
+          (input)="onHolderInput($event)" />
+        <small
+          *ngIf="form.get('card.holder')?.errors?.['required'] && form.get('card.holder')?.touched"
+          class="err">
+          Campo requerido.
+        </small>
+        <small
+          *ngIf="form.get('card.holder')?.errors?.['invalidHolder'] && form.get('card.holder')?.touched"
+          class="err">
+          Usa solo letras y espacios (minimo 4 caracteres).
+        </small>
       </div>
 
       <div class="field col-span-2">
-        <label>Número de tarjeta *</label>
-        <input class="input" maxlength="19" placeholder="1234 5678 9012 3456" formControlName="number" />
+        <label>Numero de tarjeta *</label>
+        <input
+          class="input"
+          [attr.maxlength]="cardBrand === 'amex' ? 17 : 23"
+          [placeholder]="cardPlaceholder"
+          formControlName="number"
+          inputmode="numeric"
+          autocomplete="cc-number"
+          (input)="onCardInput($event)" />
         <small *ngIf="form.get('card.number')?.invalid && form.get('card.number')?.touched" class="err">
-          Formato inválido (#### #### #### ####)
+          Numero invalido. Debe ser {{ expectedDigitsLabel }}.
         </small>
       </div>
 
       <div class="field">
         <label>Vencimiento (MM/AA) *</label>
-        <input class="input" maxlength="5" placeholder="08/27" formControlName="exp" />
-        <small *ngIf="form.get('card.exp')?.invalid && form.get('card.exp')?.touched" class="err">Formato inválido</small>
+        <input
+          class="input"
+          maxlength="5"
+          placeholder="08/27"
+          formControlName="exp"
+          inputmode="numeric"
+          autocomplete="cc-exp"
+          (input)="onExpInput($event)" />
+        <small *ngIf="form.get('card.exp')?.invalid && form.get('card.exp')?.touched" class="err">
+          Fecha invalida.
+        </small>
       </div>
 
       <div class="field">
         <label>CVC *</label>
-        <input class="input" maxlength="4" placeholder="123" formControlName="cvc" />
-        <small *ngIf="form.get('card.cvc')?.invalid && form.get('card.cvc')?.touched" class="err">3 o 4 dígitos</small>
+        <input
+          class="input"
+          [attr.maxlength]="cardBrand === 'amex' ? 4 : 3"
+          [placeholder]="cvcPlaceholder"
+          formControlName="cvc"
+          inputmode="numeric"
+          autocomplete="cc-csc"
+          (input)="onCvcInput($event)" />
+        <small *ngIf="form.get('card.cvc')?.invalid && form.get('card.cvc')?.touched" class="err">
+          {{ cardBrand === 'amex' ? 'Debe contener 4 digitos.' : 'Debe contener 3 digitos.' }}
+        </small>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Bank instructions -->
-  <div *ngIf="kind === 'bank'" class="card box">
-    <p><strong>Transferencia bancaria</strong></p>
+  <section *ngIf="kind === 'bank'" class="box info-box">
+    <h3>Transferencia bancaria</h3>
     <ul>
       <li>Banco: Banco de Ejemplo</li>
       <li>Cuenta: 1234567-8</li>
-      <li>Nombre: MarketPets, S.A.</li>
-      <li>Concepto: Pedido (se genera al finalizar)</li>
+      <li>Titular: MarketPets, S.A.</li>
+      <li>Concepto: Numero de pedido generado al confirmar.</li>
     </ul>
-    <small class="muted">Tu pedido se procesará al confirmar el pago.</small>
-  </div>
+    <p class="muted">Tu pedido se procesa al confirmar el pago en sistema.</p>
+  </section>
 
-  <!-- Cash on delivery -->
-  <div *ngIf="kind === 'cod'" class="card box">
-    <p><strong>Contra entrega</strong></p>
-    <small class="muted">Disponible en áreas seleccionadas. El repartidor llevará POS o efectivo.</small>
-  </div>
+  <section *ngIf="kind === 'cod'" class="box info-box">
+    <h3>Contra entrega</h3>
+    <p class="muted">Disponible en zonas seleccionadas. Puedes pagar en efectivo o POS al recibir.</p>
+  </section>
 
   <label class="check">
     <input type="checkbox" formControlName="billingSame" (change)="onBillingSameChange()" />
-    <span>La dirección de facturación es igual a la de envío</span>
+    <span>La direccion de facturacion es igual a la de envio</span>
   </label>
 
-  <div *ngIf="!form.get('billingSame')?.value" class="card box" formGroupName="billing">
+  <section *ngIf="!form.get('billingSame')?.value" class="box" formGroupName="billing">
+    <h3>Direccion de facturacion</h3>
     <div class="grid">
       <div class="field col-span-2">
-        <label>Dirección de facturación *</label>
-        <input class="input" placeholder="Calle, número…" formControlName="line1" />
+        <label>Direccion *</label>
+        <input class="input" placeholder="Calle, numero, colonia" formControlName="line1" />
       </div>
       <div class="field">
-        <label>Departamento</label>
+        <label>Departamento *</label>
         <input class="input" formControlName="department" />
       </div>
       <div class="field">
-        <label>Municipio</label>
+        <label>Municipio *</label>
         <input class="input" formControlName="municipality" />
       </div>
       <div class="field">
@@ -98,14 +157,14 @@
         <input class="input" formControlName="references" />
       </div>
       <div class="field">
-        <label>Código Postal</label>
-        <input class="input" formControlName="postalCode" />
+        <label>Codigo postal</label>
+        <input class="input" formControlName="postalCode" inputmode="numeric" />
       </div>
     </div>
-  </div>
+  </section>
 
   <div class="actions">
-    <button class="btn ghost" type="button" (click)="back()">Atrás</button>
+    <button class="btn ghost" type="button" (click)="back()">Atras</button>
     <button class="btn primary" type="submit">Pagar ahora</button>
   </div>
 </form>

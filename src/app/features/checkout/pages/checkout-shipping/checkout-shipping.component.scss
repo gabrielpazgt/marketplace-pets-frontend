@@ -1,14 +1,79 @@
-.title { margin: 0 0 4px 0; font-size: var(--fs-xl); }
+﻿.title { margin: 0 0 4px; font-size: var(--fs-xl); }
 
 .methods {
-  list-style: none; padding: 0; margin: 12px 0;
-  display: grid; gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  display: grid;
+  gap: 12px;
 }
-.method { display: flex; align-items: center; justify-content: space-between; padding: 12px; cursor: pointer; }
-.method .left { display: flex; gap: 10px; align-items: center; }
-.method .txt { display: grid; }
-.method .right { font-weight: 800; }
-.dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--brand); background: transparent; display: inline-block; }
+
+.method {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  transition: border-color var(--t-fast) var(--timing), box-shadow var(--t-fast) var(--timing), transform var(--t-fast) var(--timing);
+}
+
+.method:hover {
+  transform: translateY(-1px);
+}
+
+.method .left {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.method .txt {
+  display: grid;
+}
+
+.method .right {
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--brand);
+  background: transparent;
+  display: inline-block;
+}
+
 .dot.on { background: var(--brand); }
-.method.active { border-color: var(--brand-600); box-shadow: 0 0 0 4px rgba(255, 167, 38, .12); }
-.actions { display: flex; justify-content: space-between; margin-top: 10px; }
+
+.method.active {
+  border-color: var(--brand-600);
+  box-shadow: 0 0 0 4px rgba(255, 167, 38, .12);
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .method {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .method .right {
+    width: 100%;
+    text-align: right;
+  }
+
+  .actions {
+    .btn { flex: 1; }
+  }
+}

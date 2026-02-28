@@ -8,11 +8,29 @@ import { CheckoutStateService } from '../../services/checkout-state.service';
 })
 export class CheckoutSuccessComponent implements OnInit {
   order?: string | null;
+  copied = false;
 
   constructor(private state: CheckoutStateService) {}
 
   ngOnInit(): void {
-    this.order = this.state.snapshot.orderNumber || null;
-    this.state.resetAfterSuccess();
+    const currentOrder = this.state.snapshot.orderNumber || null;
+    const persistedOrder = this.state.getLastOrder()?.orderNumber || null;
+
+    this.order = currentOrder || persistedOrder;
+
+    if (currentOrder) {
+      this.state.resetAfterSuccess();
+    }
+  }
+
+  async copyOrder() {
+    if (!this.order) return;
+    try {
+      await navigator.clipboard.writeText(this.order);
+      this.copied = true;
+      setTimeout(() => (this.copied = false), 1600);
+    } catch {
+      this.copied = false;
+    }
   }
 }
