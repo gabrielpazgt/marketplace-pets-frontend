@@ -1,0 +1,63 @@
+<section class="about">
+  <header class="hero container">
+    <div class="hero__content">
+      <span class="kicker">ACERCA DE</span>
+      <h1>Construimos un ecommerce de mascotas útil, humano y con impacto real.</h1>
+      <p>
+        Aumakki nace para simplificar la compra de productos para mascotas y, al mismo tiempo,
+        apoyar iniciativas que cuidan animales en situación vulnerable.
+      </p>
+
+      <div class="hero__actions">
+        <a class="btn primary" routerLink="/catalog">Explorar tienda</a>
+        <a class="btn ghost" routerLink="/checkout/contact">Comprar ahora</a>
+      </div>
+    </div>
+
+    <aside class="hero__panel card" aria-label="Resumen de impacto">
+      <h2>Compromiso social</h2>
+      <p>
+        Destinamos <strong>{{ impactPercent }}% de nuestras ganancias</strong>
+        a fundaciones que apoyan animales enfermos o en calle.
+      </p>
+      <ul>
+        <li *ngFor="let cause of causes">{{ cause }}</li>
+      </ul>
+    </aside>
+  </header>
+
+  <section class="values container" aria-label="Valores">
+    <h2>Nuestros principios</h2>
+    <div class="values__grid">
+      <article class="value card" *ngFor="let value of values">
+        <h3>{{ value.title }}</h3>
+        <p>{{ value.description }}</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="timeline container" aria-label="Hoja de ruta">
+    <h2>Hoja de ruta</h2>
+    <div class="timeline__list">
+      <article class="milestone card" *ngFor="let item of milestones">
+        <span class="period">{{ item.period }}</span>
+        <h3>{{ item.title }}</h3>
+        <p>{{ item.description }}</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="cta container card" aria-label="Llamado a la acción">
+    <div>
+      <h2>Gracias por comprar con propósito</h2>
+      <p class="muted">
+        Cada pedido ayuda a sostener una experiencia de compra mejor y aporta a causas
+        que benefician directamente a animales que lo necesitan.
+      </p>
+    </div>
+    <div class="cta__actions">
+      <a class="btn primary" routerLink="/catalog">Ir al catálogo</a>
+      <a class="btn ghost" routerLink="/memberships">Ver membresías</a>
+    </div>
+  </section>
+</section>

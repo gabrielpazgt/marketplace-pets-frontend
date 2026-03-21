@@ -16,7 +16,7 @@ export interface ContactInfo {
   saveInfo?: boolean;
 }
 
-export type PaymentKind = 'card' | 'bank' | 'cod';
+export type PaymentKind = 'card' | 'bank';
 
 export interface CardInfo {
   holder: string;
@@ -27,7 +27,7 @@ export interface CardInfo {
 }
 
 export interface ShippingMethod {
-  id: 'standard' | 'express' | 'pickup';
+  id: 'standard' | 'express';
   label: string;
   description: string;
   price: number;

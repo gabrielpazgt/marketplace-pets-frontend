@@ -1,7 +1,7 @@
 ﻿<section class="card summary">
   <header class="hd" *ngIf="state.itemCount$ | async as count">
     <h3>Resumen</h3>
-    <span class="count-label">{{ count }} {{ count === 1 ? 'articulo' : 'articulos' }}</span>
+    <span class="count-label">{{ count }} {{ count === 1 ? 'artículo' : 'artículos' }}</span>
   </header>
 
   <ul class="mini-list" *ngIf="state.itemCount$ | async as count">
@@ -13,7 +13,7 @@
       </div>
       <div class="price">{{ (it.price * it.qty) | currency:'GTQ':'symbol-narrow' }}</div>
     </li>
-    <li *ngIf="!count" class="empty muted">Tu carrito esta vacio.</li>
+    <li *ngIf="!count" class="empty muted">Tu carrito está vacío.</li>
   </ul>
 
   <div class="line"></div>
@@ -29,7 +29,7 @@
   </div>
 
   <div class="row">
-    <span>Envio</span>
+    <span>Envío</span>
     <strong>{{ (state.shipping$ | async) | currency:'GTQ':'symbol-narrow' }}</strong>
   </div>
 
@@ -39,13 +39,25 @@
   </div>
 
   <details class="coupon">
-    <summary>Tienes un cupon?</summary>
+    <summary>¿Tienes un cupón?</summary>
     <div class="coupon__box">
-      <input class="input" [(ngModel)]="code" placeholder="AUMAKKI15" />
+      <input class="input" [(ngModel)]="code" placeholder="Ejemplo: BIENVENIDO10" />
       <button class="btn ghost" type="button" (click)="clear()">Limpiar</button>
       <button class="btn primary" type="button" (click)="apply()">Aplicar</button>
     </div>
-    <small class="muted hint">Cupon demo: <strong>AUMAKKI15</strong> (15% OFF)</small>
+
+    <div class="coupon-list" *ngIf="availableCoupons.length">
+      <button
+        class="coupon-pill"
+        type="button"
+        *ngFor="let coupon of availableCoupons"
+        (click)="applyCode(coupon.code)"
+      >
+        <strong>{{ coupon.code }}</strong>
+        <span>{{ coupon.displayMessage }}</span>
+      </button>
+    </div>
+
     <small class="muted status" *ngIf="message">{{ message }}</small>
   </details>
 </section>

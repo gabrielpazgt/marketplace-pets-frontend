@@ -9,6 +9,24 @@
     margin-bottom: 8px;
   }
 
+  .state {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--line);
+    background: #fff;
+  }
+
+  .state--error {
+    border-color: #fecaca;
+    background: #fff7f7;
+    color: #991b1b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
   .toolbar--compact {
     grid-template-columns: minmax(0, 1fr) 220px 220px;
     align-items: end;
@@ -150,9 +168,11 @@
 
   .chip.status.pending { background: #fff7ed; border-color: #fed7aa; color: #9a3412; }
   .chip.status.paid { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+  .chip.status.processing { background: #f5f3ff; border-color: #ddd6fe; color: #6d28d9; }
   .chip.status.shipped { background: #ecfeff; border-color: #a5f3fc; color: #0e7490; }
   .chip.status.delivered { background: #ecfdf5; border-color: #bbf7d0; color: #166534; }
   .chip.status.cancelled { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+  .chip.status.refunded { background: #f8fafc; border-color: #cbd5e1; color: #334155; }
 
   .btn.invoice {
     --btn-bg: linear-gradient(90deg, var(--accent), #1e88e5);

@@ -1,6 +1,6 @@
-### Password: vKPD6Rx9!
-
 # MARKETPETS — Frontend (Angular)
+
+> Seguridad: no documentes credenciales reales en este archivo. Usa variables de entorno o un gestor de secretos.
 
 Proyecto **SPA en Angular** para un e‑commerce de mascotas con **checkout multistep**, **carrito persistente**, **sistema de precios con membresía** y una **UI unificada** basada en *design tokens* definidos en `styles.scss`.
 

@@ -10,6 +10,7 @@ type Feat = {
 };
 
 @Component({
+  standalone: false,
   selector: 'app-features',
   templateUrl: './features.component.html',
   styleUrls: ['./features.component.scss'],

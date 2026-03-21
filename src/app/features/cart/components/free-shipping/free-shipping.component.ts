@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'app-free-shipping',
   templateUrl: './free-shipping.component.html',
   styleUrls: ['./free-shipping.component.scss'],

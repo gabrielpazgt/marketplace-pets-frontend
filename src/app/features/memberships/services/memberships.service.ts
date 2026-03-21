@@ -1,113 +1,207 @@
-// src/app/features/memberships/services/memberships.service.ts
 import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { distinctUntilChanged, map } from 'rxjs/operators';
+import { AuthService } from '../../../auth/services/auth.service';
+import { StorefrontMembershipPlan } from '../../../core/models/storefront.models';
+import { StorefrontApiService } from '../../../core/services/storefront-api.service';
 
-export type PlanId = 'free' | 'premium' | 'vip';
-export type BillingCycle = 'monthly' | 'yearly'; // yearly = 2 meses gratis (ejemplo)
+export type PlanId = 'free' | 'premium';
+export type BillingCycle = 'monthly';
 
 export interface Plan {
   id: PlanId;
   name: string;
-  monthlyPrice: number;  // Q
+  monthlyPrice: number;
+  productDiscountPct: number;
   badgeColor: string;
   perks: string[];
   highlight?: string;
 }
 
-export interface PurchasePayload {
-  plan: PlanId;
-  cycle: BillingCycle;
-  email: string;
-  fullName: string;
-  cardLast4?: string;
-  coupon?: string | null;
-  totalQ: number;
-}
+const DEFAULT_PLANS: Plan[] = [
+  {
+    id: 'free',
+    name: 'Gratuita',
+    monthlyPrice: 0,
+    productDiscountPct: 0,
+    badgeColor: '#e5e7eb',
+    perks: [
+      'Acceso completo a la tienda',
+      'Checkout agil para compras rapidas',
+      'Soporte estandar por canales digitales',
+    ],
+    highlight: 'Membresia gratuita para toda la comunidad',
+  },
+  {
+    id: 'premium',
+    name: 'Premium',
+    monthlyPrice: 75,
+    productDiscountPct: 5,
+    badgeColor: '#fde68a',
+    perks: [
+      '5% de descuento en productos seleccionados',
+      'Atencion prioritaria por WhatsApp',
+      'Acceso temprano a lanzamientos y promos',
+    ],
+    highlight: 'Mas ahorro y beneficios exclusivos para tus compras',
+  },
+];
 
 @Injectable({ providedIn: 'root' })
 export class MembershipsService {
-  // Estado mock (podrías persistir/leer de API o localStorage)
-  private _currentPlan: PlanId = (localStorage.getItem('mp_current_plan') as PlanId) || 'free';
+  private readonly plansSubject = new BehaviorSubject<Plan[]>(DEFAULT_PLANS);
+  private readonly currentPlanSubject = new BehaviorSubject<PlanId>('free');
 
-  plans: Plan[] = [
-    {
-      id: 'free',
-      name: 'Free',
-      monthlyPrice: 0,
-      badgeColor: '#e5e7eb',
-      perks: ['Acceso a la tienda', 'Promos generales', 'Soporte estándar'],
-      highlight: 'Ideal para empezar'
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      monthlyPrice: 39,
-      badgeColor: '#ffd9a6',
-      perks: ['5% de descuento', 'Puntos x1.5', 'Envíos preferentes'],
-      highlight: 'Más valor por tus compras'
-    },
-    {
-      id: 'vip',
-      name: 'VIP',
-      monthlyPrice: 99,
-      badgeColor: '#bde2ff',
-      perks: ['7% de descuento', 'Puntos x2', 'Acceso anticipado'],
-      highlight: 'Experiencia completa'
-    }
-  ];
+  readonly plans$ = this.plansSubject.asObservable();
+  readonly currentPlan$ = this.currentPlanSubject.asObservable();
+
+  constructor(
+    private storefrontApi: StorefrontApiService,
+    private auth: AuthService
+  ) {
+    this.refreshPlans();
+
+    this.auth.user$
+      .pipe(
+        map((user) => user?.id ?? null),
+        distinctUntilChanged()
+      )
+      .subscribe(() => {
+        this.refreshCurrentPlan();
+      });
+
+    this.refreshCurrentPlan();
+  }
+
+  get plans(): Plan[] {
+    return this.plansSubject.value;
+  }
 
   get currentPlan(): PlanId {
-    return this._currentPlan;
+    return this.currentPlanSubject.value;
   }
 
   set currentPlan(plan: PlanId) {
-    this._currentPlan = plan;
-    localStorage.setItem('mp_current_plan', plan);
+    this.currentPlanSubject.next(plan === 'premium' ? 'premium' : 'free');
+  }
+
+  refreshPlans(): void {
+    this.storefrontApi.listMembershipPlans().subscribe({
+      next: (response) => {
+        const nextPlans = this.mergeWithDefaults((response.data || []).map((plan) => this.mapPlan(plan)));
+        this.plansSubject.next(nextPlans);
+      },
+      error: () => {
+        this.plansSubject.next(DEFAULT_PLANS);
+      },
+    });
+  }
+
+  refreshCurrentPlan(): void {
+    if (!this.auth.isLoggedIn) {
+      this.currentPlanSubject.next('free');
+      return;
+    }
+
+    this.storefrontApi.getMyMembership().subscribe({
+      next: (response) => {
+        const tier = response.data?.tier === 'premium' ? 'premium' : 'free';
+        this.currentPlanSubject.next(tier);
+
+        const available = (response.data?.availablePlans || []).map((plan) => this.mapPlan(plan));
+        if (available.length) {
+          this.plansSubject.next(this.mergeWithDefaults(available));
+        }
+      },
+      error: () => {
+        this.currentPlanSubject.next('free');
+      },
+    });
+  }
+
+  selectPlan(planId: PlanId): Observable<PlanId> {
+    const normalized = planId === 'premium' ? 'premium' : 'free';
+
+    if (!this.auth.isLoggedIn) {
+      this.currentPlanSubject.next(normalized);
+      return of(normalized);
+    }
+
+    return this.storefrontApi.updateMyMembership({ tier: normalized }).pipe(
+      map((response) => {
+        const tier: PlanId = response.data?.tier === 'premium' ? 'premium' : 'free';
+        this.currentPlanSubject.next(tier);
+        return tier;
+      })
+    );
   }
 
   getPlan(id: PlanId): Plan {
-    const p = this.plans.find(v => v.id === id);
-    if (!p) throw new Error('Plan no encontrado');
-    return p;
+    const plan = this.plans.find((entry) => entry.id === id);
+    if (!plan) throw new Error('Plan no encontrado');
+    return plan;
   }
 
-  /** Precio según ciclo. Yearly = paga 10 meses (2 gratis). */
-  priceFor(planId: PlanId, cycle: BillingCycle): number {
-    const plan = this.getPlan(planId);
-    if (cycle === 'monthly') return plan.monthlyPrice;
-    // Yearly: 10 * monthly (2 meses gratis)
-    return plan.monthlyPrice * 10;
+  priceFor(planId: PlanId, _cycle: BillingCycle): number {
+    return this.getPlan(planId).monthlyPrice;
   }
 
-  /** Cupón mock: AUMAKKI15 = 15% off */
-  applyCoupon(totalQ: number, coupon?: string | null): number {
-    if (!coupon) return totalQ;
-    const code = coupon.trim().toUpperCase();
-    if (code === 'AUMAKKI15') {
-      return Math.max(0, Math.round(totalQ * 0.85));
-    }
-    return totalQ;
+  priceWithMembership(basePrice: number, planId: PlanId = 'premium'): number {
+    const discount = this.getPlan(planId).productDiscountPct;
+    const safePrice = Number(basePrice || 0);
+    if (discount <= 0) return safePrice;
+
+    return Math.max(0, safePrice * (1 - discount / 100));
   }
 
-  /** Simula cobro y retorna id de orden + próxima fecha de cobro */
-  async processPurchase(payload: PurchasePayload): Promise<{ orderId: string; nextBilling: string | null }> {
-    // Aquí conectarías con tu pasarela. Simulación:
-    await new Promise(r => setTimeout(r, 600));
-
-    // Si plan de paga, próxima fecha = +1 mes (o +1 año según ciclo)
-    let next = null as string | null;
-    if (payload.plan !== 'free') {
-      const now = new Date();
-      if (payload.cycle === 'monthly') now.setMonth(now.getMonth() + 1);
-      else now.setFullYear(now.getFullYear() + 1);
-      next = now.toISOString();
-      this.currentPlan = payload.plan; // actualizar plan vigente
-    } else {
-      this.currentPlan = 'free';
-    }
+  private mapPlan(plan: StorefrontMembershipPlan): Plan {
+    const resolvedId = this.resolvePlanId(plan);
+    const parsedDiscount = this.extractDiscountFromFeatures(plan.features || []);
 
     return {
-      orderId: 'ORD-' + Math.random().toString(36).slice(2, 10).toUpperCase(),
-      nextBilling: next
+      id: resolvedId,
+      name: plan.name || (resolvedId === 'premium' ? 'Premium' : 'Gratuita'),
+      monthlyPrice: Number(plan.price || 0),
+      productDiscountPct: parsedDiscount,
+      badgeColor: resolvedId === 'premium' ? '#fde68a' : '#e5e7eb',
+      perks: Array.isArray(plan.features) && plan.features.length
+        ? plan.features
+        : this.defaultPlanById(resolvedId).perks,
+      highlight: plan.description || this.defaultPlanById(resolvedId).highlight,
     };
   }
+
+  private mergeWithDefaults(plans: Plan[]): Plan[] {
+    const byId = new Map<PlanId, Plan>();
+
+    DEFAULT_PLANS.forEach((plan) => byId.set(plan.id, plan));
+    plans.forEach((plan) => byId.set(plan.id, { ...this.defaultPlanById(plan.id), ...plan }));
+
+    return [byId.get('free') as Plan, byId.get('premium') as Plan];
+  }
+
+  private resolvePlanId(plan: StorefrontMembershipPlan): PlanId {
+    const slug = (plan.slug || '').toLowerCase();
+    const name = (plan.name || '').toLowerCase();
+    if (slug.includes('premium') || name.includes('premium')) return 'premium';
+    return 'free';
+  }
+
+  private extractDiscountFromFeatures(features: string[]): number {
+    for (const feature of features || []) {
+      const text = String(feature || '');
+      const match = text.match(/(\d{1,2})\s*%/);
+      if (match) {
+        const value = Number(match[1]);
+        if (Number.isFinite(value) && value > 0) return value;
+      }
+    }
+
+    return 0;
+  }
+
+  private defaultPlanById(id: PlanId): Plan {
+    return DEFAULT_PLANS.find((plan) => plan.id === id) as Plan;
+  }
+
 }

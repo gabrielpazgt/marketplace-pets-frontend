@@ -28,5 +28,9 @@
 
 <div class="actions">
   <button class="btn ghost" (click)="back()">Atras</button>
-  <button class="btn success" (click)="confirm()">Confirmar pedido</button>
+  <button class="btn success" [disabled]="submitting" (click)="confirm()">
+    {{ submitting ? 'Confirmando...' : 'Confirmar pedido' }}
+  </button>
 </div>
+
+<p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>

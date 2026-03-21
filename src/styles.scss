@@ -1,11 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap');
-
 /* ==========================================================================
    Global Styles / Design System Tokens
    ========================================================================== */
 
 /* 1) Angular Material theme (tu archivo) */
-@import 'theme';
+@use 'theme';
 
 /* 2) Base document sizing */
 html, body, app-root { height: 100%; }
@@ -13,10 +11,7 @@ body {
   margin: 0;
   font-family: var(--font-body);
   color: var(--ink);
-  background:
-    radial-gradient(1100px 420px at 14% -12%, rgba(255, 167, 38, 0.14), rgba(255, 167, 38, 0) 70%),
-    radial-gradient(920px 380px at 84% 0%, rgba(66, 165, 245, 0.12), rgba(66, 165, 245, 0) 72%),
-    #fff;
+  background: #fff;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -306,4 +301,32 @@ textarea::placeholder { color: #94a3b8; }
   :root {
     --container-px: 12px;
   }
+}
+
+/* --------------------------------------------------------------------------
+   Catalog select overlays (Angular Material panelClass)
+   -------------------------------------------------------------------------- */
+.catalog-select-panel {
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .16) !important;
+}
+
+.catalog-select-panel .mat-mdc-option {
+  min-height: 42px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.catalog-select-panel .mat-mdc-option:hover:not(.mdc-list-item--disabled) {
+  background: rgba(15, 23, 42, .05);
+}
+
+.catalog-select-panel .mat-mdc-option.mdc-list-item--selected {
+  background: rgba(217, 119, 6, .1);
+}
+
+.catalog-select-panel .mat-mdc-option.mdc-list-item--selected .mdc-list-item__primary-text {
+  color: #8a5b00;
+  font-weight: 800;
 }

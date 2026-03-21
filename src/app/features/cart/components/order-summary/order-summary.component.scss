@@ -1,8 +1,12 @@
-﻿.summary {
+.summary {
   position: sticky;
   top: calc(var(--layout-header-offset) + 8px);
   display: grid;
   gap: 1rem;
+}
+
+.summary--busy {
+  opacity: .82;
 }
 
 .panel {
@@ -42,25 +46,6 @@ h4 {
   font-size: 1.25rem;
 }
 
-.member-total {
-  padding: .35rem .5rem;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
-  color: var(--ink);
-}
-
-.member-total strong {
-  color: var(--accent);
-  font-size: 1.15rem;
-  font-weight: 900;
-}
-
-.save {
-  margin: .1rem 0 0;
-  font-size: .85rem;
-  color: var(--muted);
-}
 
 .cta,
 .button_pay {
@@ -146,6 +131,17 @@ h4 {
   margin-bottom: 16px;
 }
 
+.promo__status {
+  margin: -8px 16px 0;
+  color: #15803d;
+  font-size: .88rem;
+  font-weight: 600;
+}
+
+.promo__status--error {
+  color: #b91c1c;
+}
+
 .promo .row input {
   flex: 1;
   border: 1px dashed var(--brand-600, #e98c00);
@@ -178,6 +174,13 @@ h4 {
   cursor: pointer;
   transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
   white-space: nowrap;
+}
+
+.promo .btn:disabled,
+.promo .row input:disabled,
+.coupon .link:disabled {
+  cursor: wait;
+  opacity: .72;
 }
 
 .promo .btn:hover {
@@ -250,4 +253,5 @@ h4 {
     flex-direction: column;
   }
 }
+
 

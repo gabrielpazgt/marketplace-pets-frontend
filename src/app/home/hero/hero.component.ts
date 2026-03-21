@@ -4,6 +4,7 @@ type Cta = { label: string; link: string; variant?: 'primary' | 'ghost' };
 type Feature = { img: string; title: string; caption?: string };
 
 @Component({
+  standalone: false,
   selector: 'app-hero',
   templateUrl: './hero.component.html',
   styleUrls: ['./hero.component.scss']
@@ -16,13 +17,13 @@ export class HeroComponent {
 
   @Input() ctas: Cta[] = [
     { label: 'Comprar Ahora', link: '/catalog', variant: 'primary' },
-    { label: 'Registra tus mascotas',  link: '/c/gatos',  variant: 'ghost' },
+    { label: 'Registra tus mascotas',  link: '/catalog/gatos',  variant: 'ghost' },
   ];
 
   @Input() quickTags = [
-    { label: 'Higiene', link: '/c/higiene' },
-    { label: 'Snacks',  link: '/c/snacks' },
-    { label: 'Juguetes',link: '/c/juguetes' }
+    { label: 'Higiene', link: '/catalog/higiene' },
+    { label: 'Snacks',  link: '/catalog/snacks' },
+    { label: 'Juguetes',link: '/catalog/juguetes' }
   ];
 
   /** Tus íconos PNG */

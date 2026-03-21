@@ -2,9 +2,12 @@ import { NgModule }             from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthLayoutComponent }  from './layouts/layouts/auth-layout/auth-layout.component';
 import { FullLayoutComponent }  from './layouts/layouts/full-layout/full-layout.component';
+import { AuthGuard } from './core/guards/auth.guard';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },
+  { path: 'c/:slug', redirectTo: 'catalog/:slug', pathMatch: 'full' },
+  { path: 'p/:slug', redirectTo: 'catalog/product/:slug', pathMatch: 'full' },
 
   {
     path: 'auth',
@@ -22,6 +25,16 @@ const routes: Routes = [
     loadChildren: () => import('./features/catalog/catalog.module').then(m => m.CatalogModule)
   },
   {
+    path: 'about',
+    component: FullLayoutComponent,
+    loadChildren: () => import('./features/about/about.module').then(m => m.AboutModule)
+  },
+  {
+    path: 'terms',
+    component: FullLayoutComponent,
+    loadChildren: () => import('./features/terms/terms.module').then(m => m.TermsModule)
+  },
+  {
     path: 'cart',
     component: FullLayoutComponent,
     loadChildren: () => import('./features/cart/cart.module').then(m => m.CartModule)
@@ -35,6 +48,7 @@ const routes: Routes = [
   {
     path: 'account',
     component: FullLayoutComponent,
+    canActivate: [AuthGuard],
     loadChildren: () => import('./features/account/account.module').then(m => m.AccountModule),
   },
 

@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CheckoutStateService } from '../../services/checkout-state.service';
 
 @Component({
+  standalone: false,
   selector: 'mp-checkout-shell',
   templateUrl: './checkout-shell.component.html',
   styleUrls: ['./checkout-shell.component.scss']

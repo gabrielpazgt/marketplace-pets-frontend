@@ -1,4 +1,4 @@
-<div class="sortbar container">
+﻿<div class="sortbar container">
   <div class="sortbar__left">
     <strong>{{ total }}</strong> productos
   </div>
@@ -10,12 +10,17 @@
 
     <label class="sort">
       <span>Ordenar:</span>
-      <select [value]="sort" (change)="onSortChange($event)">
-        <option value="popular">Más populares</option>
-        <option value="new">Novedades</option>
-        <option value="price-asc">Precio: menor a mayor</option>
-        <option value="price-desc">Precio: mayor a menor</option>
-      </select>
+      <mat-form-field appearance="outline" class="sort__field">
+        <mat-select [value]="sort" panelClass="catalog-select-panel" (selectionChange)="onSortChange($event.value)">
+          <mat-select-trigger>
+            <span class="sort__selected">{{ sortLabel }}</span>
+          </mat-select-trigger>
+          <mat-option value="popular">Más populares</mat-option>
+          <mat-option value="new">Novedades</mat-option>
+          <mat-option value="price-asc">Precio: menor a mayor</mat-option>
+          <mat-option value="price-desc">Precio: mayor a menor</mat-option>
+        </mat-select>
+      </mat-form-field>
     </label>
   </div>
 </div>

@@ -1,13 +1,13 @@
 <section class="categories container" aria-labelledby="cat-title">
   <h2 id="cat-title" class="title">Explora por categoría</h2>
 
-  <ng-container *ngIf="data?.length; else skeleton">
+  <ng-container *ngIf="data.length; else skeleton">
     <div class="grid" role="list">
       <a
         class="card"
         role="listitem"
         *ngFor="let c of data"
-        [routerLink]="['/c', c.slug]"
+        [routerLink]="['/catalog', c.slug]"
         [title]="c.name"
       >
         <figure class="media">

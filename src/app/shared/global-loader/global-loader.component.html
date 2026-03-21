@@ -1,0 +1,10 @@
+<div class="loader-shell" *ngIf="isLoading$ | async" aria-live="polite" aria-busy="true">
+  <div class="loader-backdrop"></div>
+  <div class="loader-card">
+    <span class="loader-ring" aria-hidden="true"></span>
+    <div class="loader-copy">
+      <strong>{{ (label$ | async) || 'Cargando...' }}</strong>
+      <span>Espera un momento...</span>
+    </div>
+  </div>
+</div>

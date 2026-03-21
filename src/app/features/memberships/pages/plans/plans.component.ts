@@ -1,67 +1,74 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { MembershipsService, Plan, PlanId } from '../../services/memberships.service';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { Plan, PlanId, MembershipsService } from '../../services/memberships.service';
 
 @Component({
+  standalone: false,
   selector: 'mp-memberships-plans',
   templateUrl: './plans.component.html',
-  styleUrls: ['./plans.component.scss']
+  styleUrls: ['./plans.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PlansComponent implements OnInit {
+export class PlansComponent implements OnInit, OnDestroy {
   plans: Plan[] = [];
-  currentPlan!: PlanId;
-  preselect?: PlanId;
-  annualDiscountPercent = 17;
+  currentPlan: PlanId = 'free';
+  readonly billingCycle: 'monthly' = 'monthly';
+  saving = false;
 
-  /** id de la card expandida (beneficios visibles) */
-  expanded: PlanId | null = null;
+  private readonly subscriptions = new Subscription();
 
   constructor(
     private svc: MembershipsService,
-    private router: Router,
-    private route: ActivatedRoute
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.plans = this.svc.plans;
-    this.currentPlan = this.svc.currentPlan;
-    const qp = (this.route.snapshot.queryParamMap.get('plan') as PlanId) || undefined;
-    if (qp && this.plans.some(p => p.id === qp)) {
-      this.preselect = qp;
-      this.expanded = qp; // abre la preselección
-    }
+    this.svc.refreshPlans();
+    this.svc.refreshCurrentPlan();
+
+    this.subscriptions.add(
+      this.svc.plans$.subscribe((plans) => {
+        this.plans = [...plans];
+        this.cdr.markForCheck();
+      })
+    );
+
+    this.subscriptions.add(
+      this.svc.currentPlan$.subscribe((plan) => {
+        this.currentPlan = plan;
+        this.cdr.markForCheck();
+      })
+    );
   }
 
-  toggle(id: PlanId) {
-    this.expanded = this.expanded === id ? null : id;
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
-  isExpanded(id: PlanId) { return this.expanded === id; }
-
-  yearlyEquivalent(planId: PlanId): number {
-    const plan = this.plans.find((p) => p.id === planId);
-    if (!plan) return 0;
-    return plan.monthlyPrice * 10;
+  isCurrentPlan(planId: PlanId): boolean {
+    return this.currentPlan === planId;
   }
 
-  planTheme(id: PlanId): 'free' | 'premium' | 'vip' {
-    if (id === 'vip') return 'vip';
-    if (id === 'premium') return 'premium';
-    return 'free';
+  getPlanPrice(plan: Plan): number {
+    return this.svc.priceFor(plan.id, this.billingCycle);
   }
 
-  choose(planId: PlanId) {
-    if (planId === this.currentPlan) {
-      this.router.navigate(['/account/membership']);
-      return;
-    }
-    this.router.navigate(['/memberships/checkout'], { queryParams: { plan: planId }});
-  }
+  selectPlan(planId: PlanId): void {
+    if (this.saving || this.currentPlan === planId) return;
 
-  onKeyCard(e: KeyboardEvent, id: PlanId) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      this.toggle(id);
-    }
+    this.saving = true;
+    this.cdr.markForCheck();
+
+    this.svc.selectPlan(planId).subscribe({
+      next: (tier) => {
+        this.currentPlan = tier;
+        this.saving = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.saving = false;
+        this.cdr.markForCheck();
+      },
+    });
   }
 }

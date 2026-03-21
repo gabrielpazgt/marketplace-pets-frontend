@@ -22,26 +22,32 @@ interface LastOrderSnapshot {
   createdAt: string;
 }
 
+interface PersistedCheckoutState {
+  shippingMethodId: ShippingMethod['id'];
+  orderNumber?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CheckoutStateService {
   readonly shippingMethods: ShippingMethod[] = [
     { id: 'standard', label: 'Estandar', description: '3-5 dias habiles', price: 25, eta: '3-5 dias' },
     { id: 'express', label: 'Express', description: '1-2 dias habiles', price: 45, eta: '1-2 dias' },
-    { id: 'pickup', label: 'Retiro en tienda', description: 'Retiro en sucursal', price: 0, eta: 'Mismo dia' },
   ];
 
-  private readonly FREE_THRESHOLD = 500;
   private storeKey = 'mp_checkout_v1';
   private lastOrderKey = 'mp_last_order_v1';
-  private cipherKey = 'mp_front_checkout_key';
 
-  private _state = new BehaviorSubject<CheckoutSnapshot>(this.load() ?? {
-    shippingMethodId: 'standard',
-    billingSameAsShipping: true,
-    step1Done: false,
-    step2Done: false,
-    step3Done: false,
-  });
+  private _state = new BehaviorSubject<CheckoutSnapshot>(
+    this.normalizeSnapshot(
+      this.load() ?? {
+        shippingMethodId: 'standard',
+        billingSameAsShipping: true,
+        step1Done: false,
+        step2Done: false,
+        step3Done: false,
+      }
+    )
+  );
 
   readonly state$ = this._state.asObservable();
 
@@ -50,17 +56,23 @@ export class CheckoutStateService {
   // Cart passthroughs with explicit types for strict templates.
   readonly items$ = this.cart.items$ as Observable<any[]>;
   readonly itemCount$ = this.cart.itemCount$ as Observable<number>;
+  readonly cartBusy$ = this.cart.busy$ as Observable<boolean>;
+  readonly cartError$ = this.cart.error$ as Observable<string | null>;
+  readonly couponCode$ = this.cart.coupon$ as Observable<string | null>;
   readonly subtotal$ = this.cart.subtotal$ as Observable<number>;
   readonly discount$ = this.cart.discount$ as Observable<number>;
+  readonly effectiveSubtotal$ = combineLatest([this.subtotal$, this.discount$] as const).pipe(
+    map(([subtotal, discount]) => Math.max(0, subtotal - discount))
+  );
   readonly freeThreshold = this.cart.freeThreshold;
   readonly freeProgress$ = this.cart.freeProgress$ as Observable<number>;
   readonly freeRemaining$ = this.cart.freeRemaining$ as Observable<number>;
 
-  readonly shipping$ = combineLatest([this.subtotal$, this.state$] as const).pipe(
-    map(([subtotal, state]) => {
-      if (subtotal <= 0) return 0;
-      const method = this.shippingMethods.find((m) => m.id === state.shippingMethodId)!;
-      if (method.id === 'standard' && subtotal >= this.FREE_THRESHOLD) return 0;
+  readonly shipping$ = combineLatest([this.effectiveSubtotal$, this.state$] as const).pipe(
+    map(([effectiveSubtotal, state]) => {
+      if (effectiveSubtotal <= 0) return 0;
+      const method = this.shippingMethods.find((m) => m.id === state.shippingMethodId) || this.shippingMethods[0];
+      if (method.id === 'standard' && effectiveSubtotal >= this.freeThreshold) return 0;
       return method.price;
     })
   );
@@ -116,7 +128,7 @@ export class CheckoutStateService {
       });
     }
 
-    this.cart.clear();
+    this.cart.refresh();
     this.set({
       shippingMethodId: 'standard',
       billingSameAsShipping: true,
@@ -136,7 +148,7 @@ export class CheckoutStateService {
   }
 
   clearCoupon() {
-    this.cart.applyCoupon(null);
+    this.cart.clearCoupon();
   }
 
   get snapshot(): CheckoutSnapshot {
@@ -150,27 +162,28 @@ export class CheckoutStateService {
 
   private save(snapshot: CheckoutSnapshot) {
     try {
-      const safe: CheckoutSnapshot = {
-        ...snapshot,
-        card: snapshot.card
-          ? {
-              holder: snapshot.card.holder,
-              number: this.maskCard(snapshot.card.number),
-              exp: snapshot.card.exp,
-              cvc: '',
-              brand: snapshot.card.brand,
-            }
-          : undefined,
+      const safe: PersistedCheckoutState = {
+        shippingMethodId: snapshot.shippingMethodId,
+        orderNumber: snapshot.orderNumber,
       };
-      const encoded = this.encode(JSON.stringify(safe));
-      localStorage.setItem(this.storeKey, encoded);
+      sessionStorage.setItem(this.storeKey, JSON.stringify(safe));
     } catch {}
   }
 
   private load(): CheckoutSnapshot | null {
     try {
-      const raw = localStorage.getItem(this.storeKey);
-      return raw ? JSON.parse(this.decode(raw)) : null;
+      const raw = sessionStorage.getItem(this.storeKey);
+      if (!raw) return null;
+
+      const safe = JSON.parse(raw) as PersistedCheckoutState;
+      return {
+        shippingMethodId: safe.shippingMethodId,
+        orderNumber: safe.orderNumber,
+        billingSameAsShipping: true,
+        step1Done: false,
+        step2Done: false,
+        step3Done: false,
+      };
     } catch {
       return null;
     }
@@ -178,14 +191,14 @@ export class CheckoutStateService {
 
   private saveLastOrder(data: LastOrderSnapshot) {
     try {
-      localStorage.setItem(this.lastOrderKey, this.encode(JSON.stringify(data)));
+      sessionStorage.setItem(this.lastOrderKey, JSON.stringify(data));
     } catch {}
   }
 
   private loadLastOrder(): LastOrderSnapshot | null {
     try {
-      const raw = localStorage.getItem(this.lastOrderKey);
-      return raw ? JSON.parse(this.decode(raw)) : null;
+      const raw = sessionStorage.getItem(this.lastOrderKey);
+      return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
     }
@@ -198,19 +211,22 @@ export class CheckoutStateService {
     return `**** **** **** ${last4}`;
   }
 
-  private encode(value: string): string {
-    const mixed = value
-      .split('')
-      .map((ch, i) => String.fromCharCode(ch.charCodeAt(0) ^ this.cipherKey.charCodeAt(i % this.cipherKey.length)))
-      .join('');
-    return btoa(mixed);
-  }
+  private normalizeSnapshot(snapshot: CheckoutSnapshot): CheckoutSnapshot {
+    const shippingMethodId = snapshot.shippingMethodId === 'express' ? 'express' : 'standard';
+    const paymentKind =
+      snapshot.paymentKind === 'card' || snapshot.paymentKind === 'bank' ? snapshot.paymentKind : undefined;
 
-  private decode(value: string): string {
-    const mixed = atob(value);
-    return mixed
-      .split('')
-      .map((ch, i) => String.fromCharCode(ch.charCodeAt(0) ^ this.cipherKey.charCodeAt(i % this.cipherKey.length)))
-      .join('');
+    return {
+      ...snapshot,
+      shippingMethodId,
+      paymentKind,
+      step1Done: false,
+      step2Done: false,
+      step3Done: false,
+      contact: undefined,
+      shippingAddress: undefined,
+      billingAddress: undefined,
+      card: undefined,
+    };
   }
 }

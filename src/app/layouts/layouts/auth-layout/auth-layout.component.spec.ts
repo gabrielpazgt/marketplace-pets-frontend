@@ -1,5 +1,5 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { AuthLayoutComponent } from './auth-layout.component';
 
 describe('AuthLayoutComponent', () => {
@@ -8,10 +8,10 @@ describe('AuthLayoutComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [AuthLayoutComponent]
-    })
-    .compileComponents();
-    
+      declarations: [AuthLayoutComponent],
+      schemas: [NO_ERRORS_SCHEMA],
+    }).compileComponents();
+
     fixture = TestBed.createComponent(AuthLayoutComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

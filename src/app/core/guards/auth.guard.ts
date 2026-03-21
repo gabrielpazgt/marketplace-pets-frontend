@@ -8,14 +8,14 @@ import { AuthService } from '../../auth/services/auth.service';
 @Injectable({ providedIn: 'root' })
 export class AuthGuardService {
   constructor(private auth: AuthService, private router: Router) {}
-  can(): boolean {
+  can(targetUrl: string): boolean {
     if (this.auth.isLoggedIn) return true;
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/auth/login'], { queryParams: { returnUrl: targetUrl } });
     return false;
   }
 }
 
 // Angular >=15 functional guard
-export const AuthGuard: CanActivateFn = () => {
-  return inject(AuthGuardService).can();
+export const AuthGuard: CanActivateFn = (_route, state) => {
+  return inject(AuthGuardService).can(state.url);
 };

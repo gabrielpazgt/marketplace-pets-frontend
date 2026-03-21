@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'app-cart-recommendations',
   templateUrl: './cart-recommendations.component.html',
   styleUrls: ['./cart-recommendations.component.scss']

@@ -1,18 +1,123 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { take } from 'rxjs/operators';
+import { StorefrontApiService } from '../../core/services/storefront-api.service';
+
+type NewsletterState = 'idle' | 'success' | 'error';
 
 @Component({
+  standalone: false,
   selector: 'app-footer',
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss']
 })
-export class FooterComponent {
-  public currentYear = new Date().getFullYear();
+export class FooterComponent implements OnInit, OnDestroy {
+  currentYear = new Date().getFullYear();
 
-  socialLogos = [
-    { src: 'assets/images/logos/instagram.png',        alt: 'Instagram'    ,href: '#' },
-    { src: 'assets/images/logos/facebook.png',  alt: 'Facebook'     ,href: '#' },
-    { src: 'assets/images/logos/youtube.png',        alt: 'Youtube',href: '#' },
-    { src: 'assets/images/logos/tiktok.png',      alt: 'Tiktok',          href: '#' },
+  promoText = '';
+  promoCode = '';
+  newsletterMessage = '';
+  newsletterState: NewsletterState = 'idle';
 
+  readonly socialLinks = [
+    { src: 'assets/images/logos/instagram.png', alt: 'Instagram', href: '#' },
+    { src: 'assets/images/logos/facebook.png', alt: 'Facebook', href: '#' },
+    { src: 'assets/images/logos/youtube.png', alt: 'YouTube', href: '#' },
+    { src: 'assets/images/logos/tiktok.png', alt: 'TikTok', href: '#' },
   ];
+
+  readonly trustPills = [
+    {
+      icon: '📦',
+      title: 'Envios 48-72h',
+      subtitle: 'A todo el pais',
+    },
+    {
+      icon: '↩️',
+      title: 'Devoluciones 30d',
+      subtitle: 'Rapidas y sencillas',
+    },
+    {
+      icon: '💵',
+      title: 'Pago 100% seguro',
+      subtitle: 'Proteccion en compras',
+    },
+  ];
+
+  readonly footerGroups = [
+    {
+      title: 'Comprar',
+      links: [
+        { label: 'Perros', href: '/catalog/perros' },
+        { label: 'Gatos', href: '/catalog/gatos' },
+        { label: 'Snacks', href: '/catalog/snacks' },
+        { label: 'Higiene', href: '/catalog/higiene' },
+      ],
+    },
+    {
+      title: 'Explora',
+      links: [
+        { label: 'Tienda', href: '/catalog' },
+        { label: 'Membresias', href: '/memberships' },
+        { label: 'Sobre nosotros', href: '/about' },
+        { label: 'Terminos y ayuda', href: '/terms' },
+      ],
+    },
+  ];
+
+  private newsletterTimer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor(private storefrontApi: StorefrontApiService) {}
+
+  ngOnInit(): void {
+    this.storefrontApi
+      .listPublicCoupons()
+      .pipe(take(1))
+      .subscribe({
+        next: (response) => {
+          const firstCoupon = (response.data || [])[0];
+          if (!firstCoupon) return;
+
+          this.promoText = firstCoupon.displayMessage;
+          this.promoCode = firstCoupon.code;
+        },
+        error: () => {
+          this.promoText = '';
+          this.promoCode = '';
+        },
+      });
+  }
+
+  ngOnDestroy(): void {
+    if (this.newsletterTimer) {
+      clearTimeout(this.newsletterTimer);
+      this.newsletterTimer = null;
+    }
+  }
+
+  submitNewsletter(emailValue: string): void {
+    const email = String(emailValue || '').trim().toLowerCase();
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    if (!isValid) {
+      this.setNewsletterMessage('Ingresa un correo valido para suscribirte.', 'error');
+      return;
+    }
+
+    this.setNewsletterMessage('Gracias. Te avisaremos sobre novedades y promociones.', 'success');
+  }
+
+  private setNewsletterMessage(message: string, state: NewsletterState): void {
+    this.newsletterMessage = message;
+    this.newsletterState = state;
+
+    if (this.newsletterTimer) {
+      clearTimeout(this.newsletterTimer);
+    }
+
+    this.newsletterTimer = setTimeout(() => {
+      this.newsletterMessage = '';
+      this.newsletterState = 'idle';
+      this.newsletterTimer = null;
+    }, 3000);
+  }
 }

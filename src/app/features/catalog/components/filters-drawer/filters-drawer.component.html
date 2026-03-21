@@ -1,6 +1,6 @@
 ﻿<div class="drawer" [class.is-open]="open" (click)="close.emit()"></div>
 
-<aside class="panel" [class.is-open]="open" (click)="$event.stopPropagation()">
+<aside class="panel" [class.is-open]="open" (click)="$event.stopPropagation()" role="dialog" aria-label="Filtros de tienda">
   <header class="panel__header">
     <div class="title">
       <span class="dot" aria-hidden="true"></span>
@@ -11,44 +11,223 @@
     <button class="icon" (click)="close.emit()" aria-label="Cerrar filtros">×</button>
   </header>
 
-  <form (ngSubmit)="onSubmit()" class="panel__body">
-    <section class="group">
-      <h5 id="flt-tags" class="group__title">Etiquetas</h5>
-      <div class="chips" role="group" aria-labelledby="flt-tags">
-        <label
-          *ngFor="let t of availableTags"
-          class="chip chip-toggle"
-          [class.is-active]="form.value.tags?.includes(t)"
+  <form (submit)="$event.preventDefault()" class="panel__body">
+    <section class="group group--price">
+      <h5 id="flt-price" class="group__title group__title--price">Filtrar por precio</h5>
+      <div class="price-meter" role="group" aria-labelledby="flt-price" *ngIf="hasPriceRange; else noPriceRange">
+        <div class="price-meter__bounds">
+          <span>{{ priceRangeMin | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
+          <span>{{ priceRangeMax | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
+        </div>
+
+        <div
+          #priceSliderTrack
+          class="price-slider"
+          role="presentation"
+          (pointerdown)="onPriceTrackPointerDown($event)"
         >
-          <input
-            type="checkbox"
-            [checked]="form.value.tags?.includes(t)"
-            (change)="onTagChange(t, $event)"
-            [attr.aria-label]="t | titlecase"
-          />
-          <span class="check" aria-hidden="true"></span>
-          <span>{{ t | titlecase }}</span>
-        </label>
+          <div class="price-slider__rail"></div>
+          <div
+            class="price-slider__active"
+            [style.left.%]="selectedPriceMinPct"
+            [style.width.%]="selectedPriceWidthPct"
+          ></div>
+
+          <button
+            type="button"
+            class="price-slider__thumb price-slider__thumb--min"
+            [style.left.%]="selectedPriceMinPct"
+            (pointerdown)="onPriceThumbPointerDown('min', $event)"
+            (keydown)="onPriceThumbKeydown('min', $event)"
+            aria-label="Precio mínimo"
+          ></button>
+
+          <button
+            type="button"
+            class="price-slider__thumb price-slider__thumb--max"
+            [style.left.%]="selectedPriceMaxPct"
+            (pointerdown)="onPriceThumbPointerDown('max', $event)"
+            (keydown)="onPriceThumbKeydown('max', $event)"
+            aria-label="Precio máximo"
+          ></button>
+        </div>
+
+        <div class="price-meter__footer">
+          <p class="price-meter__selected">
+            Precio:
+            <strong>{{ selectedPriceMin | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
+            <span aria-hidden="true">—</span>
+            <strong>{{ selectedPriceMax | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
+          </p>
+        </div>
       </div>
+
+      <ng-template #noPriceRange>
+        <p class="group__hint">Ajusta otros filtros para habilitar un rango de precio.</p>
+      </ng-template>
     </section>
 
-    <section class="group">
-      <h5 id="flt-price" class="group__title">Precio</h5>
-      <div class="price" role="group" aria-labelledby="flt-price">
-        <label class="sr-only" for="pmin">Precio minimo</label>
-        <input id="pmin" class="input" type="number" placeholder="Min" [formControl]="form.controls.min" />
+    <section class="group group--stock">
+      <mat-checkbox class="stock-checkbox" [formControl]="form.controls.inStockOnly">
+        Solo productos disponibles
+      </mat-checkbox>
+    </section>
 
-        <span aria-hidden="true">-</span>
-
-        <label class="sr-only" for="pmax">Precio maximo</label>
-        <input id="pmax" class="input" type="number" placeholder="Max" [formControl]="form.controls.max" />
+    <section class="group" *ngIf="showPetFilter && pets.length">
+      <div class="group__head">
+        <h5 class="group__title">Mascota plantilla</h5>
+        <span class="group__pill" *ngIf="selectedPetProfile">Activa</span>
       </div>
-      <small class="hint muted">Consejo: deja vacio para no limitar.</small>
+      <p class="group__hint">
+        Usa un perfil para aplicar especie, etapa, peso, preferencias y alertas relacionadas como contexto del catalogo.
+      </p>
+      <mat-form-field appearance="outline" class="select-field">
+        <mat-select [formControl]="form.controls.petId" panelClass="catalog-select-panel">
+          <mat-option [value]="null">Todas mis mascotas</mat-option>
+          <mat-option *ngFor="let pet of pets" [value]="pet.id">{{ pet.name }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="template-state" *ngIf="selectedPetProfile; else templateIdle">
+        <strong>{{ selectedPetProfile.name }} esta guiando este filtro</strong>
+        <p>{{ petTemplateSummary }}</p>
+        <div class="template-state__chips" *ngIf="selectedPetSummaryTags.length">
+          <span class="template-chip" *ngFor="let tag of selectedPetSummaryTags">{{ tag }}</span>
+        </div>
+      </div>
+
+      <ng-template #templateIdle>
+        <p class="group__hint">Si eliges una mascota, la especie, etapa y preferencias se vuelven sugerencias fijas para este filtrado.</p>
+      </ng-template>
+
+      <p class="group__hint" *ngIf="lockBiologyFilters">
+        La mascota elegida ya define especie y etapa sugerida para el filtrado.
+      </p>
+    </section>
+
+    <section class="group" *ngIf="facets?.brands?.length">
+      <h5 class="group__title">Marca</h5>
+      <mat-form-field appearance="outline" class="select-field">
+        <mat-select [formControl]="form.controls.brandId" panelClass="catalog-select-panel">
+          <mat-option [value]="null">Todas</mat-option>
+          <mat-option *ngFor="let item of facets?.brands" [value]="item.id">
+            <span class="catalog-option">
+              <span>{{ item.name }}</span>
+              <span class="catalog-option__meta">{{ item.count }}</span>
+            </span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </section>
+
+    <section class="group" *ngIf="showFacetControl('form') && facets?.forms?.length">
+      <h5 class="group__title">Formato</h5>
+      <mat-form-field appearance="outline" class="select-field">
+        <mat-select [formControl]="form.controls.form" panelClass="catalog-select-panel">
+          <mat-option [value]="null">Todos</mat-option>
+          <mat-option *ngFor="let item of facets?.forms" [value]="item.value">
+            <span class="catalog-option">
+              <span>{{ item.label }}</span>
+              <span class="catalog-option__meta">{{ item.count }}</span>
+            </span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </section>
+
+    <section class="group" *ngIf="showFacetControl('proteinSource') && facets?.proteinSources?.length">
+      <h5 class="group__title">Proteína o sabor</h5>
+      <mat-form-field appearance="outline" class="select-field">
+        <mat-select [formControl]="form.controls.proteinSource" panelClass="catalog-select-panel">
+          <mat-option [value]="null">Todos</mat-option>
+          <mat-option *ngFor="let item of facets?.proteinSources" [value]="item.value">
+            <span class="catalog-option">
+              <span>{{ item.label }}</span>
+              <span class="catalog-option__meta">{{ item.count }}</span>
+            </span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </section>
+
+    <section class="group" *ngIf="showFacetControl('specieId') && facets?.species?.length">
+      <h5 class="group__title">Especie</h5>
+      <mat-form-field appearance="outline" class="select-field">
+        <mat-select [formControl]="form.controls.specieId" [disabled]="lockBiologyFilters" panelClass="catalog-select-panel">
+          <mat-option [value]="null">Todas</mat-option>
+          <mat-option *ngFor="let item of facets?.species" [value]="item.id">
+            <span class="catalog-option">
+              <span>{{ item.name }}</span>
+              <span class="catalog-option__meta">{{ item.count }}</span>
+            </span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </section>
+
+    <section class="group" *ngIf="showFacetControl('lifeStageId') && facets?.lifeStages?.length">
+      <h5 class="group__title">Etapa de vida</h5>
+      <mat-form-field appearance="outline" class="select-field">
+        <mat-select [formControl]="form.controls.lifeStageId" [disabled]="lockBiologyFilters" panelClass="catalog-select-panel">
+          <mat-option [value]="null">Todas</mat-option>
+          <mat-option *ngFor="let item of facets?.lifeStages" [value]="item.id">
+            <span class="catalog-option">
+              <span>{{ item.name }}</span>
+              <span class="catalog-option__meta">{{ item.count }}</span>
+            </span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </section>
+
+    <section class="group" *ngIf="showFacetControl('dietTagId') && facets?.dietTags?.length">
+      <h5 class="group__title">Necesidad alimentaria</h5>
+      <mat-form-field appearance="outline" class="select-field">
+        <mat-select [formControl]="form.controls.dietTagId" panelClass="catalog-select-panel">
+          <mat-option [value]="null">Todas</mat-option>
+          <mat-option *ngFor="let item of facets?.dietTags" [value]="item.id">
+            <span class="catalog-option">
+              <span>{{ item.name }}</span>
+              <span class="catalog-option__meta">{{ item.count }}</span>
+            </span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </section>
+
+    <section class="group" *ngIf="showFacetControl('healthConditionId') && facets?.healthConditions?.length">
+      <h5 class="group__title">Objetivo de salud</h5>
+      <mat-form-field appearance="outline" class="select-field">
+        <mat-select [formControl]="form.controls.healthConditionId" panelClass="catalog-select-panel">
+          <mat-option [value]="null">Todos</mat-option>
+          <mat-option *ngFor="let item of facets?.healthConditions" [value]="item.id">
+            <span class="catalog-option">
+              <span>{{ item.name }}</span>
+              <span class="catalog-option__meta">{{ item.count }}</span>
+            </span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </section>
+
+    <section class="group" *ngIf="showFacetControl('ingredientId') && facets?.ingredients?.length">
+      <h5 class="group__title">Ingrediente principal</h5>
+      <mat-form-field appearance="outline" class="select-field">
+        <mat-select [formControl]="form.controls.ingredientId" panelClass="catalog-select-panel">
+          <mat-option [value]="null">Todos</mat-option>
+          <mat-option *ngFor="let item of facets?.ingredients" [value]="item.id">
+            <span class="catalog-option">
+              <span>{{ item.name }}</span>
+              <span class="catalog-option__meta">{{ item.count }}</span>
+            </span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </section>
 
     <div class="actions">
       <button type="button" class="btn ghost" (click)="clear.emit()">Limpiar</button>
-      <button class="btn primary" type="submit">Aplicar</button>
+      <button class="btn primary" type="button" (click)="onSubmit()">Aplicar</button>
     </div>
   </form>
 </aside>

@@ -49,6 +49,12 @@
   margin-top: 12px;
 }
 
+.error-msg {
+  margin: 10px 0 0;
+  color: #b91c1c;
+  font-size: var(--fs-sm);
+}
+
 @media (min-width: 860px) {
   .review-grid {
     grid-template-columns: 1fr 1fr;

@@ -1,27 +1,29 @@
-<header class="app-header">
+﻿<header class="app-header">
 
-  <!-- Top Bar (gradiente como el footer) -->
-  <div class="top-bar">
-    <!-- Mensajes promocionales -->
+  <div class="top-bar" *ngIf="promoMessages.length">
     <div class="promo-container">
       <div class="promo-track">
         <div class="promo-slide">
-          <span class="promo-item" *ngFor="let msg of promoMessages">{{ msg }}</span>
+          <ng-container *ngFor="let msg of promoMessages; let last = last">
+            <span class="promo-item">{{ msg }}</span>
+            <span class="promo-divider" *ngIf="!last" aria-hidden="true">•</span>
+          </ng-container>
         </div>
         <div class="promo-slide">
-          <span class="promo-item" *ngFor="let msg of promoMessages">{{ msg }}</span>
+          <ng-container *ngFor="let msg of promoMessages; let last = last">
+            <span class="promo-item">{{ msg }}</span>
+            <span class="promo-divider" *ngIf="!last" aria-hidden="true">•</span>
+          </ng-container>
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- Main Navigation -->
   <nav class="main-nav">
     <div class="nav-content container">
-      <!-- Logo -->
-      <a class="logo" routerLink="/">
-        <img src="../../../assets/images/logo_marketpets_alargado.png" alt="MarketPets Logo" />
+      <a class="logo" routerLink="/" (click)="closeTransientPanels()">
+        <span class="logo-mark" aria-hidden="true">A</span>
+        <span class="logo-word">Aumakki</span>
       </a>
 
       <button
@@ -32,23 +34,20 @@
         <mat-icon>{{ mobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
       </button>
 
-      <!-- Links -->
       <ul class="menu">
         <li *ngFor="let link of navLinks">
           <a
             [routerLink]="link.path"
             routerLinkActive="active"
             [routerLinkActiveOptions]="{ exact: !!link.exact }"
-            (click)="closeMobileMenu()"
+            (click)="closeTransientPanels()"
           >
             {{ link.label }}
           </a>
         </li>
       </ul>
 
-      <!-- Acciones -->
       <div class="actions">
-        <!-- Buscar -->
         <div class="search-wrapper" [class.open]="showSearch">
           <input
             *ngIf="showSearch"
@@ -56,36 +55,71 @@
             [(ngModel)]="searchQuery"
             placeholder="¿Qué buscas?"
             class="input search-input"
+            (keyup.enter)="onSearchSubmit()"
             autofocus
           />
-          <button aria-label="Search" class="icon-btn search-btn" (click)="toggleSearch()">
+          <button aria-label="Buscar" class="icon-btn search-btn" (click)="toggleSearch()">
             <mat-icon>search</mat-icon>
           </button>
         </div>
 
-        <!-- Usuario -->
         <div class="user-menu-container">
-          <button aria-label="Account" class="icon-btn" (click)="onUserIconClick()">
-            <mat-icon>person_outline</mat-icon>
+          <button aria-label="Cuenta" class="icon-btn" [disabled]="isLoggingOut" (click)="onUserIconClick()">
+            <mat-icon [class.spin]="isLoggingOut">{{ isLoggingOut ? 'hourglass_top' : 'person_outline' }}</mat-icon>
           </button>
 
           <ul class="user-menu" *ngIf="userMenuOpen">
-            <li (click)="onUserMenuSelect('profile')">Ver Perfil</li>
-            <li (click)="onUserMenuSelect('orders')">Historial de Compras</li>
-            <li (click)="onUserMenuSelect('pets')">Mis Mascotas</li>
-            <li (click)="onUserMenuSelect('membership')">Membresía</li>
-            <li (click)="onUserMenuSelect('logout')">Cerrar Sesión</li>
+            <li class="user-card" *ngIf="currentUser as user">
+              <div class="user-avatar">{{ greetingName.charAt(0) }}</div>
+              <div class="user-copy">
+                <strong>Hola, {{ greetingName }}</strong>
+                <small>{{ user.email }}</small>
+              </div>
+            </li>
+            <li class="user-menu__divider" *ngIf="isLoggedIn"></li>
+
+            <ng-container *ngIf="isLoggedIn; else guestMenu">
+              <li class="menu-action" (click)="onUserMenuSelect('profile')">
+                <mat-icon>person</mat-icon>
+                <span>Ver perfil</span>
+              </li>
+              <li class="menu-action" (click)="onUserMenuSelect('orders')">
+                <mat-icon>receipt_long</mat-icon>
+                <span>Historial de compras</span>
+              </li>
+              <li class="menu-action" (click)="onUserMenuSelect('pets')">
+                <mat-icon>pets</mat-icon>
+                <span>Mis mascotas</span>
+              </li>
+              <li class="menu-action" (click)="onUserMenuSelect('membership')">
+                <mat-icon>workspace_premium</mat-icon>
+                <span>Membresía</span>
+              </li>
+              <li class="menu-action menu-action--danger" [class.busy]="isLoggingOut" (click)="onUserMenuSelect('logout')">
+                <mat-icon [class.spin]="isLoggingOut">{{ isLoggingOut ? 'hourglass_top' : 'logout' }}</mat-icon>
+                <span>{{ isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión' }}</span>
+              </li>
+            </ng-container>
+
+            <ng-template #guestMenu>
+              <li class="menu-action" (click)="onUserMenuSelect('login')">
+                <mat-icon>login</mat-icon>
+                <span>Iniciar sesión</span>
+              </li>
+              <li class="menu-action" (click)="onUserMenuSelect('register')">
+                <mat-icon>person_add</mat-icon>
+                <span>Crear cuenta</span>
+              </li>
+            </ng-template>
           </ul>
         </div>
 
-        <!-- Carrito + Mini Cart -->
         <div class="cart" (click)="$event.stopPropagation()">
-          <button aria-label="Cart" class="icon-btn cart-btn" (click)="toggleMiniCart()">
+          <button aria-label="Carrito" class="icon-btn cart-btn" (click)="toggleMiniCart()">
             <mat-icon>shopping_cart</mat-icon>
             <span class="badge">{{ (count$ | async) || 0 }}</span>
           </button>
 
-          <!-- Mini-carrito -->
           <div class="mini-cart" *ngIf="miniCartOpen" (click)="$event.stopPropagation()" role="dialog" aria-label="Mini carrito">
             <div class="mini-cart__head">
               <strong>Carrito</strong>
@@ -96,12 +130,12 @@
               <ul class="mini-cart__list" *ngIf="items.length; else emptyCart">
                 <li class="mini-cart__item" *ngFor="let it of items">
                   <img class="thumb" [src]="it.image || ('assets/images/products/' + (it.slug || 'placeholder') + '.png')"
-                       [alt]="it.title || 'Producto'" loading="lazy" />
+                       [alt]="it.name || 'Producto'" loading="lazy" />
                   <div class="info">
-                    <div class="title">{{ it.title }}</div>
+                    <div class="title">{{ it.name }}</div>
                     <div class="meta">
                       <span class="qty">x{{ it.qty }}</span>
-                      <span class="dot">•</span>
+                      <span class="dot">-</span>
                       <span class="price">{{ it.price | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
                     </div>
                   </div>
@@ -114,25 +148,161 @@
 
             <ng-template #emptyCart>
               <div class="mini-cart__empty">
-                <img src="assets/illustrations/sleeping-pet.svg" alt="" aria-hidden="true" />
+                <img src="assets/images/cart/dog-sleep.webp" alt="" aria-hidden="true" />
                 <p>Tu carrito está vacío</p>
               </div>
             </ng-template>
 
-            <div class="mini-cart__footer">
+            <div class="mini-cart__footer" *ngIf="(count$ | async) as count">
               <div class="total">
-                <span>Total</span>
-                <strong>{{ (total$ | async) | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
+                <span>Subtotal</span>
+                <strong>{{ (subtotal$ | async) | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
               </div>
               <div class="actions">
-                <a routerLink="/cart" class="btn ghost" (click)="closeMobileMenu()">Ver carrito</a>
-                <a routerLink="/checkout" class="btn primary" (click)="closeMobileMenu()">Pagar</a>
+                <a routerLink="/cart" class="btn ghost" (click)="closeMiniCart(); closeMobileMenu()">Ver carrito</a>
+                <a *ngIf="count > 0" routerLink="/checkout" class="btn primary" (click)="closeMiniCart(); closeMobileMenu()">Pagar</a>
               </div>
             </div>
           </div>
         </div>
-        <!-- /cart -->
       </div>
+    </div>
+
+    <div class="catalog-nav" *ngIf="isCatalogRoute">
+      <div class="container catalog-nav__bar">
+        <button
+          type="button"
+          class="catalog-nav__explore"
+          [class.is-open]="exploreDrawerOpen"
+          (click)="toggleExploreDrawer()"
+        >
+          <mat-icon class="catalog-nav__explore-icon">dashboard_customize</mat-icon>
+          <span class="catalog-nav__explore-copy">
+            <small>Navegación</small>
+            <strong>Explorar</strong>
+          </span>
+          <mat-icon class="catalog-nav__explore-caret">
+            {{ exploreDrawerOpen ? 'expand_less' : 'expand_more' }}
+          </mat-icon>
+        </button>
+
+        <div class="catalog-nav__shortcuts">
+          <button
+            type="button"
+            class="catalog-nav__chip"
+            *ngFor="let shortcut of catalogShortcuts"
+            (click)="goToCatalogShortcut(shortcut.key)"
+          >
+            <mat-icon>{{ shortcut.icon }}</mat-icon>
+            <span>{{ shortcut.label }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="explore-drawer" *ngIf="isCatalogRoute" [class.is-open]="exploreDrawerOpen">
+      <button
+        type="button"
+        class="explore-drawer__scrim"
+        aria-label="Cerrar exploración"
+        (click)="closeExploreDrawer()"
+      ></button>
+
+      <aside class="explore-drawer__panel" role="dialog" aria-label="Explorar tienda">
+        <div class="explore-drawer__head">
+          <div>
+            <span class="explore-drawer__eyebrow">Tienda</span>
+            <strong>Explorar categorías</strong>
+          </div>
+
+          <button type="button" class="explore-drawer__close" aria-label="Cerrar" (click)="closeExploreDrawer()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <div class="explore-list">
+          <div class="explore-tree" *ngIf="exploreAnimals.length; else noExploreFamilies">
+            <section class="explore-column">
+              <h4 class="explore-column__title">Familias</h4>
+              <button
+                type="button"
+                class="explore-node"
+                *ngFor="let animal of exploreAnimals; trackBy: trackByExploreAnimal"
+                [class.is-active]="isExploreAnimalActive(animal.key)"
+                (click)="setExploreAnimal(animal.key)"
+              >
+                <mat-icon>{{ animal.icon }}</mat-icon>
+                <span>{{ animal.label }}</span>
+              </button>
+            </section>
+
+            <section class="explore-column">
+              <h4 class="explore-column__title">Categorías</h4>
+              <ng-container *ngIf="activeExploreCategories.length; else noExploreCategories">
+                <button
+                  type="button"
+                  class="explore-node"
+                  *ngFor="let category of activeExploreCategories; trackBy: trackByExploreCategory"
+                  [class.is-active]="isExploreCategoryActive(category.slug)"
+                  (click)="setExploreCategory(category.slug)"
+                >
+                  <mat-icon>{{ category.icon }}</mat-icon>
+                  <span>{{ category.label }}</span>
+                  <mat-icon class="explore-node__arrow">chevron_right</mat-icon>
+                </button>
+              </ng-container>
+            </section>
+
+            <section class="explore-column">
+              <h4 class="explore-column__title">Subcategorías</h4>
+              <ng-container *ngIf="activeExploreAnimal as activeAnimal; else noActiveAnimal">
+                <ng-container *ngIf="activeExploreCategory as activeCategory; else noActiveCategory">
+                  <button
+                    type="button"
+                    class="explore-node explore-node--all"
+                    (click)="selectExploreCategory(activeAnimal, activeCategory)"
+                  >
+                    <span>Todo en {{ activeCategory.label }}</span>
+                    <mat-icon class="explore-node__arrow">chevron_right</mat-icon>
+                  </button>
+
+                  <ng-container *ngIf="activeExploreSubcategories.length; else noExploreSubcategories">
+                    <button
+                      type="button"
+                      class="explore-node explore-node--leaf"
+                      *ngFor="let subcategory of activeExploreSubcategories; trackBy: trackByExploreSubcategory"
+                      (click)="selectExploreSubcategory(activeAnimal, activeCategory, subcategory)"
+                    >
+                      <span>{{ subcategory.label }}</span>
+                      <mat-icon class="explore-node__arrow">chevron_right</mat-icon>
+                    </button>
+                  </ng-container>
+                </ng-container>
+              </ng-container>
+            </section>
+          </div>
+
+          <ng-template #noExploreFamilies>
+            <div class="explore-empty">No hay familias configuradas.</div>
+          </ng-template>
+
+          <ng-template #noExploreCategories>
+            <div class="explore-empty">Sin categorías en esta familia.</div>
+          </ng-template>
+
+          <ng-template #noActiveAnimal>
+            <div class="explore-empty">Selecciona una familia.</div>
+          </ng-template>
+
+          <ng-template #noActiveCategory>
+            <div class="explore-empty">Selecciona una categoría.</div>
+          </ng-template>
+
+          <ng-template #noExploreSubcategories>
+            <div class="explore-empty">Sin subcategorías en esta categoría.</div>
+          </ng-template>
+        </div>
+      </aside>
     </div>
 
     <div class="mobile-panel" [class.open]="mobileMenuOpen">
@@ -142,7 +312,7 @@
             [routerLink]="link.path"
             routerLinkActive="active"
             [routerLinkActiveOptions]="{ exact: !!link.exact }"
-            (click)="closeMobileMenu()"
+            (click)="closeTransientPanels()"
           >
             {{ link.label }}
           </a>
@@ -150,4 +320,9 @@
       </ul>
     </div>
   </nav>
+
+  <div class="session-toast" [class.show]="showSessionToast" [class.error]="sessionToastType === 'error'" aria-live="polite">
+    <mat-icon>{{ sessionToastIcon }}</mat-icon>
+    <span>{{ sessionToastMessage }}</span>
+  </div>
 </header>

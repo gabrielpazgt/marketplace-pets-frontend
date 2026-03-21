@@ -1,48 +1,28 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { MembershipsService } from '../../features/memberships/services/memberships.service';
 import { Product } from '../home.models';
 
-type PriceView = { now: number; old?: number };
-type DealItem = Product & { reg: PriceView; mem: PriceView };
-
 @Component({
+  standalone: false,
   selector: 'app-deals',
   templateUrl: './deals.component.html',
   styleUrls: ['./deals.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DealsComponent implements OnChanges {
+export class DealsComponent {
   @Input() products: Product[] | null | undefined;
-  /** Si un producto no trae memberPrice, se calcula con esta tasa. */
-  @Input() membershipRate = 0.10; // 10% OFF por defecto (ajústalo a tu regla real)
 
-  /** Items listos para pintar (con precios calculados) */
-  view: DealItem[] = [];
+  constructor(private memberships: MembershipsService) {}
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['products'] || changes['membershipRate']) {
-      const list = (this.products ?? []).filter(Boolean) as Product[];
-      this.view = list.map(p => this.buildItem(p));
-    }
+  get view(): Product[] {
+    return (this.products ?? []).filter(Boolean) as Product[];
   }
 
-  private buildItem(p: any): DealItem {
-    // normal
-    const price = Number(p.price) || 0;
-    const oldPrice = (p.oldPrice && p.oldPrice > price) ? Number(p.oldPrice) : undefined;
+  get membershipDiscountPct(): number {
+    return this.memberships.getPlan('premium').productDiscountPct;
+  }
 
-    // membresía (si viene, se respeta; si no, se calcula con rate)
-    const memberNow: number =
-      p.memberPrice != null ? Number(p.memberPrice)
-                            : Math.round(price * (1 - this.membershipRate));
-
-    const memberOld: number | undefined =
-      p.memberOldPrice != null ? Number(p.memberOldPrice)
-                               : (oldPrice ? Math.round(oldPrice * (1 - this.membershipRate)) : undefined);
-
-    return {
-      ...(p as Product),
-      reg: { now: price, old: oldPrice },
-      mem: { now: memberNow, old: memberOld }
-    };
+  memberPrice(price: number): number {
+    return this.memberships.priceWithMembership(price, 'premium');
   }
 }

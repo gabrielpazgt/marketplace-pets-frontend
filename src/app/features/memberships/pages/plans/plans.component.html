@@ -1,105 +1,85 @@
-﻿<section class="memberships">
+<section class="memberships">
   <div class="container memberships__container">
     <header class="memberships-hero">
-      <span class="kicker">MEMBRESIAS</span>
-      <h1>Sube de nivel tu experiencia de compra</h1>
+      <span class="kicker">MEMBRESÍAS</span>
+      <h1>Elige entre plan Gratuito o plan Premium</h1>
       <p>
-        Elige un plan, recibe mejores precios y desbloquea beneficios en cada pedido.
-        Puedes cambiar de plan cuando quieras.
+        Todos los usuarios registrados tienen membresía gratuita por defecto. También puedes
+        optar por Premium para obtener beneficios adicionales y ahorrar en tus compras.
       </p>
 
-      <div class="hero-meta" aria-label="Ventajas de membresia">
-        <span class="meta-chip">Ahorro anual hasta {{ annualDiscountPercent }}%</span>
-        <span class="meta-chip">Checkout en 2 pasos</span>
-        <span class="meta-chip">Sin permanencia obligatoria</span>
+      <div class="hero-meta" aria-label="Resumen de membresías">
+        <span class="meta-chip">Gratuita desde Q0</span>
+        <span class="meta-chip">Premium por Q75/mes</span>
+        <span class="meta-chip">5% de descuento en productos</span>
       </div>
     </header>
 
-    <section class="plans-section" aria-label="Planes disponibles">
-      <article
-        class="plan-card"
-        *ngFor="let p of plans"
-        [class.emphasis]="p.id === preselect"
-        [class.active]="isExpanded(p.id)"
-        [class.current]="p.id === currentPlan"
-        [class.theme-free]="planTheme(p.id) === 'free'"
-        [class.theme-premium]="planTheme(p.id) === 'premium'"
-        [class.theme-vip]="planTheme(p.id) === 'vip'"
-        tabindex="0"
-        role="button"
-        [attr.aria-expanded]="isExpanded(p.id)"
-        (keydown)="onKeyCard($event, p.id)"
-        (click)="toggle(p.id)"
-      >
-        <div class="plan-top">
-          <span class="plan-label">{{ p.name | uppercase }}</span>
-          <span class="plan-state" *ngIf="p.id === currentPlan">Tu plan actual</span>
+    <section class="plans-grid" aria-label="Planes de membresía disponibles">
+      <article class="card plan-card" *ngFor="let plan of plans" [class.plan-card--active]="isCurrentPlan(plan.id)">
+        <div class="plan-head">
+          <span class="plan-label">{{ plan.name }}</span>
+          <span class="plan-state" *ngIf="isCurrentPlan(plan.id)">Plan activo</span>
         </div>
 
-        <div class="plan-main">
-          <h3>{{ p.highlight || 'Plan para tu tienda' }}</h3>
+        <h2>{{ plan.highlight }}</h2>
 
-          <div class="price-wrap">
-            <span class="currency">Q</span>
-            <span class="amount">{{ p.monthlyPrice }}</span>
-            <span class="unit">/mes</span>
-          </div>
-
-          <p class="yearly-info" *ngIf="p.monthlyPrice > 0">
-            Anual: Q{{ yearlyEquivalent(p.id) }} (pagas 10 meses)
-          </p>
-          <p class="yearly-info" *ngIf="p.monthlyPrice === 0">
-            Empieza gratis y mejora cuando quieras.
-          </p>
+        <div class="price-row">
+          <strong class="price">Q{{ getPlanPrice(plan) }}</strong>
+          <span class="cycle">/ mes</span>
         </div>
 
-        <ul class="perk-preview" aria-label="Resumen de beneficios">
-          <li *ngFor="let perk of p.perks | slice:0:3">{{ perk }}</li>
+        <p class="muted" *ngIf="plan.id === 'free'">
+          Ideal para empezar. Acceso total a la tienda sin costo mensual.
+        </p>
+        <p class="muted" *ngIf="plan.id === 'premium'">
+          Incluye 5% de descuento y atención prioritaria para una experiencia más completa.
+        </p>
+
+        <ul class="ticks">
+          <li *ngFor="let perk of plan.perks">
+            <span class="tick" aria-hidden="true">&#10003;</span>
+            <span>{{ perk }}</span>
+          </li>
         </ul>
 
-        <div class="plan-actions" (click)="$event.stopPropagation()">
-          <button class="btn primary" [class.ghost]="p.id === currentPlan" (click)="choose(p.id)">
-            {{ p.id === currentPlan ? 'Administrar plan' : 'Elegir ' + p.name }}
-          </button>
-
-          <button class="btn ghost toggle" (click)="toggle(p.id)">
-            {{ isExpanded(p.id) ? 'Ocultar detalles' : 'Ver detalles' }}
-            <i class="chev" [class.open]="isExpanded(p.id)"></i>
-          </button>
-        </div>
-
-        <div class="benefits" *ngIf="isExpanded(p.id)">
-          <ul class="ticks">
-            <li *ngFor="let perk of p.perks">
-              <span class="tick" aria-hidden="true">&#10003;</span>
-              <span>{{ perk }}</span>
-            </li>
-          </ul>
-
-          <div class="footnote">
-            <span class="muted">Sin cargos ocultos. Puedes cambiar o cancelar renovacion futura.</span>
-            <a class="link" (click)="choose(p.id)">Continuar al checkout</a>
-          </div>
-        </div>
+        <button
+          class="btn"
+          type="button"
+          [class.primary]="!isCurrentPlan(plan.id)"
+          [class.ghost]="isCurrentPlan(plan.id)"
+          [disabled]="saving || isCurrentPlan(plan.id)"
+          (click)="selectPlan(plan.id)"
+        >
+          {{ isCurrentPlan(plan.id) ? 'Plan activo' : (saving ? 'Actualizando...' : 'Seleccionar plan') }}
+        </button>
       </article>
     </section>
 
-    <section class="faq" aria-label="Preguntas frecuentes de membresias">
-      <h2>Preguntas rapidas</h2>
+    <section class="impact-note card">
+      <h3>Compromiso social</h3>
+      <p>
+        Destinamos un porcentaje de nuestras ganancias a fundaciones que apoyan animales enfermos
+        y en situación de calle.
+      </p>
+    </section>
+
+    <section class="faq" aria-label="Preguntas frecuentes de membresía">
+      <h2>Preguntas rápidas</h2>
 
       <details>
-        <summary>¿Puedo cambiar de plan cuando quiera?</summary>
-        <p>Si. El cambio aplica de inmediato y la proxima renovacion usa el plan vigente.</p>
+        <summary>¿La membresía gratuita incluye todo lo básico?</summary>
+        <p>Sí. Puedes comprar sin límites y acceder al flujo completo de tienda.</p>
       </details>
 
       <details>
-        <summary>¿El plan anual tiene descuento?</summary>
-        <p>Si. Pagas 10 meses y recibes 2 meses adicionales sin costo.</p>
+        <summary>¿Qué gano con Premium por Q75 al mes?</summary>
+        <p>Obtienes 5% de descuento en productos seleccionados y atención prioritaria.</p>
       </details>
 
       <details>
-        <summary>¿Hay reembolsos en planes pagados?</summary>
-        <p>No hay reembolsos parciales. Puedes cancelar la renovacion futura en cualquier momento.</p>
+        <summary>¿Necesito cuenta para comprar?</summary>
+        <p>Puedes comprar como invitado o iniciar sesión para guardar tus datos.</p>
       </details>
     </section>
   </div>

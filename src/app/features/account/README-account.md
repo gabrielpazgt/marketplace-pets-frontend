@@ -181,7 +181,7 @@ Reutilizamos **`features/pets`** tal cual, montándolo en `/account/pets`. Los p
 ## 🧪 Datos mock y assets
 
 - Perfil: información dummy (nombre, email) y foto por sexo (boy/girl).
-- Points/membership: valores simulados para la barra de progreso.
+- Membresia: valores simulados pendientes de conectar a backend real.
 - Orders: lista de órdenes dummy con estados para demostrar UI.
 
 > Conectar a backend sólo requerirá mapear los modelos a estos mismos slots visuales.
@@ -193,7 +193,7 @@ Reutilizamos **`features/pets`** tal cual, montándolo en `/account/pets`. Los p
 - Conectar Orders a API (paginación y descarga de factura).
 - Persistir Settings/Perfil en backend (y validaciones).
 - Habilitar **detalle de orden** como página interna (`/account/orders/:id`).
-- Integrar **programa de puntos** en Profile/Membership con earning rules reales.
+- Integrar estado de **membresia gratuita** en Profile/Membership con datos reales de backend.
 - Modal de **cambio de contraseña** y **2FA** con OTP.
 - “Mis Direcciones” en Profile con CRUD completo y selección en Checkout.
 

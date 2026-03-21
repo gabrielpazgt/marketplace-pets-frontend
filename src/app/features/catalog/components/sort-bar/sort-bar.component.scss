@@ -57,12 +57,46 @@
   font-weight: 600;
 }
 
-.sort select {
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: .42rem .7rem;
-  min-width: 190px;
+.sort__field {
+  min-width: 210px;
+  margin-bottom: -1.25em;
+}
+
+:host ::ng-deep .sort__field .mat-mdc-text-field-wrapper {
+  border-radius: 16px;
   background: #fff;
+}
+
+:host ::ng-deep .sort__field .mat-mdc-form-field-infix {
+  min-height: 42px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+:host ::ng-deep .sort__field .mat-mdc-select-value-text {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+:host ::ng-deep .sort__field .mat-mdc-select-arrow {
+  color: #475569;
+}
+
+:host ::ng-deep .sort__field .mdc-notched-outline__leading,
+:host ::ng-deep .sort__field .mdc-notched-outline__notch,
+:host ::ng-deep .sort__field .mdc-notched-outline__trailing {
+  border-color: #d8dee8 !important;
+}
+
+:host ::ng-deep .sort__field.mat-focused .mdc-notched-outline__leading,
+:host ::ng-deep .sort__field.mat-focused .mdc-notched-outline__notch,
+:host ::ng-deep .sort__field.mat-focused .mdc-notched-outline__trailing {
+  border-color: rgba(217, 119, 6, .55) !important;
+}
+
+.sort__selected {
+  font-weight: 800;
+  color: var(--ink);
 }
 
 @media (max-width: 720px) {
@@ -81,7 +115,7 @@
     justify-content: space-between;
   }
 
-  .sort select {
+  .sort__field {
     min-width: 0;
     width: min(72vw, 240px);
   }

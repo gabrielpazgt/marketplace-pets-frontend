@@ -1,14 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-
-// (mock) en lo que se integra AuthService real
-function devUserId() { return 'dev-user'; }
+import { Subject, forkJoin } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { AuthService } from '../../../../auth/services/auth.service';
+import { StorefrontApiService } from '../../../../core/services/storefront-api.service';
+import { PetsStateService } from '../../../pets/services/pet-state.service';
 
 type Address = {
   id: string;
-  userId: string;
-  label: string;        // Casa, Trabajo, etc.
-  recipient: string;    // A nombre de
+  label: string;
+  recipient: string;
   phone?: string;
   line1: string;
   line2?: string;
@@ -18,56 +19,69 @@ type Address = {
   country: string;
   instructions?: string;
   isDefault?: boolean;
-  createdAt: string; updatedAt: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
-const ADDR_KEY = 'mp_addresses';
-
 @Component({
+  standalone: false,
   selector: 'app-profile-overview',
   templateUrl: './profile-overview.component.html',
   styleUrls: ['./profile-overview.component.scss']
 })
-export class ProfileOverviewComponent implements OnInit {
+export class ProfileOverviewComponent implements OnInit, OnDestroy {
+  private readonly destroy$ = new Subject<void>();
 
-  // Mock de datos del usuario (conecta luego a AuthService/ProfileService)
   user = {
-    id: devUserId(),
-    name: 'Aumakki User',
-    email: 'hola@aumakki.com',
-    gender: 'male' as 'male' | 'female' | undefined, // ⬅️ setea 'male' | 'female' | undefined
-    membership: 'Free',        // Free | Premium | VIP
-    points: 120,
-    ordersCount: 3,
-    petsCount: 2
+    id: 'dev-user',
+    name: 'Usuario',
+    email: 'usuario@aumakki.com',
+    membership: 'Free',
+    ordersCount: 0,
+    petsCount: 0,
+    phone: '',
+    documentIdNumber: '',
+    birthDate: '',
   };
 
-  /** URL del avatar según sexo; si no hay género, retorna null y mostramos la inicial */
   get avatarUrl(): string | null {
-    if (this.user.gender === 'male')   return 'assets/icons/account/boy.png';
-    if (this.user.gender === 'female') return 'assets/icons/account/girl.png';
     return null;
   }
 
-  // Quick prefs (se conectan luego)
   prefs = {
     locale: 'ES',
     currency: 'GTQ',
     newsletter: true,
     notifyPromos: true,
-    notifyOrders: true
+    notifyOrders: true,
   };
 
-  // Direcciones
   addresses: Address[] = [];
+  loading = false;
+  loadingAddresses = false;
+  formSaving = false;
+  errorMessage = '';
+
   formOpen = false;
   formMode: 'create' | 'edit' = 'create';
   editingId: string | null = null;
   addrForm!: FormGroup;
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private auth: AuthService,
+    private storefrontApi: StorefrontApiService,
+    private pets: PetsStateService
+  ) {}
 
   ngOnInit(): void {
+    const authUser = this.auth.user;
+    if (authUser) {
+      this.user.id = String(authUser.id);
+      this.user.name = authUser.username;
+      this.user.email = authUser.email;
+    }
+
     this.addrForm = this.fb.group({
       label: ['', [Validators.required, Validators.maxLength(24)]],
       recipient: ['', [Validators.required, Validators.maxLength(80)]],
@@ -78,27 +92,100 @@ export class ProfileOverviewComponent implements OnInit {
       state: [''],
       zip: [''],
       country: ['Guatemala', [Validators.required]],
-      instructions: ['']
+      instructions: [''],
+      isDefault: [false],
     });
 
-    this.load();
+    this.pets.pets$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((pets) => {
+        this.user.petsCount = pets.length;
+      });
+
+    this.loadProfileAndPreferences();
+    this.loadAddresses();
   }
 
-  // ====== Direcciones (localStorage demo) ======
-  private read(): Address[] {
-    try {
-      const raw = localStorage.getItem(ADDR_KEY);
-      return raw ? JSON.parse(raw) as Address[] : [];
-    } catch { return []; }
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
-  private persist(list: Address[]) {
-    localStorage.setItem(ADDR_KEY, JSON.stringify(list));
-  }
-  private uid() { return 'a_' + Math.random().toString(36).slice(2) + Date.now().toString(36); }
 
-  load() {
-    const all = this.read();
-    this.addresses = all.filter(a => a.userId === this.user.id);
+  loadProfileAndPreferences(): void {
+    if (!this.auth.isLoggedIn) return;
+
+    this.loading = true;
+    this.errorMessage = '';
+
+    forkJoin({
+      profile: this.storefrontApi.getMyProfile(),
+      preferences: this.storefrontApi.getMyPreferences(),
+      membership: this.storefrontApi.getMyMembership(),
+    }).subscribe({
+      next: ({ profile, preferences, membership }) => {
+        const p = profile.data;
+
+        this.user.id = String(p.id);
+        this.user.name = p.fullName || p.username;
+        this.user.email = p.email;
+        this.user.phone = p.phone || '';
+        this.user.documentIdNumber = p.documentIdNumber || '';
+        this.user.birthDate = p.birthDate || '';
+        this.user.ordersCount = Number(p.stats?.orders || 0);
+        this.user.petsCount = Number(p.stats?.pets || 0);
+
+        const tier = membership.data?.tier === 'premium' ? 'Premium' : 'Free';
+        this.user.membership = tier;
+
+        const pref = preferences.data;
+        this.prefs = {
+          locale: (pref.language || 'es').toUpperCase(),
+          currency: pref.currency || 'GTQ',
+          newsletter: pref.notifications?.newsletter !== false,
+          notifyPromos: pref.notifications?.promotions !== false,
+          notifyOrders: pref.notifications?.orderUpdates !== false,
+        };
+
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.errorMessage = 'No se pudo cargar la informacion de tu perfil.';
+      },
+    });
+  }
+
+  loadAddresses() {
+    if (!this.auth.isLoggedIn) {
+      this.addresses = [];
+      return;
+    }
+
+    this.loadingAddresses = true;
+    this.storefrontApi.listMyAddresses().subscribe({
+      next: (response) => {
+        this.addresses = (response.data || []).map((address) => ({
+          id: String(address.id),
+          label: address.label || 'Direccion',
+          recipient: address.fullName || this.user.name,
+          phone: address.phone || undefined,
+          line1: address.addressLine1 || '',
+          line2: address.addressLine2 || undefined,
+          city: address.city || '',
+          state: address.state || undefined,
+          zip: address.postalCode || undefined,
+          country: address.country || 'Guatemala',
+          instructions: address.reference || undefined,
+          isDefault: !!address.isDefault,
+          createdAt: address.createdAt,
+          updatedAt: address.updatedAt,
+        }));
+        this.loadingAddresses = false;
+      },
+      error: () => {
+        this.loadingAddresses = false;
+      },
+    });
   }
 
   openCreate() {
@@ -108,14 +195,15 @@ export class ProfileOverviewComponent implements OnInit {
     this.addrForm.reset({
       label: 'Casa',
       recipient: this.user.name,
-      phone: '',
+      phone: this.user.phone || '',
       line1: '',
       line2: '',
       city: '',
       state: '',
       zip: '',
       country: 'Guatemala',
-      instructions: ''
+      instructions: '',
+      isDefault: this.addresses.length === 0,
     });
   }
 
@@ -133,7 +221,8 @@ export class ProfileOverviewComponent implements OnInit {
       state: a.state || '',
       zip: a.zip || '',
       country: a.country,
-      instructions: a.instructions || ''
+      instructions: a.instructions || '',
+      isDefault: !!a.isDefault,
     });
   }
 
@@ -144,79 +233,69 @@ export class ProfileOverviewComponent implements OnInit {
   }
 
   saveAddress() {
-    if (this.addrForm.invalid) {
+    if (this.addrForm.invalid || this.formSaving) {
       this.addrForm.markAllAsTouched();
       return;
     }
-    const v = this.addrForm.value;
-    const now = new Date().toISOString();
 
-    const all = this.read();
-    if (this.formMode === 'create') {
-      const addr: Address = {
-        id: this.uid(),
-        userId: this.user.id,
-        label: v.label,
-        recipient: v.recipient,
-        phone: v.phone || undefined,
-        line1: v.line1,
-        line2: v.line2 || undefined,
-        city: v.city,
-        state: v.state || undefined,
-        zip: v.zip || undefined,
-        country: v.country,
-        instructions: v.instructions || undefined,
-        isDefault: all.filter(a => a.userId === this.user.id).length === 0, // primera = default
-        createdAt: now, updatedAt: now
-      };
-      all.push(addr);
-    } else if (this.editingId) {
-      const idx = all.findIndex(a => a.id === this.editingId);
-      if (idx >= 0) {
-        all[idx] = {
-          ...all[idx],
-          ...v,
-          phone: v.phone || undefined,
-          line2: v.line2 || undefined,
-          state: v.state || undefined,
-          zip: v.zip || undefined,
-          instructions: v.instructions || undefined,
-          updatedAt: now
-        };
-      }
-    }
+    const value = this.addrForm.value;
+    const payload = {
+      label: value.label,
+      fullName: value.recipient,
+      phone: value.phone || undefined,
+      addressLine1: value.line1,
+      addressLine2: value.line2 || undefined,
+      city: value.city,
+      state: value.state || undefined,
+      postalCode: value.zip || undefined,
+      country: value.country,
+      reference: value.instructions || undefined,
+      isDefault: !!value.isDefault,
+    };
 
-    this.persist(all);
-    this.cancelForm();
-    this.load();
+    this.formSaving = true;
+
+    const request$ = this.formMode === 'create'
+      ? this.storefrontApi.createMyAddress(payload)
+      : this.storefrontApi.updateMyAddress(this.editingId as string, payload);
+
+    request$.subscribe({
+      next: () => {
+        this.formSaving = false;
+        this.cancelForm();
+        this.loadAddresses();
+      },
+      error: () => {
+        this.formSaving = false;
+        this.errorMessage = 'No se pudo guardar la direccion.';
+      },
+    });
   }
 
   setDefault(a: Address) {
-    const all = this.read();
-    const byUser = all.map(x =>
-      x.userId === this.user.id ? { ...x, isDefault: x.id === a.id } : x
-    );
-    this.persist(byUser);
-    this.load();
+    this.storefrontApi
+      .updateMyAddress(a.id, { isDefault: true })
+      .subscribe({
+        next: () => this.loadAddresses(),
+        error: () => {
+          this.errorMessage = 'No se pudo actualizar la direccion predeterminada.';
+        },
+      });
   }
 
   remove(a: Address) {
-    if (!confirm(`¿Eliminar la dirección "${a.label}"?`)) return;
-    const all = this.read().filter(x => x.id !== a.id);
-    // Si eliminamos la default, pone otra del usuario como default
-    const still = all.filter(x => x.userId === this.user.id);
-    if (still.length && !still.some(x => x.isDefault)) {
-      still[0].isDefault = true;
-      const idx = all.findIndex(x => x.id === still[0].id);
-      if (idx >= 0) all[idx] = still[0];
-    }
-    this.persist(all);
-    this.load();
+    if (!confirm(`¿Eliminar la direccion "${a.label}"?`)) return;
+
+    this.storefrontApi.deleteMyAddress(a.id).subscribe({
+      next: () => this.loadAddresses(),
+      error: () => {
+        this.errorMessage = 'No se pudo eliminar la direccion.';
+      },
+    });
   }
 
-  // ====== Helpers UI ======
   get defaultAddress(): Address | undefined {
-    return this.addresses.find(a => a.isDefault);
+    return this.addresses.find((address) => address.isDefault) || this.addresses[0];
   }
 
   kpiLabel(n: number) {

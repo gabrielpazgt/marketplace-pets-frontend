@@ -8,11 +8,13 @@ import { MatSelectModule }      from '@angular/material/select';
 import { MatFormFieldModule }   from '@angular/material/form-field';
 import { HeaderComponent }      from './header/header.component';
 import { FooterComponent }      from './footer/footer.component';
+import { GlobalLoaderComponent } from './global-loader/global-loader.component';
 
 @NgModule({
   declarations: [
     HeaderComponent,
-    FooterComponent
+    FooterComponent,
+    GlobalLoaderComponent
   ],
   imports: [
     CommonModule,
@@ -24,7 +26,8 @@ import { FooterComponent }      from './footer/footer.component';
   ],
   exports: [
     HeaderComponent,
-    FooterComponent
+    FooterComponent,
+    GlobalLoaderComponent
   ]
 })
 export class SharedModule { }

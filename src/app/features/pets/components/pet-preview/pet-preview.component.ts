@@ -11,6 +11,7 @@ import {
 } from '../../models/pet.models';
 
 @Component({
+  standalone: false,
   selector: 'mp-pet-preview',
   templateUrl: './pet-preview.component.html',
   styleUrls: ['./pet-preview.component.scss'],
@@ -32,8 +33,9 @@ export class PetPreviewComponent {
       dog: 'assets/images/pets/dog.png',
       cat: 'assets/images/pets/cat.png',
       bird: 'assets/images/pets/bird.png',
-      hamster: 'assets/images/pets/hamster.png',
-      turtle: 'assets/images/pets/tortuga.png',
+      fish: 'assets/images/pets/other_pet.png',
+      reptile: 'assets/images/pets/tortuga.png',
+      'small-pet': 'assets/images/pets/hamster.png',
       other: 'assets/images/pets/other_pet.png',
     };
     const key = this.draft?.species ?? 'dog';

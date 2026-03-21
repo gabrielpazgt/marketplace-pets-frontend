@@ -1,21 +1,24 @@
-﻿.membership {
+.membership {
   .wrap { padding: var(--sp-4); }
   .head { margin-bottom: var(--sp-4); }
   h2 { margin: 0 0 4px; }
 
-  .top {
+  .plans-grid {
     display: grid;
-    gap: var(--sp-4);
-    grid-template-columns: 1fr 1fr;
-
-    @media (max-width: 960px) {
-      grid-template-columns: 1fr;
-    }
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
   }
 
   .panel {
     padding: var(--sp-4);
     background: var(--color-surface);
+    display: grid;
+    gap: var(--sp-3);
+  }
+
+  .panel.current {
+    border-color: color-mix(in srgb, var(--success) 46%, var(--line));
+    box-shadow: 0 12px 28px rgba(34, 197, 94, 0.08);
   }
 
   .panel__head {
@@ -23,10 +26,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    margin-bottom: var(--sp-3);
+    flex-wrap: wrap;
   }
-
-  .panel__body { display: grid; gap: var(--sp-3); }
 
   .chip.plan {
     display: inline-grid;
@@ -35,28 +36,11 @@
     border-radius: var(--r-pill);
     border: 1px solid var(--line);
     font-weight: 800;
-    background: var(--chip);
+    background: linear-gradient(90deg, #dbe2ec, #c4cfdd);
+    color: #0f172a;
   }
 
   .price { font-size: var(--fs-xl); font-weight: 800; }
-
-  .tone-neutral .chip.plan {
-    background: linear-gradient(90deg, #dbe2ec, #c4cfdd);
-    color: #0f172a;
-    border-color: transparent;
-  }
-
-  .tone-brand .chip.plan {
-    background: linear-gradient(90deg, var(--brand), var(--brand-700));
-    color: #fff;
-    border-color: transparent;
-  }
-
-  .tone-accent .chip.plan {
-    background: linear-gradient(90deg, var(--accent), #1e88e5);
-    color: #fff;
-    border-color: transparent;
-  }
 
   .ticks {
     list-style: none;
@@ -81,109 +65,26 @@
     li { display: flex; align-items: flex-start; }
   }
 
-  .progress {
-    display: grid;
-    gap: 6px;
-
-    .labels {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-
-      span:last-child { font-weight: 800; }
-    }
-
-    .bar {
-      width: 100%;
-      height: 10px;
-      border: 1px solid var(--line);
-      border-radius: var(--r-pill);
-      background: #fff;
-      overflow: hidden;
-
-      .fill {
-        display: block;
-        height: 100%;
-        background: linear-gradient(90deg, var(--brand), var(--brand-700));
-      }
-    }
-  }
-
   .cta {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
   }
 
-  .benefits h3 { margin: 0 0 var(--sp-2); }
-  .hint { font-size: var(--fs-sm); }
-
-  .compare { margin-top: var(--sp-4); }
-  .subhead { margin-bottom: var(--sp-3); }
-
-  .grid {
-    display: grid;
-    gap: var(--sp-3);
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-
-    @media (max-width: 1080px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    @media (max-width: 720px) { grid-template-columns: 1fr; }
+  .impact {
+    margin-top: var(--sp-4);
+    padding: var(--sp-4);
+    border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--line));
+    background: color-mix(in srgb, var(--accent) 7%, #fff);
   }
 
-  .plan-card {
-    border: 1px solid var(--line);
-    border-radius: var(--r-md);
-    background: #fff;
-    padding: var(--sp-4);
-    box-shadow: var(--elev-1);
-    display: grid;
-    gap: 12px;
-    transition: transform var(--t-fast) var(--timing), box-shadow var(--t-base) var(--timing), border-color var(--t-base) var(--timing);
+  .impact h3 {
+    margin: 0 0 8px;
+  }
 
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--elev-3);
-    }
-
-    &.active {
-      border-color: color-mix(in srgb, var(--brand) 40%, var(--line));
-      box-shadow: 0 10px 26px rgba(233, 140, 0, .16);
-    }
-
-    .badge {
-      display: inline-grid;
-      place-items: center;
-      padding: 6px 12px;
-      border-radius: var(--r-pill);
-      border: 1px solid var(--line);
-      font-weight: 800;
-      width: max-content;
-      background: var(--chip);
-    }
-
-    &.tone-neutral .badge { background: #e5e7eb; }
-    &.tone-brand .badge { background: color-mix(in srgb, var(--brand) 20%, #fff); }
-    &.tone-accent .badge { background: color-mix(in srgb, var(--accent) 20%, #fff); }
-
-    .price { font-size: var(--fs-xl); font-weight: 900; }
-
-    .bullets {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: grid;
-      gap: 6px;
-    }
-
-    .bullets li::before {
-      content: '•';
-      margin-right: 8px;
-      color: var(--brand-600);
-      font-weight: 900;
-    }
-
-    .btn { justify-self: start; }
+  .impact p {
+    margin: 0;
+    color: var(--ink-2);
   }
 
   .faq { margin-top: var(--sp-4); }
@@ -212,8 +113,8 @@
 
   @media (max-width: 640px) {
     .wrap { padding: 14px; }
+    .plans-grid { grid-template-columns: 1fr; }
     .panel { padding: 14px; }
-    .cta .btn { width: 100%; }
-    .panel__head { align-items: flex-start; flex-direction: column; }
+    .panel .btn { width: 100%; }
   }
 }

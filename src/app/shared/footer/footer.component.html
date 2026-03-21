@@ -1,102 +1,132 @@
 <footer class="footer" role="contentinfo">
-  <!-- Promo / wave -->
-  <section class="promo" aria-label="Promoción">
-    <div class="promo__inner">
-      <p class="promo__text">
-        ¡Obtén <strong>15% OFF</strong> en tu primera compra!
-      </p>
-      <div class="promo__code" aria-label="Código de cupón">
-        <span>CODE:</span> <strong>AUMAKKI15</strong>
+  <section class="promo" aria-label="Promocion activa" *ngIf="promoText && promoCode">
+    <div class="promo__inner container">
+      <p class="promo__text">{{ promoText }}</p>
+      <div class="promo__code" aria-label="Codigo del cupon">
+        <span>Codigo</span>
+        <strong>{{ promoCode }}</strong>
       </div>
     </div>
-
-    <!-- Ola integrada al color del footer -->
-    <svg class="promo__wave" viewBox="0 0 1200 80" preserveAspectRatio="none" aria-hidden="true">
-      <path d="M0,32 C150,80 350,0 600,40 C850,80 1050,10 1200,40 L1200,0 L0,0 Z"></path>
+    <svg class="promo__wave" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,48 C150,92 360,12 600,56 C840,100 1050,18 1200,48 L1200,0 L0,0 Z"></path>
     </svg>
   </section>
 
-  <!-- Main content -->
-  <section class="footer__content container">
-    <!-- Brand / About -->
-    <div class="footer__col footer__brand">
-      <div class="brand">
-        <img src="assets/logos/aumakki-mark.svg" alt="Aumakki" class="brand__logo" />
-        <span class="brand__name">Aumakki</span>
-      </div>
-      <p class="muted">
-        Todo para tu mascota en un solo lugar. Productos de calidad, envíos rápidos
-        y recomendaciones personalizadas según el perfil de tu mascota.
-      </p>
-
-      <nav class="social" aria-label="Redes sociales">
-        <a
-          class="social__link"
-          *ngFor="let s of socialLogos"
-          [href]="s.href || null"
-          [attr.aria-label]="s.alt"
-          [attr.title]="s.alt"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img class="social__icon" [src]="s.src" [alt]="s.alt" loading="lazy" />
+  <section class="footer__shell">
+    <div class="container footer__grid">
+      <div class="footer__brand">
+        <a routerLink="/" class="brand" aria-label="Aumakki inicio">
+          <span class="brand__logo" aria-hidden="true">A</span>
+          <span class="brand__name">Aumakki</span>
         </a>
-      </nav>
 
-    </div>
+        <p class="footer__lead">
+          Ecommerce de mascotas con catalogo curado, filtros inteligentes y recomendaciones mas utiles para cada perfil.
+        </p>
 
-    <!-- Quick links -->
-    <div class="footer__col">
-      <h3 class="footer__title">Información</h3>
-      <ul class="list">
-        <li><a routerLink="/about">Sobre nosotros</a></li>
-        <li><a routerLink="/help/faq">Preguntas frecuentes</a></li>
-        <li><a routerLink="/shipping">Envíos y devoluciones</a></li>
-        <li><a routerLink="/loyalty">Membresías y puntos</a></li>
-      </ul>
-    </div>
+        <ul class="trust-list" aria-label="Puntos de confianza">
+          <li *ngFor="let pill of trustPills">
+            <span class="trust-list__icon" aria-hidden="true">{{ pill.icon }}</span>
+            <span class="trust-list__body">
+              <strong>{{ pill.title }}</strong>
+              <small>{{ pill.subtitle }}</small>
+            </span>
+          </li>
+        </ul>
 
-    <!-- Contact -->
-    <div class="footer__col">
-      <h3 class="footer__title">Contacto</h3>
-      <ul class="contact">
-        <li><i class="fa-solid fa-location-dot"></i><span>Guatemala City</span></li>
-        <li><i class="fa-solid fa-phone"></i><a href="tel:+50200000000">+502 0000 0000</a></li>
-        <li><i class="fa-solid fa-envelope"></i><a href="mailto:hola&#64;aumakki.com">hola&#64;aumakki.com</a></li>
-        <li><i class="fa-solid fa-clock"></i><span>Lun–Sáb 9am–6pm</span></li>
-      </ul>
-    </div>
+        <nav class="social" aria-label="Redes sociales">
+          <a
+            *ngFor="let item of socialLinks"
+            class="social__link"
+            [href]="item.href || null"
+            [attr.aria-label]="item.alt"
+            [attr.title]="item.alt"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img class="social__icon" [src]="item.src" [alt]="item.alt" loading="lazy" />
+          </a>
+        </nav>
+      </div>
 
-    <!-- Newsletter -->
-    <div class="footer__col">
-      <h3 class="footer__title">Newsletter</h3>
-      <p class="muted">Te enviamos un correo al mes con lo mas nuevo. Sin spam.</p>
+      <div class="footer__stack">
+        <article class="link-group" *ngFor="let group of footerGroups">
+          <h3>{{ group.title }}</h3>
+          <ul>
+            <li *ngFor="let link of group.links">
+              <a [routerLink]="link.href">{{ link.label }}</a>
+            </li>
+          </ul>
+        </article>
 
-      <form class="newsletter" (submit)="$event.preventDefault()" aria-label="Suscripción al newsletter">
-        <label class="sr-only" for="nl-email">Tu email</label>
-        <input id="nl-email" type="email" placeholder="tu@email.com" required />
-        <button type="submit" class="btn primary">Suscribirme</button>
-      </form>
+        <article class="link-group link-group--contact">
+          <h3>Contacto</h3>
+          <ul class="contact-list">
+            <li>
+              <span class="contact-list__label">Ciudad</span>
+              <span>Guatemala, Guatemala</span>
+            </li>
+            <li>
+              <span class="contact-list__label">Telefono</span>
+              <a href="tel:+50200000000">+502 0000 0000</a>
+            </li>
+            <li>
+              <span class="contact-list__label">Correo</span>
+              <a href="mailto:hola&#64;aumakki.com">hola&#64;aumakki.com</a>
+            </li>
+            <li>
+              <span class="contact-list__label">Horario</span>
+              <span>Lun - Sab, 9:00 a. m. a 6:00 p. m.</span>
+            </li>
+          </ul>
+        </article>
+      </div>
 
-      <ul class="tags" aria-label="Categorías populares">
-        <li><a routerLink="/c/perros">Perros</a></li>
-        <li><a routerLink="/c/gatos">Gatos</a></li>
-        <li><a routerLink="/c/higiene">Higiene</a></li>
-        <li><a routerLink="/c/snacks">Snacks</a></li>
-      </ul>
+      <div class="footer__newsletter">
+        <h3>Newsletter</h3>
+        <p>Recibe lanzamientos, cupones y tips de compra utiles. Sin spam.</p>
+
+        <form
+          class="newsletter"
+          (submit)="$event.preventDefault(); submitNewsletter(newsletterEmail.value); newsletterEmail.value = ''"
+          aria-label="Suscripcion al newsletter"
+        >
+          <label class="sr-only" for="newsletter-email">Correo electronico</label>
+          <input
+            #newsletterEmail
+            id="newsletter-email"
+            type="email"
+            name="newsletterEmail"
+            autocomplete="email"
+            placeholder="tu@correo.com"
+          />
+          <button type="submit" class="btn primary">Suscribirme</button>
+        </form>
+
+        <p
+          class="newsletter__message"
+          *ngIf="newsletterMessage"
+          [attr.data-state]="newsletterState"
+        >
+          {{ newsletterMessage }}
+        </p>
+
+        <div class="quick-links" aria-label="Accesos rapidos">
+          <a routerLink="/catalog">Ver tienda</a>
+          <a routerLink="/catalog/perros">Comprar para perros</a>
+          <a routerLink="/catalog/gatos">Comprar para gatos</a>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- Bottom bar -->
-  <section class="footer__bottom" aria-label="Información legal">
-    <div class="container bottom__inner">
-      <p>© {{ currentYear }} Aumakki. Todos los derechos reservados.</p>
-      <nav class="bottom__links" aria-label="Políticas">
-        <a routerLink="/privacy">Privacidad</a>
-        <span aria-hidden="true">•</span>
-        <a routerLink="/terms">Términos</a>
-        <span aria-hidden="true">•</span>
-        <a routerLink="/cookies">Cookies</a>
+  <section class="footer__bottom">
+    <div class="container footer__bottom-inner">
+      <p>&copy; {{ currentYear }} Aumakki. Todos los derechos reservados.</p>
+      <nav class="footer__legal" aria-label="Legal">
+        <a routerLink="/terms">Privacidad</a>
+        <a routerLink="/terms">Terminos</a>
+        <a routerLink="/terms">Cookies</a>
       </nav>
     </div>
   </section>

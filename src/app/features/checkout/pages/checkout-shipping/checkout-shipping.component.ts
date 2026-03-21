@@ -1,9 +1,10 @@
-﻿import { Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { CheckoutStateService } from '../../services/checkout-state.service';
 import { ShippingMethod } from '../../models/checkout.models';
 
 @Component({
+  standalone: false,
   selector: 'mp-checkout-shipping',
   templateUrl: './checkout-shipping.component.html',
   styleUrls: ['./checkout-shipping.component.scss']
@@ -15,9 +16,9 @@ export class CheckoutShippingComponent {
     this.state.setShippingMethod(id);
   }
 
-  getPrice(id: ShippingMethod['id'], subtotal: number): number {
+  getPrice(id: ShippingMethod['id'], effectiveSubtotal: number): number {
     const method = this.state.shippingMethods.find((x) => x.id === id)!;
-    const s = Number(subtotal ?? 0);
+    const s = Number(effectiveSubtotal ?? 0);
     if (method.id === 'standard' && s >= this.state.freeThreshold) return 0;
     return method.price;
   }

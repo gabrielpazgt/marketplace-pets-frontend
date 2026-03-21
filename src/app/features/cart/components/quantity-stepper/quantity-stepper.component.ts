@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'app-quantity-stepper',
   templateUrl: './quantity-stepper.component.html',
   styleUrls: ['./quantity-stepper.component.scss']

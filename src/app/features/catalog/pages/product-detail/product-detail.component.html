@@ -1,0 +1,217 @@
+<section class="pdp section">
+  <div class="container">
+    <ng-container *ngIf="loading; else loadedState">
+      <div class="skeleton-grid">
+        <div class="skel skel-main"></div>
+        <div class="skel skel-info"></div>
+      </div>
+    </ng-container>
+
+    <ng-template #loadedState>
+      <div class="state state--error" *ngIf="errorMsg">
+        <p>{{ errorMsg }}</p>
+        <a routerLink="/catalog" class="btn ghost">Volver a la tienda</a>
+      </div>
+
+      <ng-container *ngIf="!errorMsg && product as p">
+        <article class="pdp-grid">
+          <div class="media-col">
+            <figure class="main-media card">
+              <img [src]="selectedImage" [alt]="p.name" loading="lazy" />
+              <span class="stock-tag" [class.out]="!inStock">
+                {{ inStock ? 'En stock' : 'Sin stock' }}
+              </span>
+            </figure>
+
+            <div class="thumbs" *ngIf="gallery.length > 1">
+              <button
+                type="button"
+                class="thumb"
+                *ngFor="let photo of gallery"
+                [class.active]="photo.url === selectedImage"
+                (click)="selectImage(photo.url)"
+              >
+                <img [src]="photo.url" [alt]="photo.alt" loading="lazy" />
+              </button>
+            </div>
+          </div>
+
+          <div class="info-col">
+            <div class="eyebrow">
+              <span>{{ categoryLabel ? 'Categoria: ' + categoryLabel : 'Producto' }}</span>
+              <span *ngIf="subcategoryLabel">Subcategoria: {{ subcategoryLabel }}</span>
+              <span *ngIf="p.brand?.name">Marca: {{ p.brand?.name }}</span>
+            </div>
+
+            <h1>{{ p.name }}</h1>
+
+            <p class="description" *ngIf="leadText; else noDescription">{{ leadText }}</p>
+            <ng-template #noDescription>
+              <p class="description muted">Este producto estara disponible pronto con una ficha mas completa.</p>
+            </ng-template>
+
+            <div class="price-row">
+              <strong class="price">{{ p.price | currency:'GTQ':'symbol-narrow':'1.0-2' }}</strong>
+              <span class="member-price">
+                Con membresia ({{ membershipDiscountPct }}%):
+                <strong>{{ membershipPrice | currency:'GTQ':'symbol-narrow':'1.0-2' }}</strong>
+              </span>
+              <span
+                class="stock-count"
+                [class.stock-count--low]="stockTone === 'low'"
+                [class.stock-count--none]="stockTone === 'none'"
+              >
+                {{ stockLabel }}
+              </span>
+            </div>
+
+            <div class="actions card">
+              <label class="qty-label">Cantidad</label>
+              <div class="qty-control">
+                <button type="button" (click)="decQty()" [disabled]="!inStock || qty <= 1">-</button>
+                <span class="qty-value" aria-live="polite">{{ qty }}</span>
+                <button type="button" (click)="incQty()" [disabled]="!inStock || qty >= maxQty">+</button>
+              </div>
+
+              <button class="btn primary add-btn" type="button" [disabled]="!inStock || adding" (click)="addToCart()">
+                <span class="btn-loader" *ngIf="adding" aria-hidden="true"></span>
+                {{ adding ? 'Agregando...' : 'Agregar al carrito' }}
+              </button>
+
+              <p class="feedback" *ngIf="addFeedback">{{ addFeedback }}</p>
+              <p class="feedback feedback--error" *ngIf="cartError">{{ cartError }}</p>
+            </div>
+
+            <section class="pet-fit card" *ngIf="petRecommendations.length">
+              <div class="pet-fit__head">
+                <span class="section-kicker">Compatibilidad</span>
+                <h2>Como se ve este producto para tus mascotas</h2>
+                <p>Tomamos especie, etapa, peso y alergias registradas para darte una guia rapida antes de comprar.</p>
+              </div>
+
+              <div class="pet-fit__grid">
+                <article
+                  class="pet-fit__item"
+                  *ngFor="let recommendation of petRecommendations"
+                  [attr.data-status]="recommendation.status"
+                >
+                  <header>
+                    <strong>{{ recommendation.petName }}</strong>
+                    <span class="pet-fit__badge">
+                      {{
+                        recommendation.status === 'recommended'
+                          ? 'Recomendado'
+                          : recommendation.status === 'caution'
+                            ? 'Revisar'
+                            : 'No recomendado'
+                      }}
+                    </span>
+                  </header>
+                  <h3>{{ recommendation.title }}</h3>
+                  <p>{{ recommendation.detail }}</p>
+                </article>
+              </div>
+            </section>
+
+            <div class="tags" *ngIf="tags.length">
+              <span class="chip" *ngFor="let tag of tags">{{ tag }}</span>
+            </div>
+
+            <div class="benefits">
+              <article>
+                <h3>Compra con contexto</h3>
+                <p>La ficha conecta categoria, marca, ingredientes y orientacion de uso para ayudar a decidir mas rapido.</p>
+              </article>
+              <article>
+                <h3>Ficha adaptable</h3>
+                <p>Podemos combinar contenido editorial de Strapi con datos tecnicos del catalogo sin rehacer la pantalla.</p>
+              </article>
+            </div>
+          </div>
+        </article>
+
+        <section class="detail-strip card" *ngIf="detailFacts.length">
+          <div class="detail-strip__intro">
+            <span class="section-kicker">Ficha enriquecida</span>
+            <h2>Detalles rapidos para decidir mejor</h2>
+            <p>Esta zona combina descripcion editorial con metadatos del catalogo para volver la ficha mas util.</p>
+          </div>
+
+          <div class="detail-strip__grid">
+            <article class="detail-fact" *ngFor="let fact of detailFacts">
+              <span>{{ fact.label }}</span>
+              <strong>{{ fact.value }}</strong>
+              <p>{{ fact.note }}</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="detail-layout">
+          <div class="detail-main card">
+            <div class="section-head">
+              <span class="section-kicker">Descripcion del producto</span>
+              <h2>Contenido comercial y tecnico</h2>
+            </div>
+
+            <div class="rich-copy" *ngIf="descriptionHtml; else generatedDescription" [innerHTML]="descriptionHtml"></div>
+
+            <ng-template #generatedDescription>
+              <div class="rich-copy">
+                <p>{{ leadText }}</p>
+                <p class="muted">
+                  Cuando el equipo cargue mas bloques en Strapi, esta seccion podra mostrar parrafos, listas y encabezados sin tocar frontend otra vez.
+                </p>
+              </div>
+            </ng-template>
+          </div>
+
+          <aside class="detail-side">
+            <section class="detail-panel card" *ngIf="productSpecs.length">
+              <h3>Especificaciones rapidas</h3>
+              <dl class="spec-list">
+                <div class="spec-row" *ngFor="let spec of productSpecs">
+                  <dt>{{ spec.label }}</dt>
+                  <dd>{{ spec.value }}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section class="detail-panel card" *ngIf="ingredientNames.length">
+              <h3>Ingredientes relacionados</h3>
+              <div class="token-grid">
+                <span class="token" *ngFor="let ingredient of ingredientNames">{{ ingredient }}</span>
+              </div>
+            </section>
+
+            <section class="detail-panel card" *ngIf="wellnessTags.length">
+              <h3>Beneficios y necesidades</h3>
+              <div class="token-grid token-grid--soft">
+                <span class="token token--soft" *ngFor="let item of wellnessTags">{{ item }}</span>
+              </div>
+            </section>
+
+            <section class="detail-panel card" *ngIf="brandSummary">
+              <h3>Sobre la marca</h3>
+              <p>{{ brandSummary }}</p>
+            </section>
+          </aside>
+        </section>
+
+        <section class="related" *ngIf="related.length">
+          <header class="related-head">
+            <h2>Tambien te puede interesar</h2>
+            <a routerLink="/catalog" class="link">Ver mas</a>
+          </header>
+
+          <div class="related-grid">
+            <app-product-card
+              *ngFor="let item of related"
+              [product]="item"
+              (addToCart)="addRelatedToCart(item)">
+            </app-product-card>
+          </div>
+        </section>
+      </ng-container>
+    </ng-template>
+  </div>
+</section>

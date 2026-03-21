@@ -1,30 +1,182 @@
-// src/app/core/services/auth.service.ts
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
+import { AuthResponse, User } from '../../core/models/auth.models';
+import { AuthApiService } from './auth-api.service';
 
-export interface AuthUser {
-  id: string;
-  name: string;
-  email: string;
-}
+export type AuthUser = User;
 
-const STORAGE_KEY = 'mp_user';
+const TOKEN_STORAGE_KEY = 'mp_auth_token';
+const USER_STORAGE_KEY = 'mp_auth_user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private _user$ = new BehaviorSubject<AuthUser | null>(this.readUser());
-  readonly user$ = this._user$.asObservable();
+  private readonly tokenSubject = new BehaviorSubject<string | null>(this.readToken());
+  private readonly userSubject = new BehaviorSubject<AuthUser | null>(this.readUser());
+  private bootstrapped = false;
 
-  get user(): AuthUser | null { return this._user$.value; }
-  get isLoggedIn(): boolean { return !!this._user$.value; }
-  get userId(): string | null { return this._user$.value?.id ?? null; }
+  readonly token$ = this.tokenSubject.asObservable();
+  readonly user$ = this.userSubject.asObservable();
 
-  // Helpers para el demo (ajústalo a tu flujo real de login/register)
-  loginMock(user: AuthUser) { localStorage.setItem(STORAGE_KEY, JSON.stringify(user)); this._user$.next(user); }
-  logout() { localStorage.removeItem(STORAGE_KEY); this._user$.next(null); }
+  constructor(private api: AuthApiService) {}
+
+  get token(): string | null {
+    return this.tokenSubject.value;
+  }
+
+  get user(): AuthUser | null {
+    return this.userSubject.value;
+  }
+
+  get isLoggedIn(): boolean {
+    return !!this.token;
+  }
+
+  get userId(): string | null {
+    return this.user?.id != null ? String(this.user.id) : null;
+  }
+
+  bootstrapSession(): Observable<void> {
+    if (this.bootstrapped) return of(void 0);
+    this.bootstrapped = true;
+
+    const token = this.token;
+    if (!token) return of(void 0);
+
+    return this.api.getMe().pipe(
+      tap((user) => this.persistSession(token, user)),
+      map(() => void 0),
+      catchError(() => {
+        this.clearSession();
+        return of(void 0);
+      })
+    );
+  }
+
+  register(email: string, password: string, username?: string): Observable<AuthUser> {
+    return this.api.register(email, password, username).pipe(
+      tap((res) => this.persistFromAuthResponse(res)),
+      map((res) => res.user)
+    );
+  }
+
+  login(identifier: string, password: string): Observable<AuthUser> {
+    return this.api.login(identifier, password).pipe(
+      tap((res) => this.persistFromAuthResponse(res)),
+      map((res) => res.user)
+    );
+  }
+
+  forgotPassword(email: string): Observable<void> {
+    return this.api.forgotPassword(email).pipe(map(() => void 0));
+  }
+
+  resetPassword(code: string, password: string, passwordConfirmation: string): Observable<AuthUser> {
+    return this.api.resetPassword(code, password, passwordConfirmation).pipe(
+      tap((res) => this.persistFromAuthResponse(res)),
+      map((res) => res.user)
+    );
+  }
+
+  getMe(): Observable<AuthUser> {
+    const token = this.token;
+    if (!token) {
+      return throwError(() => ({ status: 401, name: 'Unauthorized', message: 'No hay sesión activa.' }));
+    }
+
+    return this.api.getMe().pipe(
+      tap((user) => this.persistSession(token, user))
+    );
+  }
+
+  logout(): void {
+    this.clearSession();
+  }
+
+  private persistFromAuthResponse(res: AuthResponse): void {
+    this.persistSession(res.jwt, res.user);
+  }
+
+  private persistSession(token: string, user: AuthUser): void {
+    this.tokenSubject.next(token);
+    this.userSubject.next(user);
+    this.safeSetSession(TOKEN_STORAGE_KEY, token);
+    this.safeSetSession(USER_STORAGE_KEY, JSON.stringify(user));
+    this.safeRemoveLocal(TOKEN_STORAGE_KEY);
+    this.safeRemoveLocal(USER_STORAGE_KEY);
+  }
+
+  private clearSession(): void {
+    this.tokenSubject.next(null);
+    this.userSubject.next(null);
+    this.safeRemoveSession(TOKEN_STORAGE_KEY);
+    this.safeRemoveSession(USER_STORAGE_KEY);
+    this.safeRemoveLocal(TOKEN_STORAGE_KEY);
+    this.safeRemoveLocal(USER_STORAGE_KEY);
+  }
+
+  private readToken(): string | null {
+    const sessionToken = this.safeGetSession(TOKEN_STORAGE_KEY);
+    if (sessionToken) return sessionToken;
+
+    // Migrate legacy sessions previously stored in localStorage.
+    const legacyToken = this.safeGetLocal(TOKEN_STORAGE_KEY);
+    if (legacyToken) {
+      this.safeSetSession(TOKEN_STORAGE_KEY, legacyToken);
+      this.safeRemoveLocal(TOKEN_STORAGE_KEY);
+    }
+    return legacyToken;
+  }
 
   private readUser(): AuthUser | null {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    try { return raw ? JSON.parse(raw) as AuthUser : null; } catch { return null; }
+    const raw = this.safeGetSession(USER_STORAGE_KEY) || this.safeGetLocal(USER_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    if (!this.safeGetSession(USER_STORAGE_KEY)) {
+      this.safeSetSession(USER_STORAGE_KEY, raw);
+      this.safeRemoveLocal(USER_STORAGE_KEY);
+    }
+
+    try {
+      return JSON.parse(raw) as AuthUser;
+    } catch {
+      return null;
+    }
+  }
+
+  private safeGetSession(key: string): string | null {
+    try {
+      return sessionStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  private safeSetSession(key: string, value: string): void {
+    try {
+      sessionStorage.setItem(key, value);
+    } catch {}
+  }
+
+  private safeRemoveSession(key: string): void {
+    try {
+      sessionStorage.removeItem(key);
+    } catch {}
+  }
+
+  private safeGetLocal(key: string): string | null {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  private safeRemoveLocal(key: string): void {
+    try {
+      localStorage.removeItem(key);
+    } catch {}
   }
 }

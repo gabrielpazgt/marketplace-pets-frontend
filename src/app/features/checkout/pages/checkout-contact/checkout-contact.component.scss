@@ -1,12 +1,48 @@
-﻿.title {
+.title {
   margin: 0 0 4px;
   font-size: var(--fs-xl);
+}
+
+.account-choice {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #ffffff, #fffdf8);
+}
+
+.choice-head h3 {
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+
+.choice-head p {
+  margin: 6px 0 0;
+}
+
+.choice-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.choice-foot {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.choice-foot a {
+  color: var(--brand-700);
+  font-weight: 700;
+  text-decoration: underline;
 }
 
 .form-grid {
   display: grid;
   gap: 12px;
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 .address {
@@ -49,6 +85,15 @@
 }
 
 @media (max-width: 720px) {
+  .account-choice {
+    padding: 12px;
+  }
+
+  .choice-actions .btn,
+  .choice-actions a.btn {
+    width: 100%;
+  }
+
   .address {
     grid-template-columns: 1fr;
     padding: 10px;

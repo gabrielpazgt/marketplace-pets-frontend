@@ -1,63 +1,53 @@
 ﻿<article class="row">
-  <div class="cell media">
-    <img [src]="item.image" [alt]="item.name" width="96" height="96" loading="lazy" decoding="async">
-  </div>
-
-  <div class="cell info">
-    <h3 class="title">{{ item.name }}</h3>
-
-    <div class="attrs" *ngIf="item.attrs?.length">
-      <span *ngFor="let a of item.attrs" class="chip">{{ a }}</span>
+  <div class="cell product">
+    <div class="media">
+      <img [src]="item.image" [alt]="item.name" width="96" height="96" loading="lazy" decoding="async">
     </div>
 
-    <div class="stock" [class.low]="item.stock <= 3">
-      {{ item.stock <= 3 ? 'Quedan pocas unidades' : 'En stock' }}
+    <div class="info">
+      <h3 class="title">{{ item.name }}</h3>
+
+      <div class="attrs" *ngIf="item.attrs?.length">
+        <span *ngFor="let a of item.attrs" class="chip">{{ a }}</span>
+      </div>
+
+      <div class="stock" [class.low]="item.stock <= 3">
+        {{ item.stock <= 3 ? 'Quedan pocas unidades' : 'Disponible' }}
+      </div>
     </div>
   </div>
 
-  <div class="cell price">
+  <div class="cell unit">
     <span class="cell-label">Precio</span>
-
-    <div class="price-chip price--regular" aria-label="Precio normal">
-      <span class="label">Normal</span>
-      <div class="vals">
-        <span *ngIf="item.oldPrice" class="old">
-          {{ item.oldPrice | currency:'GTQ':'symbol-narrow':'1.0-0' }}
-        </span>
-        <span class="now">
-          {{ item.price | currency:'GTQ':'symbol-narrow':'1.0-0' }}
-        </span>
-      </div>
-    </div>
-
-    <div class="price-chip price--member" aria-label="Precio con membresia">
-      <span class="label">Membresia</span>
-      <div class="vals">
-        <span *ngIf="memberOld" class="old">
-          {{ memberOld | currency:'GTQ':'symbol-narrow':'1.0-0' }}
-        </span>
-        <span class="now">
-          {{ memberNow | currency:'GTQ':'symbol-narrow':'1.0-0' }}
-        </span>
-      </div>
+    <div class="price-chip" aria-label="Precio unitario">
+      <span class="label">Unidad</span>
+      <span class="now">{{ item.price | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
     </div>
   </div>
 
   <div class="cell qty">
     <span class="cell-label">Cantidad</span>
-    <app-quantity-stepper
-      [value]="item.qty"
-      [max]="item.stock"
-      (valueChange)="onQty($event)">
-    </app-quantity-stepper>
+    <div class="qty-editor">
+      <div class="qty-control">
+        <button type="button" (click)="dec()" [disabled]="busy || localQty <= 1">-</button>
+        <input type="number" [value]="localQty" (input)="onQtyInput($event)" [disabled]="busy" min="1" [max]="item.stock" />
+        <button type="button" (click)="inc()" [disabled]="busy || localQty >= item.stock">+</button>
+      </div>
+      <div class="qty-actions" *ngIf="pending">
+        <button type="button" class="btn-xs apply" (click)="confirmQty()" [disabled]="busy">Confirmar</button>
+        <button type="button" class="btn-xs clear" (click)="resetQty()" [disabled]="busy">Cancelar</button>
+      </div>
+    </div>
   </div>
 
-  <div class="cell total">
+  <div class="cell line-total">
     <span class="cell-label">Total</span>
-    {{ lineTotal | currency:'GTQ':'symbol-narrow':'1.0-0' }}
+    <strong>{{ lineTotal | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
   </div>
 
-  <div class="cell actions">
-    <button class="link danger" (click)="remove.emit()">Eliminar</button>
+  <div class="cell remove">
+    <button class="link danger" (click)="remove.emit()" [disabled]="busy">
+      {{ busy ? 'Procesando...' : 'Eliminar' }}
+    </button>
   </div>
 </article>

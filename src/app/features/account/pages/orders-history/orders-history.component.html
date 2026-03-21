@@ -7,6 +7,17 @@
           Revisa tus pedidos, estados, facturas y repite compras en pocos clics.
         </p>
       </header>
+      <p class="muted" *ngIf="actionMsg">{{ actionMsg }}</p>
+      <p class="muted" *ngIf="actionError">{{ actionError }}</p>
+
+      <div class="state" *ngIf="loading">
+        <p class="muted">Cargando historial...</p>
+      </div>
+
+      <div class="state state--error" *ngIf="!loading && errorMsg">
+        <p>{{ errorMsg }}</p>
+        <button class="btn ghost" (click)="retryLoad()">Reintentar</button>
+      </div>
 
       <div class="toolbar toolbar--compact">
         <mat-form-field appearance="outline" class="search-field">
@@ -23,9 +34,11 @@
             <mat-option value="all">Todos</mat-option>
             <mat-option value="pending">Pendiente</mat-option>
             <mat-option value="paid">Pagado</mat-option>
+            <mat-option value="processing">En preparacion</mat-option>
             <mat-option value="shipped">Enviado</mat-option>
             <mat-option value="delivered">Entregado</mat-option>
             <mat-option value="cancelled">Cancelado</mat-option>
+            <mat-option value="refunded">Reembolsado</mat-option>
           </mat-select>
         </mat-form-field>
 
@@ -67,7 +80,9 @@
                 <td class="actions-col">
                   <div class="inline-actions" (click)="$event.stopPropagation()">
                     <button class="btn ghost tiny" (click)="downloadInvoice(o)">Factura</button>
-                    <button class="btn tiny" (click)="reorder(o)">Repetir</button>
+                    <button class="btn tiny" [disabled]="busyOrderId === o.id" (click)="reorder(o)">
+                      {{ busyOrderId === o.id ? 'Agregando...' : 'Repetir' }}
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -93,7 +108,9 @@
                     </div>
                     <div class="col actions">
                       <button class="btn invoice" (click)="downloadInvoice(o)">Descargar factura</button>
-                      <button class="btn ghost" (click)="reorder(o)">Repetir compra</button>
+                      <button class="btn ghost" [disabled]="busyOrderId === o.id" (click)="reorder(o)">
+                        {{ busyOrderId === o.id ? 'Agregando...' : 'Repetir compra' }}
+                      </button>
                     </div>
                   </div>
                 </td>
@@ -126,7 +143,9 @@
           </div>
           <div class="cta">
             <button class="btn invoice" (click)="downloadInvoice(o)">Factura</button>
-            <button class="btn ghost" (click)="reorder(o)">Repetir</button>
+            <button class="btn ghost" [disabled]="busyOrderId === o.id" (click)="reorder(o)">
+              {{ busyOrderId === o.id ? 'Agregando...' : 'Repetir' }}
+            </button>
           </div>
         </article>
 

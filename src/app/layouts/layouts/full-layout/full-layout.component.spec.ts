@@ -1,5 +1,5 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { FullLayoutComponent } from './full-layout.component';
 
 describe('FullLayoutComponent', () => {
@@ -8,10 +8,10 @@ describe('FullLayoutComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [FullLayoutComponent]
-    })
-    .compileComponents();
-    
+      declarations: [FullLayoutComponent],
+      schemas: [NO_ERRORS_SCHEMA],
+    }).compileComponents();
+
     fixture = TestBed.createComponent(FullLayoutComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

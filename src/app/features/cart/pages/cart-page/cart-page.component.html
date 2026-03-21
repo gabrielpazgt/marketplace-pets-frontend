@@ -20,22 +20,28 @@
   </div>
 
   <div class="container layout">
+    <div class="cart-update-overlay" *ngIf="(busy$ | async) ?? false">
+      <span class="cart-update-overlay__ring" aria-hidden="true"></span>
+      <span>Actualizando carrito...</span>
+    </div>
+
     <ng-container *ngIf="(items$ | async) as items; else loading">
       <ng-container *ngIf="items.length; else empty">
         <div class="left">
           <div class="surface surface--table">
             <header class="table-head" aria-hidden="true">
-              <div class="th product">Producto</div>
-              <div class="th price">Precio</div>
-              <div class="th qty">Cant.</div>
-              <div class="th total">Total</div>
-              <div class="th actions"></div>
+              <div>Producto</div>
+              <div>Precio</div>
+              <div>Cantidad</div>
+              <div>Total</div>
+              <div></div>
             </header>
 
             <div class="list">
               <app-cart-item
                 *ngFor="let it of items"
                 [item]="it"
+                [busy]="(busy$ | async) ?? false"
                 (qtyChange)="setQty(it.id, $event)"
                 (remove)="remove(it.id)">
               </app-cart-item>
@@ -62,4 +68,3 @@
     <app-cart-recommendations></app-cart-recommendations>
   </section>
 </section>
-

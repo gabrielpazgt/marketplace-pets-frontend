@@ -1,18 +1,28 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { AuthService, AuthUser } from '../../../../auth/services/auth.service';
 import { CheckoutStateService } from '../../services/checkout-state.service';
 import { GT_DEPARTMENTS, GT_MUNICIPALITIES } from '../../services/gt-data';
 
 @Component({
+  standalone: false,
   selector: 'mp-checkout-contact',
   templateUrl: './checkout-contact.component.html',
   styleUrls: ['./checkout-contact.component.scss']
 })
-export class CheckoutContactComponent implements OnInit {
+export class CheckoutContactComponent implements OnInit, OnDestroy {
   departments = GT_DEPARTMENTS;
   municipalities: string[] = [];
   muniMap = GT_MUNICIPALITIES;
+
+  isLoggedIn = false;
+  authUser: AuthUser | null = null;
+  checkoutMode: 'guest' | 'account' = 'guest';
+  readonly authQueryParams = { returnUrl: '/checkout/contact' };
+  private readonly destroy$ = new Subject<void>();
 
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -34,7 +44,8 @@ export class CheckoutContactComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private state: CheckoutStateService,
-    private router: Router
+    private router: Router,
+    private auth: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -61,7 +72,25 @@ export class CheckoutContactComponent implements OnInit {
       });
     }
 
+    this.auth.user$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((user) => {
+        this.authUser = user;
+        this.isLoggedIn = !!user;
+        this.checkoutMode = user ? 'account' : 'guest';
+        if (user) this.prefillFromAuth(user);
+      });
+
     this.onDepartmentChange();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  setCheckoutMode(mode: 'guest' | 'account') {
+    this.checkoutMode = mode;
   }
 
   onDepartmentChange() {
@@ -105,5 +134,21 @@ export class CheckoutContactComponent implements OnInit {
     );
 
     this.router.navigate(['checkout/shipping']);
+  }
+
+  private prefillFromAuth(user: AuthUser) {
+    const fullName = (user.username || '').trim();
+    const [firstName, ...rest] = fullName.split(' ').filter(Boolean);
+    const lastName = rest.join(' ');
+
+    if (!this.form.get('email')?.value) {
+      this.form.get('email')?.setValue(user.email);
+    }
+    if (!this.form.get('firstName')?.value && firstName) {
+      this.form.get('firstName')?.setValue(firstName);
+    }
+    if (!this.form.get('lastName')?.value && lastName) {
+      this.form.get('lastName')?.setValue(lastName);
+    }
   }
 }

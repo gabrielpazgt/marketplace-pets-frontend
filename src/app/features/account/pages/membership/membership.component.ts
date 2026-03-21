@@ -1,91 +1,75 @@
-﻿import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { Router } from '@angular/router';
-
-type PlanId = 'free' | 'premium' | 'vip';
-type PlanTone = 'neutral' | 'brand' | 'accent';
-
-interface Plan {
-  id: PlanId;
-  name: string;
-  price: string;
-  tone: PlanTone;
-  perks: string[];
-}
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { MembershipsService, Plan, PlanId } from '../../../memberships/services/memberships.service';
 
 @Component({
+  standalone: false,
   selector: 'mp-account-membership',
   templateUrl: './membership.component.html',
   styleUrls: ['./membership.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MembershipComponent {
-  constructor(private router: Router) {}
-
+export class MembershipComponent implements OnInit, OnDestroy {
+  plans: Plan[] = [];
   currentPlan: PlanId = 'free';
-  points = 120;
+  saving = false;
+  message = '';
 
-  tiers = {
-    premium: 500,
-    vip: 1200,
-  };
+  private readonly subscriptions = new Subscription();
 
-  plans: Plan[] = [
-    {
-      id: 'free',
-      name: 'Free',
-      price: 'Q0',
-      tone: 'neutral',
-      perks: [
-        'Acceso a la tienda',
-        'Promos generales',
-        'Soporte estandar'
-      ]
-    },
-    {
-      id: 'premium',
-      name: 'Premium',
-      price: 'Q39/mes',
-      tone: 'brand',
-      perks: [
-        '5% de descuento en compras',
-        'Puntos de lealtad x1.5',
-        'Envios preferentes',
-      ]
-    },
-    {
-      id: 'vip',
-      name: 'VIP',
-      price: 'Q99/mes',
-      tone: 'accent',
-      perks: [
-        '7% de descuento en compras',
-        'Puntos de lealtad x2',
-        'Acceso anticipado a lanzamientos',
-      ]
-    },
-  ];
+  constructor(
+    private memberships: MembershipsService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
-  get userPlan(): Plan {
-    return this.plans.find((p) => p.id === this.currentPlan)!;
+  ngOnInit(): void {
+    this.memberships.refreshPlans();
+    this.memberships.refreshCurrentPlan();
+
+    this.subscriptions.add(
+      this.memberships.plans$.subscribe((plans) => {
+        this.plans = plans;
+        this.cdr.markForCheck();
+      })
+    );
+
+    this.subscriptions.add(
+      this.memberships.currentPlan$.subscribe((plan) => {
+        this.currentPlan = plan;
+        this.cdr.markForCheck();
+      })
+    );
   }
 
-  get nextTier(): { id: PlanId; label: string; target: number } {
-    if (this.currentPlan === 'free') return { id: 'premium', label: 'Premium', target: this.tiers.premium };
-    if (this.currentPlan === 'premium') return { id: 'vip', label: 'VIP', target: this.tiers.vip };
-    return { id: 'vip', label: 'VIP', target: this.tiers.vip };
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
-  get progressPct(): number {
-    if (this.currentPlan === 'vip') return 100;
-    const pct = Math.min(100, Math.round((this.points / this.nextTier.target) * 100));
-    return pct;
+  isCurrentPlan(planId: PlanId): boolean {
+    return this.currentPlan === planId;
   }
 
-  get planToneClass(): string {
-    return `tone-${this.userPlan.tone}`;
-  }
+  selectPlan(planId: PlanId): void {
+    if (this.saving || this.currentPlan === planId) return;
 
-  goUpgrade(to?: PlanId) {
-    this.router.navigate(['/memberships'], { queryParams: to ? { plan: to } : undefined });
+    this.saving = true;
+    this.message = '';
+    this.cdr.markForCheck();
+
+    this.memberships.selectPlan(planId).subscribe({
+      next: (tier) => {
+        this.currentPlan = tier;
+        this.saving = false;
+        this.message = tier === 'premium'
+          ? 'Tu membresia Premium esta activa.'
+          : 'Tu cuenta ahora usa el plan Gratuito.';
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.saving = false;
+        this.message = 'No fue posible actualizar tu membresia.';
+        this.cdr.markForCheck();
+      },
+    });
   }
 }

@@ -1,99 +1,70 @@
-﻿<section class="section membership">
+<section class="section membership">
   <div class="container">
     <div class="card wrap">
       <header class="head">
-        <h2>Membresia</h2>
-        <p class="muted">Consulta y administra tu plan (Free / Premium / VIP).</p>
+        <h2>Membresías</h2>
+        <p class="muted">
+          Tu cuenta inicia con plan Gratuito. También puedes elegir Premium por Q75/mes.
+        </p>
       </header>
 
-      <div class="top">
-        <article class="card panel current" [ngClass]="planToneClass">
+      <section class="plans-grid" aria-label="Planes disponibles para tu cuenta">
+        <article class="card panel" *ngFor="let plan of plans" [class.current]="isCurrentPlan(plan.id)">
           <div class="panel__head">
-            <span class="chip plan">{{ userPlan.name }}</span>
-            <strong class="price">{{ userPlan.price }}</strong>
+            <span class="chip plan">{{ plan.name }}</span>
+            <strong class="price">Q{{ plan.monthlyPrice }}</strong>
           </div>
 
-          <div class="panel__body">
-            <ul class="ticks">
-              <li *ngFor="let perk of userPlan.perks">
-                <span class="tick" aria-hidden="true">✓</span> {{ perk }}
-              </li>
-            </ul>
+          <p class="muted" *ngIf="plan.id === 'premium'">
+            Incluye <strong>5% de descuento</strong> y atención prioritaria para ayudarte más rápido.
+          </p>
+          <p class="muted" *ngIf="plan.id === 'free'">
+            Ideal para empezar y comprar sin costo mensual.
+          </p>
 
-            <div class="progress" *ngIf="currentPlan !== 'vip'">
-              <div class="labels">
-                <span>Progreso a <strong>{{ nextTier.label }}</strong></span>
-                <span>{{ progressPct }}%</span>
-              </div>
-              <div class="bar">
-                <span class="fill" [style.width.%]="progressPct"></span>
-              </div>
-              <small class="muted">{{ points }} pts / {{ nextTier.target }} pts</small>
-            </div>
-
-            <div class="cta">
-              <button class="btn primary" (click)="goUpgrade()">Mejorar plan</button>
-              <a class="btn ghost" (click)="goUpgrade()">Ver beneficios completos</a>
-            </div>
-          </div>
-        </article>
-
-        <article class="card panel benefits">
-          <h3>Beneficios</h3>
           <ul class="ticks">
-            <li><span class="tick">✓</span> 5% de descuento (Premium)</li>
-            <li><span class="tick">✓</span> 7% de descuento (VIP)</li>
-            <li><span class="tick">✓</span> Puntos de lealtad acumulables</li>
-            <li><span class="tick">✓</span> Acceso anticipado a ofertas</li>
+            <li *ngFor="let perk of plan.perks">
+              <span class="tick" aria-hidden="true">&#10003;</span>
+              <span>{{ perk }}</span>
+            </li>
           </ul>
-          <div class="hint muted">
-            Los beneficios pueden variar por pais o temporada.
-          </div>
+
+          <button
+            type="button"
+            class="btn"
+            [class.primary]="!isCurrentPlan(plan.id)"
+            [class.ghost]="isCurrentPlan(plan.id)"
+            [disabled]="saving || isCurrentPlan(plan.id)"
+            (click)="selectPlan(plan.id)"
+          >
+            {{ isCurrentPlan(plan.id) ? 'Plan activo' : (saving ? 'Actualizando...' : 'Elegir plan') }}
+          </button>
         </article>
-      </div>
+      </section>
 
-      <section class="compare">
-        <header class="subhead">
-          <h3>Comparativa rapida de planes</h3>
-          <p class="muted">Elige el plan que mas se adapte a tus compras.</p>
-        </header>
+      <p class="muted" *ngIf="message">{{ message }}</p>
 
-        <div class="grid">
-          <article class="plan-card" *ngFor="let p of plans" [class.active]="p.id === currentPlan" [class]="'tone-' + p.tone">
-            <div class="badge">{{ p.name }}</div>
-            <div class="price">{{ p.price }}</div>
-            <ul class="bullets">
-              <li *ngFor="let perk of p.perks">{{ perk }}</li>
-            </ul>
-            <button
-              class="btn"
-              [class.primary]="p.id !== currentPlan"
-              [class.ghost]="p.id === currentPlan"
-              (click)="goUpgrade(p.id)">
-              {{ p.id === currentPlan ? 'Plan actual' : 'Elegir ' + p.name }}
-            </button>
-          </article>
-        </div>
+      <section class="impact card">
+        <h3>Impacto social</h3>
+        <p>
+          Un porcentaje de nuestras ganancias será destinado a fundaciones que ayudan a animales
+          enfermos o en situación de calle.
+        </p>
       </section>
 
       <section class="faq">
         <header class="subhead">
-          <h3>Preguntas rapidas</h3>
+          <h3>Preguntas rápidas</h3>
         </header>
 
         <details>
-          <summary>¿Como funciona la renovacion?</summary>
-          <p>Los planes de pago se renuevan automaticamente cada mes. Puedes cancelarlo cuando quieras.</p>
+          <summary>¿La membresía se renueva automáticamente?</summary>
+          <p>Solo el plan Premium se renueva mensualmente; el plan Gratuito siempre está disponible.</p>
         </details>
 
         <details>
-          <summary>¿Los descuentos aplican a todo?</summary>
-          <p>Aplica a la mayoria de productos; pueden existir excepciones por marca o categoria.</p>
-        </details>
-
-        <details>
-          <summary>¿Los puntos vencen?</summary>
-          <p>Actualmente no caducan. Si cambia la politica te avisaremos con anticipacion.</p>
+          <summary>¿Necesito membresía para comprar?</summary>
+          <p>No. Puedes comprar como invitado o con tu cuenta registrada.</p>
         </details>
       </section>
     </div>

@@ -26,16 +26,6 @@
       Transferencia
     </label>
 
-    <label class="pill" [class.on]="kind === 'cod'">
-      <input
-        type="radio"
-        name="kind"
-        value="cod"
-        formControlName="kind"
-        (change)="onKindChange()" />
-      <span class="icon" aria-hidden="true">🚚</span>
-      Contra entrega
-    </label>
   </div>
 
   <section *ngIf="kind === 'card'" class="box card-form" formGroupName="card">
@@ -117,15 +107,10 @@
     <ul>
       <li>Banco: Banco de Ejemplo</li>
       <li>Cuenta: 1234567-8</li>
-      <li>Titular: MarketPets, S.A.</li>
+      <li>Titular: Aumakki, S.A.</li>
       <li>Concepto: Numero de pedido generado al confirmar.</li>
     </ul>
     <p class="muted">Tu pedido se procesa al confirmar el pago en sistema.</p>
-  </section>
-
-  <section *ngIf="kind === 'cod'" class="box info-box">
-    <h3>Contra entrega</h3>
-    <p class="muted">Disponible en zonas seleccionadas. Puedes pagar en efectivo o POS al recibir.</p>
   </section>
 
   <label class="check">

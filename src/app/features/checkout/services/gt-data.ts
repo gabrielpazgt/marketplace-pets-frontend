@@ -1,13 +1,13 @@
 export const GT_DEPARTMENTS = [
-  'Guatemala', 'Sacatepéquez', 'Chimaltenango', 'Escuintla', 'Santa Rosa',
-  'Sololá', 'Totonicapán', 'Quetzaltenango', 'Suchitepéquez', 'Retalhuleu',
-  'San Marcos', 'Huehuetenango', 'Quiché', 'Baja Verapaz', 'Alta Verapaz',
-  'Petén', 'Izabal', 'Zacapa', 'Chiquimula', 'Jalapa', 'Jutiapa'
+  'Guatemala', 'Sacatepequez', 'Chimaltenango', 'Escuintla', 'Santa Rosa',
+  'Solola', 'Totonicapan', 'Quetzaltenango', 'Suchitepequez', 'Retalhuleu',
+  'San Marcos', 'Huehuetenango', 'Quiche', 'Baja Verapaz', 'Alta Verapaz',
+  'Peten', 'Izabal', 'Zacapa', 'Chiquimula', 'Jalapa', 'Jutiapa'
 ];
 
-// Minimal mock of municipalities by department (add more as needed)
+// Reference municipalities by department.
 export const GT_MUNICIPALITIES: Record<string, string[]> = {
   'Guatemala': ['Guatemala', 'Mixco', 'Villa Nueva', 'San Miguel Petapa', 'Santa Catarina Pinula'],
-  'Sacatepéquez': ['Antigua Guatemala', 'Ciudad Vieja', 'San Lucas Sacatepéquez'],
-  'San Marcos': ['San Marcos', 'Malacatán', 'San Pedro Sacatepéquez'],
+  'Sacatepequez': ['Antigua Guatemala', 'Ciudad Vieja', 'San Lucas Sacatepequez'],
+  'San Marcos': ['San Marcos', 'Malacatan', 'San Pedro Sacatepequez'],
 };

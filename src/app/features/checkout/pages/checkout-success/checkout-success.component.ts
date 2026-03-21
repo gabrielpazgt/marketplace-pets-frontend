@@ -2,11 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CheckoutStateService } from '../../services/checkout-state.service';
 
 @Component({
+  standalone: false,
   selector: 'mp-checkout-success',
   templateUrl: './checkout-success.component.html',
   styleUrls: ['./checkout-success.component.scss']
 })
 export class CheckoutSuccessComponent implements OnInit {
+  private readonly transientMessageMs = 3000;
+
   order?: string | null;
   copied = false;
 
@@ -28,7 +31,7 @@ export class CheckoutSuccessComponent implements OnInit {
     try {
       await navigator.clipboard.writeText(this.order);
       this.copied = true;
-      setTimeout(() => (this.copied = false), 1600);
+      setTimeout(() => (this.copied = false), this.transientMessageMs);
     } catch {
       this.copied = false;
     }

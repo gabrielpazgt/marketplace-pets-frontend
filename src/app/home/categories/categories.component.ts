@@ -7,6 +7,7 @@ export interface Category {
 }
 
 @Component({
+  standalone: false,
   selector: 'app-categories',
   templateUrl: './categories.component.html',
   styleUrls: ['./categories.component.scss'],

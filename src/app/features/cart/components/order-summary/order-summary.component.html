@@ -1,4 +1,4 @@
-﻿<aside class="summary">
+<aside class="summary" [class.summary--busy]="(busy$ | async) ?? false">
   <div class="panel totals">
     <h4>Resumen</h4>
 
@@ -11,8 +11,8 @@
       <strong>-{{ discount$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
     </div>
     <div class="split">
-      <span>Envio</span>
-      <strong>{{ shipping$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
+      <span>Envío</span>
+      <strong>{{ shippingEstimate$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
     </div>
 
     <hr>
@@ -22,22 +22,9 @@
       <strong>{{ total$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
     </div>
 
-    <div class="split member-total">
-      <span>Total membresia</span>
-      <strong>{{ memberTotal$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
-    </div>
-
-    <ng-container *ngIf="(total$ | async) as t">
-      <ng-container *ngIf="(memberTotal$ | async) as mt">
-        <p class="save" *ngIf="t > mt">
-          Ahorras <strong class="save__amount">{{ (t - mt) | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong> con tu membresia.
-        </p>
-      </ng-container>
-    </ng-container>
-
     <button
       class="cta button_pay"
-      [disabled]="!(hasItems$ | async)"
+      [disabled]="!(hasItems$ | async) || ((busy$ | async) ?? false)"
       aria-label="Pagar ahora"
       (click)="checkout()">
       Pagar ahora
@@ -48,17 +35,30 @@
 
   <div class="panel promo">
     <div class="promo__header">
-      <h5>¿Tienes un codigo?</h5>
+      <h5>¿Tienes un código?</h5>
     </div>
 
     <div class="row">
-      <input type="text" placeholder="Codigo de descuento" [formControl]="form.controls.code">
-      <button class="btn" (click)="apply()">Aplicar</button>
+      <input
+        type="text"
+        placeholder="Código de descuento"
+        [formControl]="form.controls.code"
+        [disabled]="(busy$ | async) ?? false">
+      <button class="btn" (click)="apply()" [disabled]="(busy$ | async) ?? false">
+        {{ ((busy$ | async) ?? false) ? 'Procesando...' : 'Aplicar' }}
+      </button>
     </div>
 
+    <p
+      class="promo__status"
+      *ngIf="statusMessage"
+      [class.promo__status--error]="statusType === 'error'">
+      {{ statusMessage }}
+    </p>
+
     <div class="coupon" *ngIf="(coupon$ | async) as c">
-      <span class="ticket">CUPON: {{ c }}</span>
-      <button class="link" (click)="clearCoupon()">Quitar</button>
+      <span class="ticket">CUPÓN: {{ c }}</span>
+      <button class="link" (click)="clearCoupon()" [disabled]="(busy$ | async) ?? false">Quitar</button>
     </div>
   </div>
 </aside>

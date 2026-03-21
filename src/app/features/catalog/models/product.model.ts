@@ -1,13 +1,16 @@
-export type Badge = 'TOP' | 'SALE' | 'NEW' | null;
+﻿export type Badge = 'TOP' | 'SALE' | 'NEW' | null;
 
 export interface Product {
   id: string;
-  slug: string;          // slug del producto
+  documentId?: string;
+  slug: string;
   name: string;
   price: number;
   oldPrice?: number;
-  image: string;         // path asset
+  image: string;
   badge: Badge;
-  category: string;      // slug de categoría (/c/:slug)
-  tags: string[];        // para filtros rápidos (higiene, snacks, etc)
+  category: string;
+  subcategory?: string;
+  tags: string[];
+  stock?: number;
 }

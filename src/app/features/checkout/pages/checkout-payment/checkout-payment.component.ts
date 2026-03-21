@@ -1,4 +1,4 @@
-Ôªøimport { Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractControl, FormBuilder, FormControl, ValidationErrors, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PaymentKind } from '../../models/checkout.models';
@@ -7,6 +7,7 @@ import { CheckoutStateService } from '../../services/checkout-state.service';
 type CardBrand = 'visa' | 'mastercard' | 'amex' | 'other';
 
 @Component({
+  standalone: false,
   selector: 'mp-checkout-payment',
   templateUrl: './checkout-payment.component.html',
   styleUrls: ['./checkout-payment.component.scss']
@@ -125,7 +126,7 @@ export class CheckoutPaymentComponent {
   onHolderInput(event: Event) {
     const input = event.target as HTMLInputElement;
     const sanitized = input.value
-      .replace(/[^A-Za-z√Å√â√ç√ì√ö√ú√ë√°√©√≠√≥√∫√º√± ]/g, '')
+      .replace(/[^A-Za-z¡…Õ”⁄‹—·ÈÌÛ˙¸Ò ]/g, '')
       .replace(/\s{2,}/g, ' ');
     this.form.get('card.holder')?.setValue(sanitized, { emitEvent: false });
   }
@@ -205,8 +206,6 @@ export class CheckoutPaymentComponent {
       this.state.setBillingAddress(undefined);
     }
 
-    const orderNumber = `MP-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-    this.state.setOrderNumber(orderNumber);
     this.router.navigate(['checkout/review']);
   }
 
@@ -249,7 +248,7 @@ export class CheckoutPaymentComponent {
     if (!value) return null;
 
     // Nombre en tarjeta: solo letras (incluye acentos) y espacios.
-    const validPattern = /^[A-Za-z√Å√â√ç√ì√ö√ú√ë√°√©√≠√≥√∫√º√± ]+$/;
+    const validPattern = /^[A-Za-z¡…Õ”⁄‹—·ÈÌÛ˙¸Ò ]+$/;
     if (!validPattern.test(value)) return { invalidHolder: true };
 
     const normalized = value.replace(/\s+/g, ' ').trim();
