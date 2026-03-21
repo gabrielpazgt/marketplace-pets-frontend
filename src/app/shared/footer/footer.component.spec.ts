@@ -16,6 +16,8 @@ describe('FooterComponent', () => {
           provide: StorefrontApiService,
           useValue: {
             listPublicCoupons: () => of({ data: [] }),
+            getFooterNewsletterPromo: () => of({ data: null }),
+            resolveMediaUrl: (url: string) => url,
           },
         },
       ],

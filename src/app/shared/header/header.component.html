@@ -178,7 +178,6 @@
         >
           <mat-icon class="catalog-nav__explore-icon">dashboard_customize</mat-icon>
           <span class="catalog-nav__explore-copy">
-            <small>Navegación</small>
             <strong>Explorar</strong>
           </span>
           <mat-icon class="catalog-nav__explore-caret">
@@ -210,9 +209,8 @@
 
       <aside class="explore-drawer__panel" role="dialog" aria-label="Explorar tienda">
         <div class="explore-drawer__head">
-          <div>
-            <span class="explore-drawer__eyebrow">Tienda</span>
-            <strong>Explorar categorías</strong>
+          <div class="explore-drawer__copy">
+            <strong>Explora categorías</strong>
           </div>
 
           <button type="button" class="explore-drawer__close" aria-label="Cerrar" (click)="closeExploreDrawer()">
@@ -222,18 +220,33 @@
 
         <div class="explore-list">
           <div class="explore-tree" *ngIf="exploreAnimals.length; else noExploreFamilies">
-            <section class="explore-column">
-              <h4 class="explore-column__title">Familias</h4>
-              <button
-                type="button"
-                class="explore-node"
-                *ngFor="let animal of exploreAnimals; trackBy: trackByExploreAnimal"
-                [class.is-active]="isExploreAnimalActive(animal.key)"
-                (click)="setExploreAnimal(animal.key)"
-              >
-                <mat-icon>{{ animal.icon }}</mat-icon>
-                <span>{{ animal.label }}</span>
-              </button>
+            <section class="explore-column explore-column--families">
+              <div class="explore-column__header">
+                <h4 class="explore-column__title">Familias</h4>
+              </div>
+
+              <div class="explore-column__stack">
+                <button
+                  type="button"
+                  class="explore-node"
+                  *ngFor="let animal of exploreAnimals; trackBy: trackByExploreAnimal"
+                  [class.is-active]="isExploreAnimalActive(animal.key)"
+                  (click)="setExploreAnimal(animal.key)"
+                >
+                  <mat-icon>{{ animal.icon }}</mat-icon>
+                  <span>{{ animal.label }}</span>
+                </button>
+              </div>
+
+              <article class="explore-promo" *ngIf="activeExplorePromo as promo">
+                <div class="explore-promo__media" [class.explore-promo__media--empty]="!promo.imageUrl">
+                  <img *ngIf="promo.imageUrl" [src]="promo.imageUrl" [alt]="promo.imageAlt" loading="lazy" />
+
+                  <div class="explore-promo__placeholder" *ngIf="!promo.imageUrl" aria-hidden="true">
+                    <mat-icon>campaign</mat-icon>
+                  </div>
+                </div>
+              </article>
             </section>
 
             <section class="explore-column">
@@ -326,3 +339,4 @@
     <span>{{ sessionToastMessage }}</span>
   </div>
 </header>
+

@@ -4,12 +4,14 @@
   </div>
 
   <div class="sortbar__right">
-    <button class="sort-btn" (click)="openFilters.emit()">
-      Filtros<span *ngIf="activeFilters>0" class="badge">{{ activeFilters }}</span>
+    <button type="button" class="sort-btn" (click)="openFilters.emit()">
+      <mat-icon>tune</mat-icon>
+      <span>Filtros</span>
+      <span *ngIf="activeFilters>0" class="badge">{{ activeFilters }}</span>
     </button>
 
     <label class="sort">
-      <span>Ordenar:</span>
+      <span class="sort__label">Ordenar:</span>
       <mat-form-field appearance="outline" class="sort__field">
         <mat-select [value]="sort" panelClass="catalog-select-panel" (selectionChange)="onSortChange($event.value)">
           <mat-select-trigger>

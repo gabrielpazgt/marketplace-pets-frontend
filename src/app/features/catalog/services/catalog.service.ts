@@ -10,10 +10,13 @@ import {
 import { StorefrontApiService } from '../../../core/services/storefront-api.service';
 import { Product } from '../models/product.model';
 
+export type CatalogCollectionTag = 'new' | 'clearance';
+
 export interface CatalogQuery {
   category?: string | null;
   subcategory?: string | null;
   allowedSubcategories?: string[];
+  collectionTag?: CatalogCollectionTag | null;
   search?: string;
   min?: number;
   max?: number;
@@ -45,7 +48,36 @@ export class CatalogService {
   private readonly clientFetchPageSize = 100;
   private readonly maxClientFetchPages = 50;
   private readonly requestTimeoutMs = 8000;
+  private readonly newArrivalsLimit = 20;
+  private readonly clearanceThresholdPct = 45;
   private facetsEndpointUnavailable = false;
+  private readonly searchAliases: Record<string, string[]> = {
+    alimento: ['alimentacion', 'comida', 'food', 'croquetas'],
+    alimentacion: ['alimento', 'comida', 'food'],
+    comida: ['alimento', 'alimentacion', 'food', 'croquetas'],
+    food: ['alimento', 'alimentacion', 'comida'],
+    treats: ['snack', 'snacks', 'premio', 'premios'],
+    snack: ['treats', 'snacks', 'premio', 'premios'],
+    snacks: ['treats', 'snack', 'premio', 'premios'],
+    premio: ['premios', 'snack', 'snacks', 'treats'],
+    premios: ['premio', 'snack', 'snacks', 'treats'],
+    higiene: ['aseo', 'grooming', 'limpieza', 'hygiene'],
+    aseo: ['higiene', 'grooming', 'limpieza', 'hygiene'],
+    grooming: ['higiene', 'aseo', 'limpieza'],
+    salud: ['health', 'farmacia'],
+    health: ['salud', 'farmacia'],
+    farmacia: ['salud', 'health'],
+    ropa: ['zapatos', 'calzado'],
+    zapatos: ['zapato', 'calzado', 'ropa'],
+    calzado: ['zapatos', 'ropa'],
+    perro: ['perros', 'dog', 'dogs'],
+    perros: ['perro', 'dog', 'dogs'],
+    gato: ['gatos', 'cat', 'cats'],
+    gatos: ['gato', 'cat', 'cats'],
+    pez: ['peces', 'fish', 'acuario'],
+    peces: ['pez', 'fish', 'acuario'],
+    acuario: ['pez', 'peces', 'fish'],
+  };
 
   private readonly categorySlugMap: Record<string, string> = {
     food: 'food',
@@ -102,12 +134,21 @@ export class CatalogService {
 
   getFacets(query: CatalogQuery = {}, petProfileId?: number): Observable<StorefrontProductFacets> {
     const allowedSubcategories = this.normalizeAllowedSubcategories(query.allowedSubcategories || []);
+    const collectionTag = this.normalizeCollectionTag(query.collectionTag);
+    const normalizedSearch = this.normalizeSearch(query.search);
+    const blockedTerms = this.buildExcludedTerms(query.excludedTerms || []);
+    const requiresLocalFacetComputation =
+      allowedSubcategories.length > 0 ||
+      Boolean(collectionTag) ||
+      normalizedSearch.length > 0 ||
+      blockedTerms.length > 0;
 
-    if (allowedSubcategories.length > 0) {
+    if (requiresLocalFacetComputation) {
       const storefrontQuery = this.buildStorefrontQuery(
         {
           ...query,
           allowedSubcategories: [],
+          search: undefined,
           page: 1,
           pageSize: this.clientFetchPageSize,
         },
@@ -117,8 +158,18 @@ export class CatalogService {
 
       return this.fetchAllPages(storefrontQuery, Boolean(petProfileId && petProfileId > 0)).pipe(
         map((response) => {
-          const filtered = this.filterStorefrontProductsByAllowedSubcategories(response.items || [], allowedSubcategories);
-          return this.buildFacetsFromStorefrontProducts(filtered);
+          const filteredProducts = this.applyClientFiltering(
+            response.items || [],
+            query,
+            blockedTerms,
+            allowedSubcategories,
+            collectionTag,
+            normalizedSearch
+          );
+          const filteredIds = new Set(filteredProducts.map((item) => Number(item.id)));
+          const filteredStorefront = (response.items || []).filter((item) => filteredIds.has(Number(item.id)));
+
+          return this.buildFacetsFromStorefrontProducts(filteredStorefront);
         }),
         catchError(() => of(this.emptyFacets))
       );
@@ -152,14 +203,20 @@ export class CatalogService {
     const normalizedSearch = this.normalizeSearch(query.search);
     const blockedTerms = this.buildExcludedTerms(query.excludedTerms || []);
     const allowedSubcategories = this.normalizeAllowedSubcategories(query.allowedSubcategories || []);
-    const requiresRichProductData = blockedTerms.length > 0 || allowedSubcategories.length > 0;
+    const collectionTag = this.normalizeCollectionTag(query.collectionTag);
+    const searchDrivenFiltering = normalizedSearch.length > 0;
+    const requiresRichProductData =
+      blockedTerms.length > 0 ||
+      allowedSubcategories.length > 0 ||
+      Boolean(collectionTag) ||
+      searchDrivenFiltering;
     const useClientFiltering = requiresRichProductData;
-    const useSearchRanking = requiresRichProductData && normalizedSearch.length > 0;
+    const useSearchRanking = normalizedSearch.length > 0;
 
     const storefrontQuery = this.buildStorefrontQuery(
       {
         ...query,
-        search: normalizedSearch,
+        search: useSearchRanking ? undefined : normalizedSearch,
         page: useClientFiltering ? 1 : page,
         pageSize: useClientFiltering ? this.clientFetchPageSize : pageSize,
       },
@@ -173,14 +230,14 @@ export class CatalogService {
 
     return source$.pipe(
       map((source) => {
-        const baseItems = (source.items || []).map((item) => this.toUiProduct(item));
-        const withoutAllergyConflicts = this.excludeByAllergyTerms(baseItems, blockedTerms);
-        const subcategoryFiltered = this.filterByAllowedSubcategories(withoutAllergyConflicts, allowedSubcategories);
-        const priceFiltered = this.applyLocalPriceFilter(subcategoryFiltered, query.min, query.max);
-        const scored = useSearchRanking ? this.rankBySearch(priceFiltered, normalizedSearch) : [];
-        const resolved = useSearchRanking
-          ? this.sortScored(scored, query.sort).map((entry) => entry.item)
-          : this.sortPlain(priceFiltered, query.sort);
+        const resolved = this.applyClientFiltering(
+          source.items || [],
+          query,
+          blockedTerms,
+          allowedSubcategories,
+          collectionTag,
+          normalizedSearch
+        );
 
         if (!useClientFiltering) {
           return {
@@ -200,6 +257,28 @@ export class CatalogService {
         };
       })
     );
+  }
+
+  private applyClientFiltering(
+    items: StorefrontProduct[],
+    query: CatalogQuery,
+    blockedTerms: string[],
+    allowedSubcategories: string[],
+    collectionTag: CatalogCollectionTag | null,
+    normalizedSearch: string
+  ): Product[] {
+    const collectionFilteredStorefront = this.filterStorefrontProductsByCollectionTag(items || [], collectionTag);
+    const baseItems = collectionFilteredStorefront.map((item) => this.toUiProduct(item));
+    const withoutAllergyConflicts = this.excludeByAllergyTerms(baseItems, blockedTerms);
+    const subcategoryFiltered = this.filterByAllowedSubcategories(withoutAllergyConflicts, allowedSubcategories);
+    const priceFiltered = this.applyLocalPriceFilter(subcategoryFiltered, query.min, query.max);
+
+    if (!normalizedSearch) {
+      return this.sortPlain(priceFiltered, query.sort, collectionTag);
+    }
+
+    const scored = this.rankBySearch(priceFiltered, normalizedSearch);
+    return this.sortScored(scored, query.sort, collectionTag).map((entry) => entry.item);
   }
 
   private buildStorefrontQuery(
@@ -303,12 +382,15 @@ export class CatalogService {
   }
 
   private toUiProduct(item: StorefrontProduct): Product {
+    const oldPrice = this.resolveCompareAtPrice(item);
+
     return {
       id: String(item.id),
       documentId: item.documentId,
       slug: item.slug,
       name: item.name,
       price: Number(item.price || 0),
+      oldPrice: oldPrice ?? undefined,
       image: this.resolveProductImage(item),
       badge: this.resolveBadge(item),
       category: item.category || 'general',
@@ -332,7 +414,8 @@ export class CatalogService {
 
   private resolveBadge(item: StorefrontProduct): Product['badge'] {
     const stock = Number(item.stock || 0);
-    if (stock <= 0) return 'SALE';
+    if (this.getDiscountPercentage(item) > 0) return 'SALE';
+    if (stock <= 0) return null;
     if (stock <= 5) return 'TOP';
     return null;
   }
@@ -379,6 +462,58 @@ export class CatalogService {
     return (items || []).filter((item) =>
       allowed.has(this.normalizeSubcategoryValue(item.subcategory))
     );
+  }
+
+  private filterStorefrontProductsByCollectionTag(
+    items: StorefrontProduct[],
+    collectionTag: CatalogCollectionTag | null
+  ): StorefrontProduct[] {
+    if (!collectionTag) return items || [];
+
+    if (collectionTag === 'new') {
+      return [...(items || [])]
+        .sort((a, b) => this.compareStorefrontByNewest(a, b))
+        .slice(0, this.newArrivalsLimit);
+    }
+
+    return (items || []).filter((item) => this.getDiscountPercentage(item) >= this.clearanceThresholdPct);
+  }
+
+  private normalizeCollectionTag(value?: CatalogCollectionTag | string | null): CatalogCollectionTag | null {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (normalized === 'new' || normalized === 'clearance') {
+      return normalized;
+    }
+
+    return null;
+  }
+
+  private compareStorefrontByNewest(a: StorefrontProduct, b: StorefrontProduct): number {
+    const aTime = Date.parse(a.publishedAt || '') || 0;
+    const bTime = Date.parse(b.publishedAt || '') || 0;
+    if (bTime !== aTime) return bTime - aTime;
+    return Number(b.id || 0) - Number(a.id || 0);
+  }
+
+  private resolveCompareAtPrice(item: StorefrontProduct): number | null {
+    const price = Number(item.price || 0);
+    const compareAtPrice = Number(item.compareAtPrice || 0);
+    if (!Number.isFinite(compareAtPrice) || compareAtPrice <= 0) {
+      return null;
+    }
+
+    return compareAtPrice > price ? compareAtPrice : null;
+  }
+
+  private getDiscountPercentage(item: Pick<StorefrontProduct, 'price' | 'compareAtPrice'>): number {
+    const price = Number(item.price || 0);
+    const compareAtPrice = Number(item.compareAtPrice || 0);
+
+    if (!Number.isFinite(price) || !Number.isFinite(compareAtPrice) || price <= 0 || compareAtPrice <= price) {
+      return 0;
+    }
+
+    return Math.round(((compareAtPrice - price) / compareAtPrice) * 100);
   }
 
   private normalizeSubcategoryValue(value?: string | null): string {
@@ -498,7 +633,37 @@ export class CatalogService {
   }
 
   private normalizeSearch(value?: string): string {
-    return String(value || '').trim().toLowerCase();
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ');
+  }
+
+  private tokenizeSearch(value: string): string[] {
+    return Array.from(new Set(
+      this.normalizeSearch(value)
+        .split(' ')
+        .map((token) => token.trim())
+        .filter((token) => token.length >= 2)
+    ));
+  }
+
+  private expandSearchToken(token: string): string[] {
+    const normalized = this.normalizeSearch(token);
+    if (!normalized) return [];
+
+    const singular = normalized.endsWith('s') && normalized.length > 3 ? normalized.slice(0, -1) : '';
+    const plural = !normalized.endsWith('s') && normalized.length > 2 ? `${normalized}s` : '';
+
+    return Array.from(new Set([
+      normalized,
+      singular,
+      plural,
+      ...(this.searchAliases[normalized] || []),
+      ...(singular ? this.searchAliases[singular] || [] : []),
+    ].map((value) => this.normalizeSearch(value)).filter((value) => value.length >= 2)));
   }
 
   private buildExcludedTerms(rawTerms: string[]): string[] {
@@ -567,46 +732,87 @@ export class CatalogService {
   }
 
   private rankBySearch(items: Product[], search: string): Array<{ item: Product; score: number }> {
-    const tokens = Array.from(new Set(search.split(/\s+/).map((token) => token.trim()).filter(Boolean)));
-    const normalizedSearch = search.trim();
+    const tokens = this.tokenizeSearch(search);
+    const expandedTokens = Array.from(new Set(tokens.flatMap((token) => this.expandSearchToken(token))));
+    const normalizedSearch = this.normalizeSearch(search);
 
     return items
       .map((item) => {
-        const name = item.name.toLowerCase();
-        const category = (item.category || '').toLowerCase();
-        const subcategory = (item.subcategory || '').toLowerCase();
-        const tags = (item.tags || []).map((tag) => tag.toLowerCase());
+        const name = this.normalizeSearch(item.name);
+        const category = this.normalizeSearch(item.category || '');
+        const subcategory = this.normalizeSearch(item.subcategory || '');
+        const tags = (item.tags || []).map((tag) => this.normalizeSearch(tag));
+        const haystack = [name, category, subcategory, ...tags].filter(Boolean).join(' ');
 
         let score = 0;
+        let matched = false;
 
-        if (name === normalizedSearch) score += 140;
-        else if (name.startsWith(normalizedSearch)) score += 110;
-        else if (name.includes(normalizedSearch)) score += 85;
-
-        for (const token of tokens) {
-          if (name.startsWith(token)) score += 30;
-          else if (name.includes(token)) score += 20;
-
-          if (category.includes(token)) score += 12;
-          if (subcategory.includes(token)) score += 14;
-
-          const matchingTag = tags.some((tag) => tag.includes(token));
-          if (matchingTag) score += 14;
+        if (name === normalizedSearch) {
+          score += 140;
+          matched = true;
+        } else if (name.startsWith(normalizedSearch)) {
+          score += 110;
+          matched = true;
+        } else if (name.includes(normalizedSearch)) {
+          score += 85;
+          matched = true;
         }
 
-        if ((item.stock || 0) > 0) score += 3;
+        if (normalizedSearch && haystack.includes(normalizedSearch)) {
+          score += 40;
+          matched = true;
+        }
 
-        return { item, score };
+        for (const token of expandedTokens) {
+          if (name.startsWith(token)) {
+            score += 30;
+            matched = true;
+          } else if (name.includes(token)) {
+            score += 20;
+            matched = true;
+          }
+
+          if (category.includes(token)) {
+            score += 12;
+            matched = true;
+          }
+          if (subcategory.includes(token)) {
+            score += 14;
+            matched = true;
+          }
+
+          const matchingTag = tags.some((tag) => tag.includes(token));
+          if (matchingTag) {
+            score += 14;
+            matched = true;
+          }
+
+          if (haystack.includes(token)) {
+            score += 6;
+            matched = true;
+          }
+        }
+
+        if (matched && (item.stock || 0) > 0) score += 3;
+
+        return { item, score, matched };
       })
-      .filter((entry) => entry.score > 0);
+      .filter((entry) => entry.matched && entry.score > 0)
+      .map(({ item, score }) => ({ item, score }));
   }
 
   private sortScored(
     entries: Array<{ item: Product; score: number }>,
-    sort: CatalogQuery['sort']
+    sort: CatalogQuery['sort'],
+    collectionTag?: CatalogCollectionTag | null
   ): Array<{ item: Product; score: number }> {
     return [...entries].sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
+
+      if ((collectionTag || null) === 'clearance' && (!sort || sort === 'popular')) {
+        const discountDiff = this.getProductDiscountPercentage(b.item) - this.getProductDiscountPercentage(a.item);
+        if (discountDiff !== 0) return discountDiff;
+      }
 
       if (sort === 'price-asc') return a.item.price - b.item.price;
       if (sort === 'price-desc') return b.item.price - a.item.price;
@@ -616,7 +822,15 @@ export class CatalogService {
     });
   }
 
-  private sortPlain(items: Product[], sort: CatalogQuery['sort']): Product[] {
+  private sortPlain(items: Product[], sort: CatalogQuery['sort'], collectionTag?: CatalogCollectionTag | null): Product[] {
+    if ((collectionTag || null) === 'clearance' && (!sort || sort === 'popular')) {
+      return [...items].sort((a, b) => {
+        const discountDiff = this.getProductDiscountPercentage(b) - this.getProductDiscountPercentage(a);
+        if (discountDiff !== 0) return discountDiff;
+        return b.price - a.price;
+      });
+    }
+
     if (sort === 'price-asc') {
       return [...items].sort((a, b) => a.price - b.price);
     }
@@ -630,6 +844,17 @@ export class CatalogService {
     }
 
     return items;
+  }
+
+  private getProductDiscountPercentage(item: Pick<Product, 'price' | 'oldPrice'>): number {
+    const price = Number(item.price || 0);
+    const oldPrice = Number(item.oldPrice || 0);
+
+    if (!Number.isFinite(price) || !Number.isFinite(oldPrice) || price <= 0 || oldPrice <= price) {
+      return 0;
+    }
+
+    return Math.round(((oldPrice - price) / oldPrice) * 100);
   }
 
   private resolveSort(sort: CatalogQuery['sort']): string {

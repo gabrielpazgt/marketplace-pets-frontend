@@ -54,12 +54,13 @@
   position: absolute;
   top: 10px;
   right: 10px;
-  background: var(--chip);
-  color: var(--brand-700);
-  font-weight: 700;
+  background: #0f172a;
+  color: #fff;
+  font-weight: 800;
   border-radius: 999px;
-  padding: .2rem .5rem;
-  border: 1px solid var(--line);
+  padding: .24rem .58rem;
+  border: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .22);
 }
 
 .card__body {

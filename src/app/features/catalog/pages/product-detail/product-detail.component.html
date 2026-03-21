@@ -51,7 +51,13 @@
             </ng-template>
 
             <div class="price-row">
-              <strong class="price">{{ p.price | currency:'GTQ':'symbol-narrow':'1.0-2' }}</strong>
+              <div class="price-stack">
+                <div class="price-main">
+                  <strong class="price">{{ p.price | currency:'GTQ':'symbol-narrow':'1.0-2' }}</strong>
+                  <span *ngIf="compareAtPrice" class="price-old">{{ compareAtPrice | currency:'GTQ':'symbol-narrow':'1.0-2' }}</span>
+                  <span *ngIf="discountPct" class="price-discount">-{{ discountPct }}%</span>
+                </div>
+              </div>
               <span class="member-price">
                 Con membresia ({{ membershipDiscountPct }}%):
                 <strong>{{ membershipPrice | currency:'GTQ':'symbol-narrow':'1.0-2' }}</strong>

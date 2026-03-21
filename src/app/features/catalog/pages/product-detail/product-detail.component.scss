@@ -125,9 +125,34 @@ h1 {
   gap: 10px;
 }
 
+.price-main {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .price {
   font-size: clamp(1.4rem, 1.15rem + 0.8vw, 1.9rem);
   color: var(--brand-700);
+}
+
+.price-old {
+  color: var(--muted);
+  text-decoration: line-through;
+  font-size: 1rem;
+}
+
+.price-discount {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+  font-size: var(--fs-sm);
+  font-weight: 800;
 }
 
 .member-price {

@@ -116,6 +116,13 @@
           <a routerLink="/catalog/perros">Comprar para perros</a>
           <a routerLink="/catalog/gatos">Comprar para gatos</a>
         </div>
+
+        <article class="footer__ad" [class.footer__ad--empty]="!footerPromoImageUrl" aria-hidden="{{ !footerPromoImageUrl }}">
+          <img *ngIf="footerPromoImageUrl" [src]="footerPromoImageUrl" [alt]="footerPromoImageAlt" loading="lazy" />
+          <div class="footer__ad-placeholder" *ngIf="!footerPromoImageUrl" aria-hidden="true">
+            <mat-icon>campaign</mat-icon>
+          </div>
+        </article>
       </div>
     </div>
   </section>

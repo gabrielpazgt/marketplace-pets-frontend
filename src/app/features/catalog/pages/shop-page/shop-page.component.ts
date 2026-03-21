@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, ViewRef } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { combineLatest, EMPTY, Subject, of } from 'rxjs';
+import { combineLatest, EMPTY, Subject, forkJoin, of } from 'rxjs';
 import { catchError, distinctUntilChanged, map, shareReplay, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { AppHttpError } from '../../../../core/models/http.models';
@@ -30,16 +30,17 @@ import {
 } from '../../catalog-navigation.config';
 import { DrawerFacetControlKey, FilterState } from '../../components/filters-drawer/filters-drawer.component';
 import { Product } from '../../models/product.model';
-import { CatalogQuery, CatalogService } from '../../services/catalog.service';
+import { CatalogCollectionTag, CatalogQuery, CatalogService } from '../../services/catalog.service';
 
 type SortType = 'popular' | 'price-asc' | 'price-desc' | 'new';
 
 interface NavQuery {
   petType?: CatalogPetType | null;
+  tag?: CatalogCollectionTag | null;
   sort?: SortType;
   page?: number;
   pageSize?: number;
-  search?: string;
+  search?: string | null;
   min?: number | null;
   max?: number | null;
   stock?: 'in' | 'all' | null;
@@ -59,6 +60,7 @@ interface NavQuery {
 interface RouteState {
   slug: string | null;
   petType: CatalogPetType | null;
+  tag: CatalogCollectionTag | null;
   sort: SortType;
   page: number;
   pageSize: number;
@@ -137,12 +139,14 @@ export class ShopPageComponent implements OnInit, OnDestroy {
 
   slug: string | null = null;
   selectedPetType: CatalogPetType | null = null;
+  collectionTag: CatalogCollectionTag | null = null;
   loading = true;
   errorMsg = '';
   items: Product[] = [];
   total = 0;
   facets: StorefrontProductFacets = this.emptyFacets;
   navFacets: StorefrontProductFacets = this.emptyFacets;
+  priceRangeBounds: { min: number; max: number } | null = null;
   subcategoryChipList: SubcategoryChip[] = [];
   speciesTaxonomy: StorefrontTaxonomyItem[] = [];
   catalogTaxonomy: StorefrontCatalogTaxonomy | null = null;
@@ -236,6 +240,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
           this.applyState(() => {
             this.slug = state.slug;
             this.selectedPetType = state.petType;
+            this.collectionTag = state.tag;
             this.sort = state.sort;
             this.page = state.page;
             this.pageSize = state.pageSize;
@@ -326,6 +331,14 @@ export class ShopPageComponent implements OnInit, OnDestroy {
   }
 
   get pageTitle(): string {
+    if (this.collectionTag === 'new' && !this.selectedPetType && !this.filters.category && !this.filters.subcategory) {
+      return 'Recien llegados';
+    }
+
+    if (this.collectionTag === 'clearance' && !this.selectedPetType && !this.filters.category && !this.filters.subcategory) {
+      return 'Ofertas imperdibles';
+    }
+
     const familyLabel = this.activeAnimalTaxonomy?.label || this.currentPetConfig?.label || 'mascotas';
     const taxonomyHeadline = this.activeAnimalTaxonomy?.headline?.trim();
     const selectedSubcategoryLabel = this.selectedSubcategoryTaxonomy?.label || this.resolveSubcategoryDisplayLabel(this.filters.subcategory);
@@ -351,6 +364,14 @@ export class ShopPageComponent implements OnInit, OnDestroy {
   }
 
   get pageSubtitle(): string {
+    if (this.collectionTag === 'new' && !this.selectedPetType && !this.filters.category && !this.filters.subcategory) {
+      return 'Descubre lo ultimo que acaba de llegar a la tienda y encuentra novedades antes de que se agoten.';
+    }
+
+    if (this.collectionTag === 'clearance' && !this.selectedPetType && !this.filters.category && !this.filters.subcategory) {
+      return 'Aprovecha descuentos de 45% o mas en productos seleccionados antes de que vuelen.';
+    }
+
     const subcategoryDescription = String(this.selectedSubcategoryTaxonomy?.description || '').trim();
     if (subcategoryDescription) {
       return subcategoryDescription;
@@ -375,7 +396,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       return this.currentPetConfig.subtitle;
     }
 
-    return 'Encuentra lo mejor para tu mascota con filtros inteligentes y una navegacion mas clara por especie y necesidad.';
+    return 'Descubre productos para consentir, cuidar y acompañar a tu mascota en cada etapa, con una tienda pensada para encontrar justo lo que buscas.';
   }
 
   get discoveryToggleLabel(): string {
@@ -423,6 +444,11 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     const fallbackCategory = this.filters.category ? this.resolveCategoryDisplayLabel(this.filters.category) : '';
     const fallbackSubcategory = this.resolveSubcategoryDisplayLabel(this.filters.subcategory);
     const familyLabel = this.activeAnimalTaxonomy?.label || this.currentPetConfig?.label || 'Catalogo general';
+    const isGeneralCatalog = !this.selectedPetType && !fallbackCategory && !fallbackSubcategory;
+
+    if (isGeneralCatalog) {
+      return [];
+    }
 
     const steps: HeroPathStep[] = [
       {
@@ -663,13 +689,17 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     ];
   }
 
-  onSearchSubmit(): void {
+  onSearchSubmit(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+
     this.page = 1;
     this.navigateWith({
       petType: this.selectedPetType,
+      tag: this.collectionTag,
       page: 1,
       sort: this.sort,
-      search: this.searchDraft.trim() || undefined,
+      search: this.searchDraft.trim() || null,
       min: this.filters.min ?? null,
       max: this.filters.max ?? null,
       stock: this.filters.inStockOnly ? 'in' : 'all',
@@ -710,6 +740,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     this.page = 1;
     this.navigateWith({
       petType,
+      tag: this.collectionTag,
       page: 1,
       sort: this.sort,
       search: this.search || undefined,
@@ -737,6 +768,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     this.page = 1;
     this.navigateWith({
       petType: profilePetType,
+      tag: this.collectionTag,
       page: 1,
       sort: this.sort,
       search: this.search || undefined,
@@ -797,6 +829,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
 
     this.navigateWith({
       petType: this.selectedPetType,
+      tag: this.collectionTag,
       page: 1,
       sort: this.sort,
       search: this.search || undefined,
@@ -823,6 +856,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
 
     this.navigateWith({
       petType: this.selectedPetType,
+      tag: this.collectionTag,
       page: 1,
       sort: this.sort,
       search: this.search || undefined,
@@ -849,6 +883,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
 
     this.navigateWith({
       petType: this.selectedPetType,
+      tag: this.collectionTag,
       page: 1,
       sort: value,
       search: this.search || undefined,
@@ -874,6 +909,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
 
     this.navigateWith({
       petType: this.selectedPetType,
+      tag: this.collectionTag,
       page: this.page,
       sort: this.sort,
       search: this.search || undefined,
@@ -923,6 +959,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     return {
       slug,
       petType,
+      tag: this.normalizeCollectionTag(queryParams.get('tag')),
       sort: (queryParams.get('sort') as SortType) || 'popular',
       page: +(queryParams.get('page') || 1),
       pageSize: +(queryParams.get('pageSize') || 12),
@@ -965,35 +1002,58 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     const facets$ = this.hasPetProfiles && petId > 0
       ? this.api.getFacets(query, petId)
       : this.api.getFacets(query);
+    const hasExplicitPriceFilter = Number.isFinite(query.min as number) || Number.isFinite(query.max as number);
+    const priceBoundsQuery: CatalogQuery = {
+      ...query,
+      min: undefined,
+      max: undefined,
+    };
+    const priceBounds$ = hasExplicitPriceFilter
+      ? (this.hasPetProfiles && petId > 0
+          ? this.api.getFacets(priceBoundsQuery, petId)
+          : this.api.getFacets(priceBoundsQuery))
+      : of<StorefrontProductFacets | null>(null);
 
     return result$.pipe(
       tap((result) => {
         if (requestId !== this.activeRequestId) return;
 
         const fallbackFacets = this.withFallbackFacets(this.emptyFacets, result.items, result.total);
+        const previousStableTotal = Number(this.facets.totalProducts || this.total || 0);
+        const hasProvisionalFirstPageTotal =
+          result.page === 1 &&
+          result.items.length >= result.pageSize &&
+          result.total === result.pageSize + 1;
         this.applyState(() => {
           this.items = result.items;
-          this.total = result.total;
+          this.total = hasProvisionalFirstPageTotal && previousStableTotal > result.total
+            ? previousStableTotal
+            : result.total;
           this.facets = fallbackFacets;
           this.navFacets = fallbackFacets;
+          if (!hasExplicitPriceFilter) {
+            this.priceRangeBounds = this.extractPriceRangeBounds(fallbackFacets);
+          }
           this.subcategoryChipList = this.computeSubcategoryChips();
           this.loading = false;
         });
         this.applyCollectionSeo(result.total);
       }),
       switchMap((result) =>
-        facets$.pipe(
-          tap((facets) => {
+        forkJoin({
+          facets: facets$,
+          priceBoundsFacets: priceBounds$,
+        }).pipe(
+          tap(({ facets, priceBoundsFacets }) => {
             if (requestId !== this.activeRequestId) return;
 
             const resolvedFacets = this.withFallbackFacets(facets, result.items, result.total);
             this.applyState(() => {
               const facetsTotal = Number(resolvedFacets.totalProducts || 0);
-              if (facetsTotal > 0) {
-                this.total = Math.max(this.total, facetsTotal);
-              }
+              this.total = facetsTotal > 0 ? facetsTotal : result.total;
               this.facets = resolvedFacets;
               this.navFacets = resolvedFacets;
+              this.priceRangeBounds = this.extractPriceRangeBounds(priceBoundsFacets || resolvedFacets);
               this.subcategoryChipList = this.computeSubcategoryChips();
             });
           }),
@@ -1012,6 +1072,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
           this.total = 0;
           this.facets = this.emptyFacets;
           this.navFacets = this.emptyFacets;
+          this.priceRangeBounds = null;
           this.subcategoryChipList = [];
           this.loading = false;
         });
@@ -1060,6 +1121,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       category: backendCategory,
       subcategory: backendSubcategory,
       allowedSubcategories: [],
+      collectionTag: this.collectionTag,
       min: this.filters.min ?? undefined,
       max: this.filters.max ?? undefined,
       sort: this.sort,
@@ -1084,6 +1146,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     const qp: Params = {};
 
     if (query.petType !== undefined) qp['petType'] = query.petType;
+    if (query.tag !== undefined) qp['tag'] = query.tag;
     if (query.sort !== undefined) qp['sort'] = query.sort;
     if (query.page !== undefined) qp['page'] = query.page;
     if (query.pageSize !== undefined) qp['pageSize'] = query.pageSize;
@@ -1102,7 +1165,6 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     if (query.diet !== undefined) qp['diet'] = query.diet;
     if (query.health !== undefined) qp['health'] = query.health;
     if (query.ingredient !== undefined) qp['ingredient'] = query.ingredient;
-    qp['tag'] = null;
 
     const current = this.route.snapshot.queryParams;
     const currentSignature = this.buildParamsSignature(current);
@@ -1180,6 +1242,15 @@ export class ShopPageComponent implements OnInit, OnDestroy {
   private normalizePetType(value?: string | null): CatalogPetType | null {
     const normalized = String(value || '').trim().toLowerCase();
     return getCatalogPetByKey(normalized)?.key || null;
+  }
+
+  private normalizeCollectionTag(value?: string | null): CatalogCollectionTag | null {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (normalized === 'new' || normalized === 'clearance') {
+      return normalized;
+    }
+
+    return null;
   }
 
   private parseQueryNumber(value: string | null): number | null {
@@ -1367,6 +1438,25 @@ export class ShopPageComponent implements OnInit, OnDestroy {
         max,
       },
       totalProducts,
+    };
+  }
+
+  private extractPriceRangeBounds(
+    facets: StorefrontProductFacets | null | undefined
+  ): { min: number; max: number } | null {
+    const min = Number(facets?.priceRange?.min ?? Number.NaN);
+    const max = Number(facets?.priceRange?.max ?? Number.NaN);
+
+    if (!Number.isFinite(min) || !Number.isFinite(max)) {
+      return null;
+    }
+
+    const floor = Math.floor(min);
+    const ceil = Math.ceil(max);
+
+    return {
+      min: Math.min(floor, ceil),
+      max: Math.max(floor, ceil),
     };
   }
 

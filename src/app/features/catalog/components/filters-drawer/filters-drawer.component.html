@@ -67,12 +67,6 @@
       </ng-template>
     </section>
 
-    <section class="group group--stock">
-      <mat-checkbox class="stock-checkbox" [formControl]="form.controls.inStockOnly">
-        Solo productos disponibles
-      </mat-checkbox>
-    </section>
-
     <section class="group" *ngIf="showPetFilter && pets.length">
       <div class="group__head">
         <h5 class="group__title">Mascota plantilla</h5>
@@ -223,6 +217,12 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+    </section>
+
+    <section class="group group--stock">
+      <mat-checkbox class="stock-checkbox" [formControl]="form.controls.inStockOnly">
+        Solo productos con stock
+      </mat-checkbox>
     </section>
 
     <div class="actions">

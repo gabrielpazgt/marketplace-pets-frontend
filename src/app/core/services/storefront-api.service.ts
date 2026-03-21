@@ -15,6 +15,7 @@ import {
   StorefrontMembership,
   StorefrontMembershipPayload,
   StorefrontMembershipPlan,
+  StorefrontMedia,
   StorefrontOrder,
   StorefrontPublicCoupon,
   StorefrontProductFacets,
@@ -87,6 +88,12 @@ export class StorefrontApiService {
   listHeaderAnnouncements(): Observable<StrapiListResponse<StorefrontHeaderAnnouncement>> {
     return this.http.get<StrapiListResponse<StorefrontHeaderAnnouncement>>(
       `${this.apiBaseUrl}/api/storefront/header-announcements`
+    );
+  }
+
+  getFooterNewsletterPromo(): Observable<StrapiItemResponse<StorefrontMedia | null>> {
+    return this.http.get<StrapiItemResponse<StorefrontMedia | null>>(
+      `${this.apiBaseUrl}/api/storefront/footer-newsletter-promo`
     );
   }
 

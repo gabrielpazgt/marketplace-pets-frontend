@@ -55,6 +55,7 @@ export interface StorefrontProduct {
   slug: string;
   description?: string | StorefrontRichTextNode[] | null;
   price: number;
+  compareAtPrice?: number | null;
   stock: number;
   category?: string | null;
   subcategory?: string | null;
@@ -493,6 +494,7 @@ export interface StorefrontCatalogTaxonomySubcategory extends StorefrontCatalogT
 export interface StorefrontCatalogTaxonomyCategory extends StorefrontCatalogTaxonomyLeaf {
   legacyCategory?: string | null;
   description: string;
+  image?: StorefrontMedia | null;
   recommendedFilters: StorefrontCatalogFilterDefinition[];
   subcategories: StorefrontCatalogTaxonomySubcategory[];
 }

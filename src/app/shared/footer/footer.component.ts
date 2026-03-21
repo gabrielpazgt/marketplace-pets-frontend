@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { take } from 'rxjs/operators';
+import { StorefrontMedia } from '../../core/models/storefront.models';
 import { StorefrontApiService } from '../../core/services/storefront-api.service';
 
 type NewsletterState = 'idle' | 'success' | 'error';
@@ -15,6 +16,8 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   promoText = '';
   promoCode = '';
+  footerPromoImageUrl = '';
+  footerPromoImageAlt = 'Publicidad destacada';
   newsletterMessage = '';
   newsletterState: NewsletterState = 'idle';
 
@@ -85,6 +88,21 @@ export class FooterComponent implements OnInit, OnDestroy {
           this.promoCode = '';
         },
       });
+
+    this.storefrontApi
+      .getFooterNewsletterPromo()
+      .pipe(take(1))
+      .subscribe({
+        next: (response) => {
+          const media = response.data || null;
+          this.footerPromoImageUrl = this.resolvePromoImage(media);
+          this.footerPromoImageAlt = media?.alternativeText || media?.name || 'Publicidad destacada';
+        },
+        error: () => {
+          this.footerPromoImageUrl = '';
+          this.footerPromoImageAlt = 'Publicidad destacada';
+        },
+      });
   }
 
   ngOnDestroy(): void {
@@ -119,5 +137,16 @@ export class FooterComponent implements OnInit, OnDestroy {
       this.newsletterState = 'idle';
       this.newsletterTimer = null;
     }, 3000);
+  }
+
+  private resolvePromoImage(media?: StorefrontMedia | null): string {
+    const rawUrl =
+      media?.formats?.['medium']?.url ||
+      media?.formats?.['small']?.url ||
+      media?.formats?.['thumbnail']?.url ||
+      media?.url ||
+      '';
+
+    return this.storefrontApi.resolveMediaUrl(rawUrl);
   }
 }

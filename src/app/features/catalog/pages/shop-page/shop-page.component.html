@@ -22,7 +22,7 @@
         <p class="plp__subtitle">{{ pageSubtitle }}</p>
       </div>
 
-      <form class="shop-search" (ngSubmit)="onSearchSubmit()">
+      <form class="shop-search" (submit)="onSearchSubmit($event)" novalidate>
         <input
           type="search"
           class="input"
@@ -39,11 +39,6 @@
       <button type="button" class="plp__toolbar-btn" (click)="toggleDiscovery()">
         <mat-icon>{{ discoveryOpen ? 'unfold_less' : 'unfold_more' }}</mat-icon>
         <span>{{ discoveryToggleLabel }}</span>
-      </button>
-
-      <button type="button" class="plp__toolbar-btn" (click)="onOpenFilters()">
-        <mat-icon>tune</mat-icon>
-        <span>Abrir filtros</span>
       </button>
     </div>
 
@@ -254,6 +249,7 @@
     [categories]="categoryOptions"
     [subcategories]="subcategoryChips"
     [facets]="facets"
+    [priceRangeBounds]="priceRangeBounds"
     [lockBiologyFilters]="lockBiologyFilters"
     [visibleFacetControls]="visibleFacetControls"
     [veterinaryHint]="veterinaryHint"

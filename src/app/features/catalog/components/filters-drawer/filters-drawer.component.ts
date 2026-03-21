@@ -65,6 +65,7 @@ export class FiltersDrawerComponent implements OnChanges {
   @Input() categories: Array<{ value: string; label: string }> = [];
   @Input() subcategories: Array<{ value: string; label: string; count: number; suggested?: boolean }> = [];
   @Input() facets: StorefrontProductFacets | null = null;
+  @Input() priceRangeBounds: { min: number; max: number } | null = null;
   @Input() lockBiologyFilters = false;
   @Input() visibleFacetControls: DrawerFacetControlKey[] = [
     'form',
@@ -149,19 +150,19 @@ export class FiltersDrawerComponent implements OnChanges {
       return;
     }
 
-    if (changes['facets']) {
+    if (changes['facets'] || changes['priceRangeBounds']) {
       this.syncPriceSelectionToCurrentRange();
     }
   }
 
   get priceRangeMin(): number {
-    const value = this.parseNumber(this.facets?.priceRange?.min as number | null | undefined);
+    const value = this.parseNumber((this.priceRangeBounds?.min ?? this.facets?.priceRange?.min) as number | null | undefined);
     return Math.floor(value ?? 0);
   }
 
   get priceRangeMax(): number {
     const min = this.priceRangeMin;
-    const value = this.parseNumber(this.facets?.priceRange?.max as number | null | undefined);
+    const value = this.parseNumber((this.priceRangeBounds?.max ?? this.facets?.priceRange?.max) as number | null | undefined);
     const resolved = Math.ceil(value ?? min);
     return resolved >= min ? resolved : min;
   }
@@ -380,7 +381,10 @@ export class FiltersDrawerComponent implements OnChanges {
   }
 
   private syncPriceSelectionToCurrentRange(): void {
-    const normalized = this.resolvePriceSelection(this.priceMinSelection, this.priceMaxSelection);
+    const normalized = this.resolvePriceSelection(
+      this.state.min ?? this.priceMinSelection ?? null,
+      this.state.max ?? this.priceMaxSelection ?? null,
+    );
     this.priceMinSelection = normalized.min;
     this.priceMaxSelection = normalized.max;
     this.form.patchValue(

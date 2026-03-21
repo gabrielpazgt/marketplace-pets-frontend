@@ -28,6 +28,9 @@
   font-weight: 700;
   cursor: pointer;
   transition: background .15s ease, border-color .15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
 }
 
 .sort-btn:hover {
@@ -54,7 +57,11 @@
   display: inline-flex;
   align-items: center;
   gap: .5rem;
-  font-weight: 600;
+}
+
+.sort__label {
+  color: #475569;
+  font-weight: 400;
 }
 
 .sort__field {
@@ -75,7 +82,7 @@
 
 :host ::ng-deep .sort__field .mat-mdc-select-value-text {
   color: var(--ink);
-  font-weight: 800;
+  font-weight: 600;
 }
 
 :host ::ng-deep .sort__field .mat-mdc-select-arrow {
@@ -95,7 +102,7 @@
 }
 
 .sort__selected {
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ink);
 }
 

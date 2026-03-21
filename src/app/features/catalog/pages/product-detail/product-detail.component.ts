@@ -141,6 +141,26 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     return this.memberships.priceWithMembership(this.product?.price || 0, 'premium');
   }
 
+  get compareAtPrice(): number | null {
+    const currentPrice = Number(this.product?.price || 0);
+    const compareAtPrice = Number(this.product?.compareAtPrice || 0);
+    if (!Number.isFinite(compareAtPrice) || compareAtPrice <= currentPrice) {
+      return null;
+    }
+
+    return compareAtPrice;
+  }
+
+  get discountPct(): number | null {
+    const compareAtPrice = this.compareAtPrice;
+    const currentPrice = Number(this.product?.price || 0);
+    if (!compareAtPrice || currentPrice <= 0) {
+      return null;
+    }
+
+    return Math.round(((compareAtPrice - currentPrice) / compareAtPrice) * 100);
+  }
+
   get categoryLabel(): string {
     return this.resolveCategoryLabel(this.product?.category);
   }
@@ -349,6 +369,9 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
           slug: item.slug,
           name: item.name,
           price: Number(item.price || 0),
+          oldPrice: Number(item.compareAtPrice || 0) > Number(item.price || 0)
+            ? Number(item.compareAtPrice || 0)
+            : undefined,
           image: this.resolveProductImage(item),
           badge: ((item.stock || 0) <= 5 && (item.stock || 0) > 0 ? 'TOP' : null) as Product['badge'],
           category: item.category || 'general',

@@ -12,7 +12,8 @@ import { AuthService, AuthUser } from '../../auth/services/auth.service';
 import {
   StorefrontCatalogTaxonomyAnimal,
   StorefrontCatalogTaxonomyCategory,
-  StorefrontCatalogTaxonomySubcategory
+  StorefrontCatalogTaxonomySubcategory,
+  StorefrontMedia
 } from '../../core/models/storefront.models';
 import { StorefrontApiService } from '../../core/services/storefront-api.service';
 import { CATALOG_PETS, CatalogPetType } from '../../features/catalog/catalog-navigation.config';
@@ -30,6 +31,8 @@ interface ExploreCategoryEntry {
   slug: string;
   label: string;
   icon: string;
+  description: string;
+  image?: StorefrontMedia | null;
   legacyCategory?: string | null;
   subcategories: ExploreSubcategoryEntry[];
 }
@@ -38,7 +41,16 @@ interface ExploreAnimalEntry {
   key: CatalogPetType;
   label: string;
   icon: string;
+  headline: string;
+  subtitle: string;
+  description: string;
+  image?: StorefrontMedia | null;
   categories: ExploreCategoryEntry[];
+}
+
+interface ExplorePromoCard {
+  imageUrl: string;
+  imageAlt: string;
 }
 
 @Component({
@@ -91,7 +103,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   promoMessages: string[] = [];
   readonly catalogShortcuts: Array<{ key: CatalogShortcutKey; label: string; icon: string }> = [
-    { key: 'clearance', label: 'Liquidaciones', icon: 'local_offer' },
+    { key: 'clearance', label: 'Ofertas', icon: 'local_offer' },
     { key: 'new', label: 'Nuevos ingresos', icon: 'new_releases' },
   ];
 
@@ -307,6 +319,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
     return this.activeExploreCategory?.subcategories || [];
   }
 
+  get activeExplorePromo(): ExplorePromoCard | null {
+    const animal = this.activeExploreAnimal;
+    if (!animal) return null;
+
+    const category = this.activeExploreCategory;
+    const media = category?.image || animal.image || null;
+
+    return {
+      imageUrl: this.resolveExplorePromoImage(media),
+      imageAlt: media?.alternativeText || `${category?.label || animal.label} para ${animal.label}`,
+    };
+  }
+
   trackByExploreAnimal(_: number, animal: ExploreAnimalEntry): CatalogPetType {
     return animal.key;
   }
@@ -325,14 +350,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     if (kind === 'new') {
       this.router.navigate(['/catalog'], {
-        queryParams: { sort: 'new', page: 1 },
+        queryParams: { tag: 'new', sort: 'new', stock: 'in', page: 1 },
       });
       return;
     }
 
     this.router.navigate(['/catalog'], {
       queryParams: {
-        sort: 'price-asc',
+        tag: 'clearance',
+        sort: 'popular',
         stock: 'in',
         page: 1,
       },
@@ -561,6 +587,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
       key,
       label: staticPet?.label || taxonomyAnimal?.label || key,
       icon: this.resolvePetIcon(key),
+      headline: String(taxonomyAnimal?.headline || taxonomyAnimal?.label || staticPet?.label || key).trim(),
+      subtitle: String(taxonomyAnimal?.subtitle || '').trim(),
+      description: String(taxonomyAnimal?.description || '').trim(),
+      image: taxonomyAnimal?.image || null,
       categories,
     };
   }
@@ -572,6 +602,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
       slug,
       label: category.label,
       icon: this.resolveCategoryIcon(category.legacyCategory || slug),
+      description: String(category.description || '').trim(),
+      image: category.image || null,
       legacyCategory: String(category.legacyCategory || '').trim().toLowerCase() || null,
       subcategories: (category.subcategories || []).map((subcategory) =>
         this.buildExploreSubcategoryEntry(subcategory)
@@ -594,6 +626,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
     return CATALOG_PETS.find((pet) => pet.key === normalized)?.key || null;
   }
 
+  private resolveExplorePromoImage(media?: StorefrontMedia | null): string {
+    const rawUrl =
+      media?.formats?.['medium']?.url ||
+      media?.formats?.['small']?.url ||
+      media?.formats?.['thumbnail']?.url ||
+      media?.url ||
+      '';
+
+    return this.storefrontApi.resolveMediaUrl(rawUrl);
+  }
+
   private resetExploreExpansion(): void {
     this.activeExploreAnimalKey = null;
     this.activeExploreCategorySlug = null;
@@ -610,3 +653,4 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.activeExploreCategorySlug = firstAnimal.categories[0]?.slug || null;
   }
 }
+
