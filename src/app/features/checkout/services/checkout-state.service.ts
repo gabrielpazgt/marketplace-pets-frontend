@@ -1,6 +1,7 @@
 ﻿import { Injectable } from '@angular/core';
 import { BehaviorSubject, combineLatest, map, Observable } from 'rxjs';
 import { Address, CardInfo, ContactInfo, PaymentKind, ShippingMethod } from '../models/checkout.models';
+import { CartItem } from '../../cart/models/cart.model';
 import { CartStateService } from '../../cart/services/cart-state.service';
 
 interface CheckoutSnapshot {
@@ -54,19 +55,19 @@ export class CheckoutStateService {
   constructor(private cart: CartStateService) {}
 
   // Cart passthroughs with explicit types for strict templates.
-  readonly items$ = this.cart.items$ as Observable<any[]>;
-  readonly itemCount$ = this.cart.itemCount$ as Observable<number>;
-  readonly cartBusy$ = this.cart.busy$ as Observable<boolean>;
-  readonly cartError$ = this.cart.error$ as Observable<string | null>;
-  readonly couponCode$ = this.cart.coupon$ as Observable<string | null>;
-  readonly subtotal$ = this.cart.subtotal$ as Observable<number>;
-  readonly discount$ = this.cart.discount$ as Observable<number>;
+  readonly items$: Observable<CartItem[]> = this.cart.items$;
+  readonly itemCount$: Observable<number> = this.cart.itemCount$;
+  readonly cartBusy$: Observable<boolean> = this.cart.busy$;
+  readonly cartError$: Observable<string | null> = this.cart.error$;
+  readonly couponCode$: Observable<string | null> = this.cart.coupon$;
+  readonly subtotal$: Observable<number> = this.cart.subtotal$;
+  readonly discount$: Observable<number> = this.cart.discount$;
   readonly effectiveSubtotal$ = combineLatest([this.subtotal$, this.discount$] as const).pipe(
     map(([subtotal, discount]) => Math.max(0, subtotal - discount))
   );
   readonly freeThreshold = this.cart.freeThreshold;
-  readonly freeProgress$ = this.cart.freeProgress$ as Observable<number>;
-  readonly freeRemaining$ = this.cart.freeRemaining$ as Observable<number>;
+  readonly freeProgress$: Observable<number> = this.cart.freeProgress$;
+  readonly freeRemaining$: Observable<number> = this.cart.freeRemaining$;
 
   readonly shipping$ = combineLatest([this.effectiveSubtotal$, this.state$] as const).pipe(
     map(([effectiveSubtotal, state]) => {

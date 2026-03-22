@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { resolveApiBaseUrl } from '../../core/config/api-base-url';
 import { AuthResponse, User } from '../../core/models/auth.models';
 
 interface RegisterPayload {
@@ -31,7 +31,7 @@ interface ForgotPasswordResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AuthApiService {
-  private readonly apiBaseUrl = environment.apiBaseUrl.replace(/\/+$/, '');
+  private readonly apiBaseUrl = resolveApiBaseUrl();
 
   constructor(private http: HttpClient) {}
 

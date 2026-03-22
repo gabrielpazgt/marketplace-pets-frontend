@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, ViewRef } from '@angular/core';
-import { ActivatedRoute, Params, Router } from '@angular/router';
+import { ActivatedRoute, ParamMap, Params, Router } from '@angular/router';
 import { combineLatest, EMPTY, Subject, forkJoin, of } from 'rxjs';
 import { catchError, distinctUntilChanged, map, shareReplay, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { AuthService } from '../../../../auth/services/auth.service';
@@ -717,6 +717,11 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     });
   }
 
+  onSearchDraftInput(event: Event): void {
+    const target = event.target;
+    this.searchDraft = target instanceof HTMLInputElement ? target.value : '';
+  }
+
   toggleDiscovery(): void {
     this.discoveryOpen = !this.discoveryOpen;
   }
@@ -944,7 +949,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
 
   private mapRouteState(
     slug: string | null,
-    queryParams: any,
+    queryParams: ParamMap,
     species: StorefrontTaxonomyItem[]
   ): RouteState {
     const routePetType = this.normalizePetType(getCatalogPetBySlug(slug)?.key || null);
@@ -1279,9 +1284,73 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       .join('|');
   }
 
+  private getDefaultSortForCurrentView(): SortType {
+    return this.collectionTag === 'new' ? 'new' : 'popular';
+  }
+
+  private hasIndexableCatalogFilters(): boolean {
+    return Boolean(
+      this.filters.petId ||
+      this.filters.brandId ||
+      this.filters.form ||
+      this.filters.proteinSource ||
+      this.filters.specieId ||
+      this.filters.lifeStageId ||
+      this.filters.dietTagId ||
+      this.filters.healthConditionId ||
+      this.filters.ingredientId ||
+      Number.isFinite(this.filters.min as number) ||
+      Number.isFinite(this.filters.max as number) ||
+      !this.filters.inStockOnly
+    );
+  }
+
+  private buildCollectionCanonicalUrl(): string {
+    const currentPath = this.router.url.split('?')[0] || '/catalog';
+    const params = new URLSearchParams();
+    const routePetType = this.normalizePetType(getCatalogPetBySlug(this.slug)?.key || null);
+    const routeCategory = this.normalizeCategoryParam(this.normalizeRouteCategory(this.slug));
+
+    if (this.collectionTag) {
+      params.set('tag', this.collectionTag);
+    }
+
+    if (this.selectedPetType && this.selectedPetType !== routePetType) {
+      params.set('petType', this.selectedPetType);
+    }
+
+    if (this.filters.category && this.filters.category !== routeCategory) {
+      params.set('cat', this.filters.category);
+    }
+
+    if (this.filters.subcategory) {
+      params.set('sub', this.filters.subcategory);
+    }
+
+    const query = params.toString();
+    return query ? `${currentPath}?${query}` : currentPath;
+  }
+
+  private shouldNoindexCollection(totalProducts: number, errorMessage = ''): boolean {
+    if (Boolean(errorMessage) || totalProducts <= 0) {
+      return true;
+    }
+
+    return Boolean(
+      this.search.trim() ||
+      this.page > 1 ||
+      this.pageSize !== 12 ||
+      this.sort !== this.getDefaultSortForCurrentView() ||
+      this.hasIndexableCatalogFilters()
+    );
+  }
+
   private applyCollectionSeo(totalProducts: number, errorMessage = ''): void {
     const title = `${this.pageTitle} | Aumakki`;
     const searchTerm = this.search.trim();
+    const currentUrl = this.seo.absoluteUrl(this.router.url);
+    const canonicalUrl = this.seo.absoluteUrl(this.buildCollectionCanonicalUrl());
+    const noindex = this.shouldNoindexCollection(totalProducts, errorMessage);
     const filterTags = [
       this.currentPetConfig?.label || '',
       this.filters.category ? this.resolveCategoryDisplayLabel(this.filters.category) : '',
@@ -1314,8 +1383,10 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     this.seo.setPage({
       title,
       description,
-      url: this.router.url,
+      url: currentUrl,
+      canonicalUrl,
       type: 'website',
+      noindex,
       keywords: [
         'tienda de mascotas',
         'ecommerce mascotas Guatemala',
@@ -1329,7 +1400,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
           '@type': 'CollectionPage',
           name: title,
           description,
-          url: this.router.url,
+          url: canonicalUrl,
           about: this.currentPetConfig?.label || 'Mascotas',
         },
         {
@@ -1337,7 +1408,10 @@ export class ShopPageComponent implements OnInit, OnDestroy {
           '@type': 'ItemList',
           name: `${this.pageTitle} en Aumakki`,
           numberOfItems: totalProducts,
-          itemListElement: topItems,
+          itemListElement: topItems.map((item) => ({
+            ...item,
+            url: this.seo.absoluteUrl(String(item.url || '')),
+          })),
         },
       ],
     });

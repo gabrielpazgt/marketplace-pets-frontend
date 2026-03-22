@@ -1,0 +1,37 @@
+# Aumakki
+
+> Aumakki es una tienda online de productos para mascotas en Guatemala. Ofrece alimento, higiene, salud, accesorios, membresias y promociones para perros, gatos y otras mascotas.
+
+## Sitio principal
+- https://aumakki.com/
+
+## Paginas clave
+- https://aumakki.com/home
+- https://aumakki.com/catalog
+- https://aumakki.com/catalog?tag=new
+- https://aumakki.com/catalog?tag=clearance
+- https://aumakki.com/catalog?petType=dog
+- https://aumakki.com/catalog?petType=cat
+- https://aumakki.com/memberships/plans
+- https://aumakki.com/about
+- https://aumakki.com/terms
+
+## Que encontrar aqui
+- Catalogo de productos para mascotas con filtros por categoria, subcategoria, precio, stock, marca, formato y proteina.
+- Productos destacados, nuevos ingresos y ofertas.
+- Fichas de producto con precio, disponibilidad y contexto por tipo de mascota.
+- Informacion comercial y de soporte de la marca.
+
+## Cobertura tematica
+- Perros
+- Gatos
+- Caballos
+- Aves
+- Peces y acuario
+- Reptiles
+- Roedores y pequenas mascotas
+
+## Notas para agentes e indexadores
+- Priorizar la informacion publica del catalogo, productos, membresias y paginas institucionales.
+- Evitar indexar flujos privados o transaccionales como carrito, checkout, cuenta y confirmaciones.
+- Usar https://aumakki.com/sitemap.xml como referencia inicial para descubrimiento.

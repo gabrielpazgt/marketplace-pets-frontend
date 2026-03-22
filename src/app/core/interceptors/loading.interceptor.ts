@@ -7,12 +7,12 @@ import {
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
+import { resolveApiBaseUrl } from '../config/api-base-url';
 import { LoadingService } from '../services/loading.service';
 
 @Injectable()
 export class LoadingInterceptor implements HttpInterceptor {
-  private readonly apiBaseUrl = environment.apiBaseUrl.replace(/\/+$/, '');
+  private readonly apiBaseUrl = resolveApiBaseUrl();
 
   constructor(private loading: LoadingService) {}
 

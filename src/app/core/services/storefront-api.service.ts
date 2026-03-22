@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { resolveApiBaseUrl } from '../config/api-base-url';
 import {
   StorefrontAddCartItemPayload,
   StorefrontAddress,
@@ -35,7 +35,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class StorefrontApiService {
-  private readonly apiBaseUrl = environment.apiBaseUrl.replace(/\/+$/, '');
+  private readonly apiBaseUrl = resolveApiBaseUrl();
 
   constructor(private http: HttpClient) {}
 

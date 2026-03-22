@@ -6,12 +6,12 @@ import {
   HttpRequest,
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { resolveApiBaseUrl } from '../config/api-base-url';
 import { AuthService } from '../../auth/services/auth.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  private readonly apiBaseUrl = environment.apiBaseUrl.replace(/\/+$/, '');
+  private readonly apiBaseUrl = resolveApiBaseUrl();
 
   constructor(private auth: AuthService) {}
 

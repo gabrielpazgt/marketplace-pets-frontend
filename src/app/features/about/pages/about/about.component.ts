@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { SeoService } from '../../../../core/services/seo.service';
 
 @Component({
   standalone: false,
@@ -7,7 +8,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styleUrls: ['./about.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AboutComponent {
+export class AboutComponent implements OnInit {
   readonly impactPercent = 5;
 
   readonly values = [
@@ -48,4 +49,21 @@ export class AboutComponent {
     'Alimento y atención para animales en calle',
     'Campañas de esterilización y rescate'
   ];
+  constructor(private seo: SeoService) {}
+
+  ngOnInit(): void {
+    this.seo.setPage({
+      title: 'Sobre Aumakki | Ecommerce de mascotas con impacto',
+      description: 'Conoce la historia, valores y compromiso de Aumakki con una experiencia de compra clara y un aporte social orientado al bienestar animal.',
+      url: '/about',
+      keywords: ['sobre Aumakki', 'tienda de mascotas', 'ecommerce mascotas Guatemala', 'bienestar animal'],
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@type': 'AboutPage',
+        name: 'Sobre Aumakki',
+        url: this.seo.absoluteUrl('/about'),
+        description: 'Conoce la historia, valores y compromiso de Aumakki con el bienestar animal.',
+      },
+    });
+  }
 }

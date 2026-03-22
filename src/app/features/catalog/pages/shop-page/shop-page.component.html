@@ -27,7 +27,7 @@
           type="search"
           class="input"
           [value]="searchDraft"
-          (input)="searchDraft = $any($event.target).value"
+          (input)="onSearchDraftInput($event)"
           [placeholder]="searchPlaceholder"
           aria-label="Buscar productos"
         />

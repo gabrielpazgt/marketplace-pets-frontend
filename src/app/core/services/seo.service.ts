@@ -7,6 +7,7 @@ export interface SeoPageConfig {
   description: string;
   image?: string;
   url?: string;
+  canonicalUrl?: string;
   type?: 'website' | 'product' | 'article';
   keywords?: string[];
   noindex?: boolean;
@@ -17,6 +18,8 @@ export interface SeoPageConfig {
 export class SeoService {
   private readonly canonicalId = 'app-canonical';
   private readonly schemaSelector = 'script[data-seo-schema="true"]';
+  private readonly siteName = 'Aumakki';
+  private readonly locale = 'es_GT';
 
   constructor(
     private title: Title,
@@ -29,6 +32,7 @@ export class SeoService {
     const description = this.normalizeText(config.description);
     const image = this.normalizeUrl(config.image);
     const url = this.normalizeUrl(config.url) || this.document.location?.href || '';
+    const canonicalUrl = this.normalizeUrl(config.canonicalUrl || config.url) || url;
     const type = config.type || 'website';
     const keywords = (config.keywords || []).map((value) => this.normalizeText(value)).filter(Boolean);
 
@@ -46,19 +50,31 @@ export class SeoService {
 
     if (url) {
       this.meta.updateTag({ property: 'og:url', content: url });
-      this.setCanonical(url);
+    }
+
+    if (canonicalUrl) {
+      this.setCanonical(canonicalUrl);
     }
 
     this.meta.updateTag({ property: 'og:type', content: type });
+    this.meta.updateTag({ property: 'og:site_name', content: this.siteName });
+    this.meta.updateTag({ property: 'og:locale', content: this.locale });
+    this.meta.updateTag({ name: 'application-name', content: this.siteName });
+    this.meta.updateTag({ name: 'apple-mobile-web-app-title', content: this.siteName });
     this.meta.updateTag({ name: 'twitter:card', content: image ? 'summary_large_image' : 'summary' });
 
     if (image) {
       this.meta.updateTag({ property: 'og:image', content: image });
       this.meta.updateTag({ name: 'twitter:image', content: image });
+    } else {
+      this.meta.removeTag(`property='og:image'`);
+      this.meta.removeTag(`name='twitter:image'`);
     }
 
     if (keywords.length) {
       this.meta.updateTag({ name: 'keywords', content: keywords.join(', ') });
+    } else {
+      this.meta.removeTag(`name='keywords'`);
     }
 
     this.meta.updateTag({
@@ -71,6 +87,10 @@ export class SeoService {
 
   clearStructuredData(): void {
     this.document.querySelectorAll(this.schemaSelector).forEach((element) => element.remove());
+  }
+
+  absoluteUrl(path = ''): string {
+    return this.normalizeUrl(path) || (this.document.location?.origin || '');
   }
 
   private setCanonical(url: string): void {

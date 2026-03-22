@@ -424,6 +424,8 @@ export interface StorefrontPet {
   documentId?: string;
   name: string;
   slug: string;
+  createdAt?: string;
+  updatedAt?: string;
   breed?: string | null;
   color?: string | null;
   avatarHex?: string | null;

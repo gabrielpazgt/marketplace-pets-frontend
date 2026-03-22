@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { SeoService } from '../../../../core/services/seo.service';
 import { Plan, PlanId, MembershipsService } from '../../services/memberships.service';
 
 @Component({
@@ -19,10 +20,24 @@ export class PlansComponent implements OnInit, OnDestroy {
 
   constructor(
     private svc: MembershipsService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private seo: SeoService
   ) {}
 
   ngOnInit(): void {
+    this.seo.setPage({
+      title: 'Membresias para mascotas | Aumakki',
+      description: 'Conoce los planes de membresia de Aumakki y desbloquea beneficios, descuentos y una experiencia de compra mas conveniente.',
+      url: '/memberships/plans',
+      keywords: ['membresias Aumakki', 'descuentos mascotas', 'beneficios tienda de mascotas'],
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Membresias Aumakki',
+        url: this.seo.absoluteUrl('/memberships/plans'),
+      },
+    });
+
     this.svc.refreshPlans();
     this.svc.refreshCurrentPlan();
 

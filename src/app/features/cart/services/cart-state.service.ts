@@ -32,6 +32,10 @@ export interface CartNotification {
   message: string;
 }
 
+type CartRequestResult = StrapiItemResponse<StorefrontCart> & {
+  __failed?: boolean;
+};
+
 @Injectable({ providedIn: 'root' })
 export class CartStateService {
   private readonly freeShippingThreshold = 500;
@@ -263,9 +267,9 @@ export class CartStateService {
           const message = error?.message || 'No se pudo actualizar el carrito.';
           this.errorSubject.next(message);
           this.notifySubject.next({ type: 'error', message });
-          return of({ data: this.cartSubject.value, __failed: true } as any);
+          return of<CartRequestResult>({ data: this.cartSubject.value, __failed: true });
         }),
-        map((response: any) => ({
+        map((response: CartRequestResult) => ({
           cart: (response?.data || EMPTY_CART) as StorefrontCart,
           failed: Boolean(response?.__failed),
         })),
