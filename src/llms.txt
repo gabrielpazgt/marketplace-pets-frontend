@@ -34,4 +34,5 @@
 ## Notas para agentes e indexadores
 - Priorizar la informacion publica del catalogo, productos, membresias y paginas institucionales.
 - Evitar indexar flujos privados o transaccionales como carrito, checkout, cuenta y confirmaciones.
-- Usar https://aumakki.com/sitemap.xml como referencia inicial para descubrimiento.
+- Usar https://aumakki.com/api/storefront/sitemap.xml como referencia inicial para descubrimiento.
+- Si se necesita un feed de productos estructurado, usar https://aumakki.com/api/storefront/merchant-feed.xml.

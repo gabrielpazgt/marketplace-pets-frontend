@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://aumakki.com/sitemap.xml
+Sitemap: https://aumakki.com/api/storefront/sitemap.xml
