@@ -12,15 +12,15 @@ export class CartPageComponent {
   itemCount$ = this.cart.itemCount$;
   subtotal$ = this.cart.subtotal$;
   busy$ = this.cart.busy$;
-  threshold = this.cart.freeThreshold;
+  threshold$ = this.cart.freeThreshold$;
 
   constructor(private cart: CartStateService) {}
 
-  setQty(id: string, qty: number) {
+  setQty(id: string, qty: number): void {
     this.cart.setQty(id, qty);
   }
 
-  remove(id: string) {
+  remove(id: string): void {
     this.cart.remove(id);
   }
 }

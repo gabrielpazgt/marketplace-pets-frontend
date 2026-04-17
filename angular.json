@@ -38,7 +38,8 @@
               "src/llms.txt",
               "src/robots.txt",
               "src/sitemap.xml",
-              "src/site.webmanifest"
+              "src/site.webmanifest",
+              "src/_redirects"
             ],
             "styles": [
               "src/styles.scss",
@@ -62,8 +63,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "14kb",
-                  "maximumError": "24kb"
+                  "maximumWarning": "26kb",
+                  "maximumError": "32kb"
                 }
               ],
               "outputHashing": "all"

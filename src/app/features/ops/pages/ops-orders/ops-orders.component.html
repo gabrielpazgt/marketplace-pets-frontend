@@ -1,0 +1,48 @@
+<div class="ops-page">
+  <h1 class="ops-page__title">Pedidos</h1>
+
+  <div class="tabs">
+    <button
+      *ngFor="let tab of tabs"
+      class="tab-btn"
+      [class.tab-btn--active]="activeTab === tab.value"
+      (click)="setTab(tab.value)"
+    >{{ tab.label }}</button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div><p>Cargando pedidos...</p>
+  </div>
+  <p class="error-msg" *ngIf="error">{{ error }}</p>
+
+  <div class="ops-card" *ngIf="!loading">
+    <div class="orders-empty" *ngIf="!orders.length">
+      <p>No hay pedidos en esta categoría.</p>
+    </div>
+
+    <table class="orders-table" *ngIf="orders.length">
+      <thead>
+        <tr>
+          <th># Pedido</th><th>Cliente</th><th>Total</th>
+          <th>Estado</th><th>Fecha</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of orders">
+          <td class="order-num">{{ order.orderNumber }}</td>
+          <td>{{ order.customerName || order.email }}</td>
+          <td class="order-total">Q{{ order.grandTotal | number:'1.2-2' }}</td>
+          <td><span class="status-pill" [ngClass]="statusClass(order.statusOrder)">{{ statusLabel(order.statusOrder) }}</span></td>
+          <td class="order-date">{{ order.createdAt | date:'dd/MM/yy HH:mm' }}</td>
+          <td><a class="ops-link" [routerLink]="['/gx-ops/orders', order.id]">Ver →</a></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button class="page-btn" (click)="prevPage()" [disabled]="page === 1">← Anterior</button>
+      <span>Página {{ page }} de {{ totalPages }}</span>
+      <button class="page-btn" (click)="nextPage()" [disabled]="page === totalPages">Siguiente →</button>
+    </div>
+  </div>
+</div>

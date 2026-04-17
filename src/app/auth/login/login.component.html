@@ -1,81 +1,149 @@
 <div class="auth-wrap">
+
+  <!-- ── Panel izquierdo ── -->
   <aside class="panel panel--login">
-    <div class="content">
-      <h1 class="title-panel">Aumakki Marketplace</h1>
-      <p class="subtitle">Todo lo que necesita tu mascota en un solo lugar.</p>
+    <div class="panel__logo">
+      <div class="logo-box">
+        <mat-icon aria-hidden="true">pets</mat-icon>
+      </div>
+      <span class="logo-name">Aumakki</span>
+    </div>
+
+    <div class="panel__content">
+      <span class="panel__badge">+500 miembros activos</span>
+
+      <h1 class="panel__title">Todo lo que tu mascota necesita, en un solo lugar</h1>
+      <p class="panel__sub">Accedé a productos premium, descuentos exclusivos para miembros y envío express en toda Guatemala.</p>
+
+      <div class="testimonial">
+        <div class="testimonial__stars" aria-label="5 de 5 estrellas">★★★★★</div>
+        <p class="testimonial__quote">"Desde que me uní a Aumakki Premium, ahorro en cada pedido y mi Max siempre tiene la mejor comida."</p>
+        <div class="testimonial__author">
+          <div class="testimonial__avatar" aria-hidden="true">MC</div>
+          <div class="testimonial__info">
+            <strong>María Castillo</strong>
+            <small>Miembro desde 2024 · Ciudad de Guatemala</small>
+          </div>
+        </div>
+      </div>
     </div>
   </aside>
 
-  <main class="card form-card">
-    <header class="form-head">
-      <h2>Iniciar sesión</h2>
-      <p class="muted">Usa tu correo o usuario y tu contraseña.</p>
-    </header>
+  <!-- ── Panel derecho (formulario) ── -->
+  <main class="form-side">
+    <div class="form-card">
 
-    <form [formGroup]="loginForm" (ngSubmit)="login()" [attr.aria-busy]="submitting" novalidate>
-      <label class="field">
-        <span class="label">Correo o usuario</span>
-        <div class="input-wrap">
-          <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 8l8 5 8-5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-          <input class="input" type="text" formControlName="identifier" placeholder="correo@ejemplo.com" autocomplete="email username" />
+      <header class="form-head">
+        <h2>Iniciar Sesión</h2>
+        <p>¿No tenés cuenta? <a class="link brand" routerLink="/auth/register" [queryParams]="{ returnUrl: returnUrl }">Registrate aquí</a></p>
+      </header>
+
+      <!-- OAuth Google -->
+      <button type="button" class="oauth-btn oauth-btn--full" (click)="loginWithGoogle()" aria-label="Iniciar sesión con Google">
+        <img src="/assets/icons/icon_google.svg" alt="" width="18" height="18" aria-hidden="true">
+        Continuar con Google
+      </button>
+
+      <!-- Divider -->
+      <div class="oauth-divider" aria-hidden="true">
+        <span>o continuá con correo</span>
+      </div>
+
+      <!-- Error banner -->
+      <div class="error-banner" *ngIf="errorMsg" role="alert" aria-live="polite">
+        <span class="error-banner__dot" aria-hidden="true">!</span>
+        <span>{{ errorMsg }}</span>
+      </div>
+
+      <!-- Formulario -->
+      <form [formGroup]="loginForm" (ngSubmit)="login()" [attr.aria-busy]="submitting" novalidate>
+
+        <div class="field">
+          <label class="label" for="login-email">Correo electrónico</label>
+          <div class="input-wrap">
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 6h16v12H4z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M4 8l8 5 8-5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <input
+              id="login-email"
+              class="input"
+              type="email"
+              formControlName="identifier"
+              placeholder="tu@correo.com"
+              autocomplete="email username"
+            />
+          </div>
+          <small class="field-hint" [class.error-text]="identifierError">{{ identifierError || ' ' }}</small>
         </div>
-        <small class="field-hint" [class.error-text]="identifierError">{{ identifierError || ' ' }}</small>
-      </label>
 
-      <label class="field">
-        <span class="label">Contraseña</span>
-        <div class="input-wrap input-wrap--password">
-          <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10h12v10H6z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-          <input class="input" [type]="hide ? 'password' : 'text'" formControlName="password" placeholder="Ingresa tu contraseña" autocomplete="current-password" />
-          <button
-            type="button"
-            class="eye"
-            (click)="togglePasswordVisibility()"
-            [attr.aria-label]="hide ? 'Mostrar contraseña' : 'Ocultar contraseña'"
-          >
-            <mat-icon>{{ hide ? 'visibility_off' : 'visibility' }}</mat-icon>
-          </button>
+        <div class="field">
+          <div class="label-row">
+            <label class="label" for="login-password">Contraseña</label>
+            <a class="link brand label-link" [routerLink]="['/auth/forgot-password']" [queryParams]="{ returnUrl: returnUrl }">¿Olvidaste tu contraseña?</a>
+          </div>
+          <div class="input-wrap input-wrap--password">
+            <svg class="i" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 10h12v10H6z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <input
+              id="login-password"
+              class="input"
+              [type]="hide ? 'password' : 'text'"
+              formControlName="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="eye"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="hide ? 'Mostrar contraseña' : 'Ocultar contraseña'"
+            >
+              <mat-icon>{{ hide ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </div>
+          <small class="field-hint" [class.error-text]="passwordError">{{ passwordError || ' ' }}</small>
         </div>
-        <small class="field-hint" [class.error-text]="passwordError">{{ passwordError || ' ' }}</small>
-      </label>
 
-      <div class="forgot-row">
-        <a class="link brand" [routerLink]="['/auth/forgot-password']" [queryParams]="{ returnUrl: returnUrl }">
-          Olvide mi contrasena
+        <label class="remember-row">
+          <span class="remember-check" [class.is-checked]="remember" aria-hidden="true">
+            <mat-icon *ngIf="remember">check</mat-icon>
+          </span>
+          <input type="checkbox" [checked]="remember" (change)="remember = !remember" class="sr-only" />
+          Mantener sesión iniciada
+        </label>
+
+        <button type="submit" class="btn primary full submit-btn" [disabled]="submitting">
+          <span *ngIf="!submitting">Iniciar Sesión</span>
+          <span class="spinner" *ngIf="submitting" aria-label="Cargando"></span>
+        </button>
+
+      </form>
+
+      <!-- Upsell membresía -->
+      <div class="upsell">
+        <div class="upsell__icon">
+          <mat-icon aria-hidden="true">workspace_premium</mat-icon>
+        </div>
+        <div class="upsell__text">
+          <strong>¿Todavía no sos miembro?</strong>
+          <p>Ahorrá 15% en cada compra desde Q115/mes.</p>
+        </div>
+        <a class="upsell__link" routerLink="/memberships/plans">
+          Conocer más
+          <mat-icon aria-hidden="true">chevron_right</mat-icon>
         </a>
       </div>
 
-      <p class="error-text server-error" *ngIf="errorMsg" role="alert" aria-live="polite">{{ errorMsg }}</p>
-
-      <button type="submit" class="btn primary full" [disabled]="submitting">
-        <span *ngIf="!submitting">Ingresar</span>
-        <span class="spinner" *ngIf="submitting"></span>
-      </button>
-
-      <div class="oauth-divider" aria-hidden="true">
-        <span>o continua con</span>
+      <!-- Strip de seguridad -->
+      <div class="security-strip">
+        <span><mat-icon aria-hidden="true">shield</mat-icon> SSL 256-bit</span>
+        <span><mat-icon aria-hidden="true">lock</mat-icon> Datos protegidos</span>
       </div>
 
-      <div class="oauth-grid" aria-label="Inicio de sesión social (próximamente)">
-        <button type="button" class="oauth-btn" title="Google próximamente">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-1.4 3.6-5.5 3.6-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17 3.2 14.7 2.2 12 2.2 6.9 2.2 2.8 6.3 2.8 11.4S6.9 20.6 12 20.6c6.9 0 9.1-4.8 9.1-7.2 0-.5 0-.9-.1-1.3H12z" />
-          </svg>
-          Google
-        </button>
-        <button type="button" class="oauth-btn" title="Facebook próximamente">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="#1877F2" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.03 4.39 11.03 10.13 11.93v-8.43H7.08v-3.5h3.05V9.41c0-3.03 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.88v2.26h3.32l-.53 3.5h-2.79V24C19.61 23.1 24 18.1 24 12.07z" />
-          </svg>
-          Facebook
-        </button>
-      </div>
-      <small class="oauth-hint">Google y Facebook estarán disponibles pronto.</small>
-
-      <p class="muted center mt-2">
-        ¿No tienes cuenta?
-        <a class="link brand" routerLink="/auth/register" [queryParams]="{ returnUrl: returnUrl }">Regístrate</a>
-      </p>
-    </form>
+    </div>
   </main>
+
 </div>

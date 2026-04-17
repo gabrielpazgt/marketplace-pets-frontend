@@ -1,7 +1,20 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
+import { animate, state, style, transition, trigger } from '@angular/animations';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SeoService } from '../../../../core/services/seo.service';
 import { Plan, PlanId, MembershipsService } from '../../services/memberships.service';
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
 
 @Component({
   standalone: false,
@@ -9,31 +22,113 @@ import { Plan, PlanId, MembershipsService } from '../../services/memberships.ser
   templateUrl: './plans.component.html',
   styleUrls: ['./plans.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('expandCollapse', [
+      state('collapsed', style({ height: '0px', opacity: 0, overflow: 'hidden' })),
+      state('expanded', style({ height: '*', opacity: 1, overflow: 'hidden' })),
+      transition('collapsed <=> expanded', animate('220ms ease')),
+    ]),
+  ],
 })
 export class PlansComponent implements OnInit, OnDestroy {
   plans: Plan[] = [];
   currentPlan: PlanId = 'free';
   readonly billingCycle: 'monthly' = 'monthly';
-  saving = false;
+
+  // ROI Calculator
+  roiSpend = 2000;
+  get roiSavingsPerYear(): number { return Math.round(this.roiSpend * 0.05 * 12); }
+  get roiMembershipCostPerYear(): number { return 75 * 12; }
+  get roiNet(): number { return this.roiSavingsPerYear - this.roiMembershipCostPerYear; }
+
+  // FAQ
+  activeFaqIndex: number | null = null;
+  readonly faqs: FaqItem[] = [
+    {
+      question: '¿Qué es la membresía Premium de Aumakki?',
+      answer: 'La membresía Premium te da acceso a descuentos automáticos del 5% en todos los productos, atención prioritaria por WhatsApp, acceso anticipado a lanzamientos y promociones exclusivas, y mucho más.',
+    },
+    {
+      question: '¿Cuánto cuesta la membresía Premium?',
+      answer: 'La membresía Premium de Aumakki cuesta Q75 al mes. Los miembros ahorran en promedio Q300 al año en sus compras de productos para mascotas.',
+    },
+    {
+      question: '¿Puedo cancelar cuando quiero?',
+      answer: 'Sí. Puedes cancelar tu membresía Premium en cualquier momento desde tu perfil de cuenta. No hay contratos ni penalizaciones por cancelación.',
+    },
+    {
+      question: '¿Necesito membresía para comprar en Aumakki?',
+      answer: 'No. Puedes comprar como invitado o con tu cuenta registrada en el plan Gratuito. La membresía Premium agrega beneficios adicionales pero no es requerida.',
+    },
+    {
+      question: '¿Cómo funciona el 5% de descuento?',
+      answer: 'El descuento se aplica automáticamente al hacer checkout en todos los productos. No necesitas ingresar ningún código — simplemente inicia sesión con tu cuenta Premium y el precio ya refleja el descuento.',
+    },
+    {
+      question: '¿Hay período de prueba?',
+      answer: 'Hoy puedes iniciar con el plan Gratuito sin ningún costo ni compromiso. Cuando estés listo, puedes actualizar a Premium en cualquier momento desde tu perfil.',
+    },
+  ];
+
+  readonly benefits = [
+    {
+      icon: 'bolt',
+      title: '5% de descuento en todo',
+      description: 'Aplicado automáticamente al hacer checkout — sin códigos, en todos los productos.',
+      badge: 'El más amado',
+      highlight: true,
+    },
+    {
+      icon: 'support_agent',
+      title: 'Atención prioritaria',
+      description: 'Respuesta rápida de nuestro equipo por WhatsApp. Sin esperas, solo soluciones.',
+      highlight: false,
+    },
+    {
+      icon: 'notifications_active',
+      title: 'Acceso anticipado',
+      description: 'Compra antes que todos en lanzamientos exclusivos y temporadas de oferta.',
+      highlight: false,
+    },
+    {
+      icon: 'cake',
+      title: 'Cumpleaños de tu mascota',
+      description: 'Cada año, una sorpresa especial para tu compañero peludo en su día especial.',
+      highlight: false,
+    },
+    {
+      icon: 'assignment_return',
+      title: 'Devoluciones extendidas',
+      description: '60 días para devolver tu pedido, el doble que el plan gratuito.',
+      highlight: false,
+    },
+    {
+      icon: 'flash_on',
+      title: 'Checkout ágil',
+      description: 'Tus datos guardados y el proceso simplificado para comprar más rápido.',
+      highlight: false,
+    },
+  ];
 
   private readonly subscriptions = new Subscription();
 
   constructor(
     private svc: MembershipsService,
     private cdr: ChangeDetectorRef,
-    private seo: SeoService
+    private seo: SeoService,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
     this.seo.setPage({
-      title: 'Membresias para mascotas | Aumakki',
-      description: 'Conoce los planes de membresia de Aumakki y desbloquea beneficios, descuentos y una experiencia de compra mas conveniente.',
+      title: 'Membresía Premium para mascotas | Aumakki',
+      description: 'Ahorra más en cada pedido con la membresía Premium de Aumakki. 5% de descuento automático, atención prioritaria y beneficios exclusivos para tus mascotas.',
       url: '/memberships/plans',
-      keywords: ['membresias Aumakki', 'descuentos mascotas', 'beneficios tienda de mascotas'],
+      keywords: ['membresía Aumakki', 'descuentos mascotas Guatemala', 'beneficios tienda de mascotas'],
       structuredData: {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
-        name: 'Membresias Aumakki',
+        name: 'Membresía Aumakki',
         url: this.seo.absoluteUrl('/memberships/plans'),
       },
     });
@@ -69,21 +164,19 @@ export class PlansComponent implements OnInit, OnDestroy {
   }
 
   selectPlan(planId: PlanId): void {
-    if (this.saving || this.currentPlan === planId) return;
+    if (planId === 'premium') {
+      this.router.navigate(['/memberships/checkout']);
+      return;
+    }
+    // Free plan: no action needed (already free by default)
+  }
 
-    this.saving = true;
+  toggleFaq(index: number): void {
+    this.activeFaqIndex = this.activeFaqIndex === index ? null : index;
     this.cdr.markForCheck();
+  }
 
-    this.svc.selectPlan(planId).subscribe({
-      next: (tier) => {
-        this.currentPlan = tier;
-        this.saving = false;
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.saving = false;
-        this.cdr.markForCheck();
-      },
-    });
+  scrollToPlans(): void {
+    document.getElementById('planes')?.scrollIntoView({ behavior: 'smooth' });
   }
 }

@@ -1,63 +1,97 @@
-﻿<section class="card summary">
-  <header class="hd" *ngIf="state.itemCount$ | async as count">
-    <h3>Resumen</h3>
-    <span class="count-label">{{ count }} {{ count === 1 ? 'artículo' : 'artículos' }}</span>
-  </header>
+<div class="os-summary">
 
-  <ul class="mini-list" *ngIf="state.itemCount$ | async as count">
-    <li *ngFor="let it of (state.items$ | async)">
-      <img [src]="it.image" [alt]="it.name" loading="lazy" />
-      <div class="info">
-        <strong>{{ it.name }}</strong>
-        <span class="muted">x{{ it.qty }}</span>
+  <!-- Header -->
+  <div class="os-header">
+    <mat-icon class="os-header__icon">inventory_2</mat-icon>
+    <h3 class="os-header__title">Resumen del pedido</h3>
+  </div>
+
+  <!-- Product list -->
+  <ul class="os-items" *ngIf="(state.items$ | async) as items">
+    <li class="os-item" *ngFor="let it of items">
+      <div class="os-item__img-wrap">
+        <img class="os-item__img" [src]="it.image" [alt]="it.name" loading="lazy" />
+        <span class="os-item__qty">{{ it.qty }}</span>
       </div>
-      <div class="price">{{ (it.price * it.qty) | currency:'GTQ':'symbol-narrow' }}</div>
+      <div class="os-item__info">
+        <p class="os-item__name">{{ it.name }}</p>
+        <p class="os-item__brand" *ngIf="it.attrs?.length">{{ it.attrs![0] }}</p>
+        <p class="os-item__brand" *ngIf="!it.attrs?.length">Aumakki</p>
+      </div>
+      <span class="os-item__price">Q{{ (it.price * it.qty) | number:'1.2-2' }}</span>
     </li>
-    <li *ngIf="!count" class="empty muted">Tu carrito está vacío.</li>
+    <li class="os-empty" *ngIf="!items.length">Tu carrito está vacío.</li>
   </ul>
 
-  <div class="line"></div>
-
-  <div class="row">
-    <span>Subtotal</span>
-    <strong>{{ (state.subtotal$ | async) | currency:'GTQ':'symbol-narrow' }}</strong>
-  </div>
-
-  <div class="row">
-    <span>Descuento</span>
-    <strong>- {{ (state.discount$ | async) | currency:'GTQ':'symbol-narrow' }}</strong>
-  </div>
-
-  <div class="row">
-    <span>Envío</span>
-    <strong>{{ (state.shipping$ | async) | currency:'GTQ':'symbol-narrow' }}</strong>
-  </div>
-
-  <div class="total">
-    <span>Total</span>
-    <strong>{{ (state.total$ | async) | currency:'GTQ':'symbol-narrow' }}</strong>
-  </div>
-
-  <details class="coupon">
-    <summary>¿Tienes un cupón?</summary>
-    <div class="coupon__box">
-      <input class="input" [(ngModel)]="code" placeholder="Ejemplo: BIENVENIDO10" />
-      <button class="btn ghost" type="button" (click)="clear()">Limpiar</button>
-      <button class="btn primary" type="button" (click)="apply()">Aplicar</button>
+  <!-- Coupon -->
+  <div class="os-coupon">
+    <div class="os-coupon__row">
+      <div class="os-coupon__input-wrap">
+        <mat-icon class="os-coupon__icon">sell</mat-icon>
+        <input class="os-coupon__input" [(ngModel)]="code" placeholder="Código de descuento" />
+      </div>
+      <button class="os-coupon__btn" type="button" (click)="apply()">Aplicar</button>
     </div>
+    <small class="os-coupon__msg" *ngIf="message">{{ message }}</small>
 
-    <div class="coupon-list" *ngIf="availableCoupons.length">
+    <div class="os-coupon-pills" *ngIf="availableCoupons.length">
       <button
-        class="coupon-pill"
+        class="os-coupon-pill"
         type="button"
-        *ngFor="let coupon of availableCoupons"
-        (click)="applyCode(coupon.code)"
+        *ngFor="let c of availableCoupons"
+        (click)="applyCode(c.code)"
       >
-        <strong>{{ coupon.code }}</strong>
-        <span>{{ coupon.displayMessage }}</span>
+        <strong>{{ c.code }}</strong>
+        <span>{{ c.displayMessage }}</span>
       </button>
     </div>
+  </div>
 
-    <small class="muted status" *ngIf="message">{{ message }}</small>
-  </details>
-</section>
+  <div class="os-divider"></div>
+
+  <!-- Totals -->
+  <div class="os-totals">
+    <div class="os-total-row">
+      <span>Subtotal</span>
+      <span>Q{{ (state.subtotal$ | async) | number:'1.2-2' }}</span>
+    </div>
+
+    <div class="os-total-row os-total-row--discount" *ngIf="(state.discount$ | async) as disc">
+      <span *ngIf="disc > 0">
+        <mat-icon>check_circle</mat-icon>
+        Descuento
+      </span>
+      <span *ngIf="disc > 0">- Q{{ disc | number:'1.2-2' }}</span>
+    </div>
+
+    <div class="os-total-row">
+      <span>Envío</span>
+      <span class="os-total-row__free" *ngIf="(state.shipping$ | async) === 0">Gratis</span>
+      <span *ngIf="(state.shipping$ | async) as ship">Q{{ ship | number:'1.2-2' }}</span>
+    </div>
+  </div>
+
+  <div class="os-divider"></div>
+
+  <div class="os-grand-total">
+    <strong>Total</strong>
+    <strong class="os-grand-total__amount">Q{{ (state.total$ | async) | number:'1.2-2' }}</strong>
+  </div>
+
+  <!-- Trust badges -->
+  <div class="os-trust">
+    <div class="os-trust-item">
+      <mat-icon>verified_user</mat-icon>
+      <span>Checkout encriptado con SSL</span>
+    </div>
+    <div class="os-trust-item">
+      <mat-icon>assignment_return</mat-icon>
+      <span>Devoluciones de 30 días</span>
+    </div>
+    <div class="os-trust-item">
+      <mat-icon>pets</mat-icon>
+      <span>Productos aprobados por veterinarios</span>
+    </div>
+  </div>
+
+</div>

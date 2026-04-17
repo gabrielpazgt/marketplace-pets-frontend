@@ -17,14 +17,21 @@ export interface Pet {
   userId: string;
   name: string;
   species: Species;
+  specieId?: number;
+  catalogAnimalId?: number;
+  lifeStageId?: number;
+  dietTagIds?: number[];
   breed?: string;
   color?: string;
   size?: Size;
   weightKg?: number;
   ageYears?: number;
+  birthMonth?: number;
+  birthYear?: number;
   sex?: Sex;
   notes?: string;
   avatarHex?: string;
+  avatarUrl?: string;
   createdAt: string;
   updatedAt: string;
 
@@ -38,14 +45,21 @@ export interface Pet {
 export interface PetDraft {
   name: string;
   species: Species;
+  specieId?: number;
+  catalogAnimalId?: number;
+  lifeStageId?: number;
+  dietTagIds?: number[];
   breed?: string;
   color?: string;
   size?: Size;
   weightKg?: number;
   ageYears?: number;
+  birthMonth?: number;
+  birthYear?: number;
   sex?: Sex;
   notes?: string;
   avatarHex?: string;
+  avatarUrl?: string;
 
   lifeStage?: LifeStage;
   sterilized?: boolean;
@@ -60,12 +74,12 @@ export const SPECIES_LABEL: Record<Species, string> = {
   bird: 'Ave',
   fish: 'Pez y acuario',
   reptile: 'Reptil',
-  'small-pet': 'Pequena mascota',
+  'small-pet': 'Pequeña mascota',
   other: 'Otra',
 };
 
 export const SIZE_LABEL: Record<Size, string> = {
-  small: 'Pequeno',
+  small: 'Pequeño',
   medium: 'Mediano',
   large: 'Grande',
 };
@@ -89,9 +103,9 @@ export const ACTIVITY_LABEL: Record<ActivityLevel, string> = {
 
 export const DIET_LABEL: Record<DietPref, string> = {
   grain_free: 'Libre de granos',
-  high_protein: 'Alta proteina',
-  low_calorie: 'Bajas calorias',
+  high_protein: 'Alta proteína',
+  low_calorie: 'Bajas calorías',
   urinary: 'Salud urinaria',
   renal: 'Soporte renal',
-  hypoallergenic: 'Hipoalergenico',
+  hypoallergenic: 'Hipoalergénico',
 };

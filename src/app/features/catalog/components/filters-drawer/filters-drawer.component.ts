@@ -1,6 +1,8 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+﻿import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { StorefrontProductFacets } from '../../../../core/models/storefront.models';
+import { Subscription } from 'rxjs';
+import { StorefrontCatalogFilterDefinition, StorefrontCountedTaxonomyItem, StorefrontProductFacets } from '../../../../core/models/storefront.models';
+import { StorefrontApiService } from '../../../../core/services/storefront-api.service';
 import { DIET_LABEL, LIFESTAGE_LABEL, Pet, SPECIES_LABEL } from '../../../pets/models/pet.models';
 
 export interface FilterState {
@@ -10,14 +12,14 @@ export interface FilterState {
   petId?: string | null;
   category?: string | null;
   subcategory?: string | null;
-  brandId?: number | null;
-  form?: string | null;
-  proteinSource?: string | null;
-  specieId?: number | null;
-  lifeStageId?: number | null;
-  dietTagId?: number | null;
-  healthConditionId?: number | null;
-  ingredientId?: number | null;
+  brandIds?: number[];
+  forms?: string[];
+  proteinSources?: string[];
+  specieIds?: number[];
+  lifeStageIds?: number[];
+  dietTagIds?: number[];
+  healthConditionIds?: number[];
+  ingredientIds?: number[];
 }
 
 export type DrawerFacetControlKey =
@@ -29,21 +31,35 @@ export type DrawerFacetControlKey =
   | 'healthConditionId'
   | 'ingredientId';
 
+type StringFilterControlName = 'forms' | 'proteinSources';
+type NumericFilterControlName =
+  | 'brandIds'
+  | 'specieIds'
+  | 'lifeStageIds'
+  | 'dietTagIds'
+  | 'healthConditionIds'
+  | 'ingredientIds';
+type FiltersPanelMode = 'drawer' | 'sidebar';
+
 @Component({
   standalone: false,
   selector: 'app-filters-drawer',
   templateUrl: './filters-drawer.component.html',
   styleUrls: ['./filters-drawer.component.scss']
 })
-export class FiltersDrawerComponent implements OnChanges {
+export class FiltersDrawerComponent implements OnChanges, OnInit, OnDestroy {
+  private readonly autoApplyDelayMs = 180;
   private priceMinSelection = 0;
   private priceMaxSelection = 0;
   private draggingPriceThumb: 'min' | 'max' | null = null;
+  private autoApplyTimer: ReturnType<typeof setTimeout> | null = null;
+  private formChangesSub?: Subscription;
 
   @ViewChild('priceSliderTrack')
   private priceSliderTrack?: ElementRef<HTMLDivElement>;
 
   @Input() open = false;
+  @Input() mode: FiltersPanelMode = 'drawer';
   @Input() state: FilterState = {
     min: null,
     max: null,
@@ -51,14 +67,14 @@ export class FiltersDrawerComponent implements OnChanges {
     petId: null,
     category: null,
     subcategory: null,
-    brandId: null,
-    form: null,
-    proteinSource: null,
-    specieId: null,
-    lifeStageId: null,
-    dietTagId: null,
-    healthConditionId: null,
-    ingredientId: null,
+    brandIds: [],
+    forms: [],
+    proteinSources: [],
+    specieIds: [],
+    lifeStageIds: [],
+    dietTagIds: [],
+    healthConditionIds: [],
+    ingredientIds: [],
   };
   @Input() pets: Pet[] = [];
   @Input() showPetFilter = false;
@@ -67,6 +83,12 @@ export class FiltersDrawerComponent implements OnChanges {
   @Input() facets: StorefrontProductFacets | null = null;
   @Input() priceRangeBounds: { min: number; max: number } | null = null;
   @Input() lockBiologyFilters = false;
+  @Input() applicableFilterKeys: string[] | null = null;
+  @Input() petDerivedFilterIds: { specieIds: number[]; lifeStageIds: number[]; dietTagIds: number[] } = {
+    specieIds: [],
+    lifeStageIds: [],
+    dietTagIds: [],
+  };
   @Input() visibleFacetControls: DrawerFacetControlKey[] = [
     'form',
     'proteinSource',
@@ -78,6 +100,7 @@ export class FiltersDrawerComponent implements OnChanges {
   ];
   @Input() veterinaryHint = '';
   @Input() veterinaryFocusTags: string[] = [];
+  @Input() technicalFilterDefinitions: StorefrontCatalogFilterDefinition[] = [];
 
   @Output() apply = new EventEmitter<FilterState>();
   @Output() close = new EventEmitter<void>();
@@ -90,17 +113,52 @@ export class FiltersDrawerComponent implements OnChanges {
     petId: this.fb.control<string | null>(null),
     category: this.fb.control<string | null>(null),
     subcategory: this.fb.control<string | null>(null),
-    brandId: this.fb.control<number | null>(null),
-    form: this.fb.control<string | null>(null),
-    proteinSource: this.fb.control<string | null>(null),
-    specieId: this.fb.control<number | null>(null),
-    lifeStageId: this.fb.control<number | null>(null),
-    dietTagId: this.fb.control<number | null>(null),
-    healthConditionId: this.fb.control<number | null>(null),
-    ingredientId: this.fb.control<number | null>(null),
+    brandIds: this.fb.nonNullable.control<number[]>([]),
+    forms: this.fb.nonNullable.control<string[]>([]),
+    proteinSources: this.fb.nonNullable.control<string[]>([]),
+    specieIds: this.fb.nonNullable.control<number[]>([]),
+    lifeStageIds: this.fb.nonNullable.control<number[]>([]),
+    dietTagIds: this.fb.nonNullable.control<number[]>([]),
+    healthConditionIds: this.fb.nonNullable.control<number[]>([]),
+    ingredientIds: this.fb.nonNullable.control<number[]>([]),
   });
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private storefrontApi: StorefrontApiService
+  ) {}
+
+  ngOnInit(): void {
+    this.formChangesSub = this.form.valueChanges.subscribe(() => {
+      this.scheduleAutoApply();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.clearAutoApplyTimer();
+    this.formChangesSub?.unsubscribe();
+  }
+
+  get isDrawerMode(): boolean {
+    return this.mode === 'drawer';
+  }
+
+  speciesEmoji(species: Pet['species']): string {
+    const map: Record<NonNullable<Pet['species']>, string> = {
+      dog: '🐕',
+      cat: '🐈',
+      bird: '🐦',
+      fish: '🐟',
+      reptile: '🦎',
+      'small-pet': '🐹',
+      other: '🐾',
+    };
+    return map[species] ?? '🐾';
+  }
+
+  clearPetFilter(): void {
+    this.form.controls.petId.setValue(null);
+  }
 
   get selectedPetProfile(): Pet | null {
     const petId = this.form.controls.petId.value;
@@ -126,22 +184,39 @@ export class FiltersDrawerComponent implements OnChanges {
   get petTemplateSummary(): string {
     const pet = this.selectedPetProfile;
     if (!pet) {
-      return 'El perfil elegido aplica especie, etapa, peso, preferencias y alertas relacionadas para usar la mascota como plantilla de filtrado.';
+      return 'El perfil elegido usa la especie como filtro principal y toma etapa, peso, preferencias y alertas como guia de compatibilidad.';
     }
 
     const parts = [
       `${pet.name} esta definiendo el contexto del catalogo.`,
-      pet.lifeStage ? `Etapa: ${LIFESTAGE_LABEL[pet.lifeStage].toLowerCase()}.` : '',
-      Number.isFinite(Number(pet.weightKg)) ? `Peso aprox: ${Number(pet.weightKg)} kg.` : '',
-      pet.diet?.length ? `Preferencias: ${pet.diet.slice(0, 2).map((entry) => DIET_LABEL[entry]).join(', ').toLowerCase()}.` : '',
+      pet.lifeStage ? `Etapa de referencia: ${LIFESTAGE_LABEL[pet.lifeStage].toLowerCase()}.` : '',
+      Number.isFinite(Number(pet.weightKg)) ? `Peso de referencia: ${Number(pet.weightKg)} kg.` : '',
+      pet.diet?.length ? `Preferencias sugeridas: ${pet.diet.slice(0, 2).map((entry) => DIET_LABEL[entry]).join(', ').toLowerCase()}.` : '',
       pet.allergies?.length ? `Alertas revisadas: ${pet.allergies.slice(0, 2).join(', ')}.` : '',
     ].filter(Boolean);
 
     return parts.join(' ');
   }
 
+  get selectedBrandCount(): number {
+    return this.normalizeIdList(this.form.controls.brandIds.value).length;
+  }
+
+  selectedStringFilterCount(controlName: StringFilterControlName): number {
+    return this.getStringArrayControlValue(controlName).length;
+  }
+
+  selectedIdFilterCount(controlName: NumericFilterControlName): number {
+    return this.getIdArrayControlValue(controlName).length;
+  }
+
   showFacetControl(control: DrawerFacetControlKey): boolean {
     return (this.visibleFacetControls || []).includes(control);
+  }
+
+  showFilter(key: string): boolean {
+    if (this.applicableFilterKeys === null) return true;
+    return this.applicableFilterKeys.includes(key);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -264,19 +339,68 @@ export class FiltersDrawerComponent implements OnChanges {
   }
 
   onSubmit(): void {
+    this.emitCurrentState();
+  }
+
+  get activeCount(): number {
+    const value = this.form.getRawValue();
+    const minCount = this.selectedPriceMin > this.priceRangeMin ? 1 : 0;
+    const maxCount = this.selectedPriceMax < this.priceRangeMax ? 1 : 0;
+    const stockCount = value.inStockOnly === false ? 1 : 0;
+    const petCount = value.petId ? 1 : 0;
+    const brandCount = this.normalizeIdList(value.brandIds).length ? 1 : 0;
+    const formCount = this.normalizeTextList(value.forms).length ? 1 : 0;
+    const proteinCount = this.normalizeTextList(value.proteinSources).length ? 1 : 0;
+    const specieCount = this.normalizeIdList(value.specieIds).length ? 1 : 0;
+    const lifeStageCount = this.normalizeIdList(value.lifeStageIds).length ? 1 : 0;
+    const dietCount = this.normalizeIdList(value.dietTagIds).length ? 1 : 0;
+    const healthCount = this.normalizeIdList(value.healthConditionIds).length ? 1 : 0;
+    const ingredientCount = this.normalizeIdList(value.ingredientIds).length ? 1 : 0;
+
+    return minCount + maxCount + stockCount + petCount + brandCount + formCount
+      + proteinCount + specieCount + lifeStageCount + dietCount + healthCount + ingredientCount;
+  }
+
+  onCloseRequested(): void {
+    this.close.emit();
+  }
+
+  onClearRequested(): void {
+    this.clearAutoApplyTimer();
+    this.clear.emit();
+  }
+
+  isBrandDisabled(item: StorefrontCountedTaxonomyItem): boolean {
+    return !this.isBrandSelected(item.id) && Number(item.count || 0) <= 0;
+  }
+
+  isStringFilterDisabled(controlName: StringFilterControlName, item: { value: string; count: number }): boolean {
+    return !this.isStringFilterSelected(controlName, item.value) && Number(item.count || 0) <= 0;
+  }
+
+  isIdFilterDisabled(controlName: NumericFilterControlName, item: StorefrontCountedTaxonomyItem): boolean {
+    return !this.isIdFilterSelected(controlName, item.id) && Number(item.count || 0) <= 0;
+  }
+
+  getOptionCountLabel(count?: number | null): string {
+    const numeric = Number(count || 0);
+    return numeric > 0 ? String(numeric) : '0';
+  }
+
+  private emitCurrentState(): void {
     const {
       inStockOnly,
       petId,
       category,
       subcategory,
-      brandId,
-      form,
-      proteinSource,
-      specieId,
-      lifeStageId,
-      dietTagId,
-      healthConditionId,
-      ingredientId,
+      brandIds,
+      forms,
+      proteinSources,
+      specieIds,
+      lifeStageIds,
+      dietTagIds,
+      healthConditionIds,
+      ingredientIds,
     } = this.form.getRawValue();
     const parsedMin = this.clamp(this.selectedPriceMin, this.priceRangeMin, this.priceRangeMax);
     const parsedMax = this.clamp(this.selectedPriceMax, this.priceRangeMin, this.priceRangeMax);
@@ -291,40 +415,179 @@ export class FiltersDrawerComponent implements OnChanges {
       petId: (petId || '').trim() || null,
       category: (category || '').trim() || null,
       subcategory: (subcategory || '').trim() || null,
-      brandId: this.parseNumber(brandId),
-      form: (form || '').trim() || null,
-      proteinSource: (proteinSource || '').trim() || null,
-      specieId: this.parseNumber(specieId),
-      lifeStageId: this.parseNumber(lifeStageId),
-      dietTagId: this.parseNumber(dietTagId),
-      healthConditionId: this.parseNumber(healthConditionId),
-      ingredientId: this.parseNumber(ingredientId),
+      brandIds: this.normalizeIdList(brandIds),
+      forms: this.normalizeTextList(forms),
+      proteinSources: this.normalizeTextList(proteinSources),
+      specieIds: this.normalizeIdList(specieIds),
+      lifeStageIds: this.normalizeIdList(lifeStageIds),
+      dietTagIds: this.normalizeIdList(dietTagIds),
+      healthConditionIds: this.normalizeIdList(healthConditionIds),
+      ingredientIds: this.normalizeIdList(ingredientIds),
     });
   }
 
-  get activeCount(): number {
-    const value = this.form.getRawValue();
-    const minCount = this.selectedPriceMin > this.priceRangeMin ? 1 : 0;
-    const maxCount = this.selectedPriceMax < this.priceRangeMax ? 1 : 0;
-    const stockCount = value.inStockOnly === false ? 1 : 0;
-    const petCount = value.petId ? 1 : 0;
-    const brandCount = value.brandId ? 1 : 0;
-    const formCount = value.form ? 1 : 0;
-    const proteinCount = value.proteinSource ? 1 : 0;
-    const specieCount = value.specieId ? 1 : 0;
-    const lifeStageCount = value.lifeStageId ? 1 : 0;
-    const dietCount = value.dietTagId ? 1 : 0;
-    const healthCount = value.healthConditionId ? 1 : 0;
-    const ingredientCount = value.ingredientId ? 1 : 0;
+  private scheduleAutoApply(): void {
+    this.clearAutoApplyTimer();
+    this.autoApplyTimer = setTimeout(() => {
+      this.autoApplyTimer = null;
+      this.emitCurrentState();
+    }, this.autoApplyDelayMs);
+  }
 
-    return minCount + maxCount + stockCount + petCount + brandCount + formCount
-      + proteinCount + specieCount + lifeStageCount + dietCount + healthCount + ingredientCount;
+  private clearAutoApplyTimer(): void {
+    if (this.autoApplyTimer) {
+      clearTimeout(this.autoApplyTimer);
+      this.autoApplyTimer = null;
+    }
+  }
+
+  trackByBrandId(_: number, item: StorefrontCountedTaxonomyItem): number {
+    return Number(item.id || 0);
+  }
+
+  isBrandSelected(brandId: number): boolean {
+    return this.normalizeIdList(this.form.controls.brandIds.value).includes(Number(brandId));
+  }
+
+  onBrandToggle(brandId: number, event?: Event): void {
+    const input = event?.target instanceof HTMLInputElement ? event.target : null;
+    const selected = this.normalizeIdList(this.form.controls.brandIds.value);
+    const targetId = Number(brandId);
+    const shouldSelect = input ? input.checked : !selected.includes(targetId);
+    const next = shouldSelect
+      ? [...selected, targetId]
+      : selected.filter((value) => value !== targetId);
+
+    this.patchArrayControl('brandIds', this.normalizeIdList(next));
+  }
+
+  clearBrandSelection(): void {
+    this.patchArrayControl('brandIds', []);
+  }
+
+  isStringFilterSelected(controlName: StringFilterControlName, value: string): boolean {
+    return this.getStringArrayControlValue(controlName).includes(String(value || '').trim());
+  }
+
+  isIdFilterSelected(controlName: NumericFilterControlName, value: number): boolean {
+    if (this.getIdArrayControlValue(controlName).includes(Number(value))) return true;
+    // También marcar como seleccionado si viene del perfil de la mascota activa
+    if (this.lockBiologyFilters) {
+      if (controlName === 'specieIds') return this.petDerivedFilterIds.specieIds.includes(Number(value));
+      if (controlName === 'lifeStageIds') return this.petDerivedFilterIds.lifeStageIds.includes(Number(value));
+      if (controlName === 'dietTagIds') return this.petDerivedFilterIds.dietTagIds.includes(Number(value));
+    }
+    return false;
+  }
+
+  get lockDietFilters(): boolean {
+    return this.lockBiologyFilters;
+  }
+
+  onStringFilterToggle(controlName: StringFilterControlName, value: string, event?: Event): void {
+    const input = event?.target instanceof HTMLInputElement ? event.target : null;
+    const selected = this.getStringArrayControlValue(controlName);
+    const targetValue = String(value || '').trim();
+    if (!targetValue) return;
+
+    const shouldSelect = input ? input.checked : !selected.includes(targetValue);
+    const next = shouldSelect
+      ? [...selected, targetValue]
+      : selected.filter((entry) => entry !== targetValue);
+
+    this.patchArrayControl(controlName, this.normalizeTextList(next));
+  }
+
+  onIdFilterToggle(controlName: NumericFilterControlName, value: number, event?: Event): void {
+    const input = event?.target instanceof HTMLInputElement ? event.target : null;
+    const selected = this.getIdArrayControlValue(controlName);
+    const targetValue = Number(value);
+    if (!Number.isFinite(targetValue) || targetValue <= 0) return;
+
+    const shouldSelect = input ? input.checked : !selected.includes(targetValue);
+    const next = shouldSelect
+      ? [...selected, targetValue]
+      : selected.filter((entry) => entry !== targetValue);
+
+    this.patchArrayControl(controlName, this.normalizeIdList(next));
+  }
+
+  clearStringFilterSelection(controlName: StringFilterControlName): void {
+    this.patchArrayControl(controlName, []);
+  }
+
+  clearIdFilterSelection(controlName: NumericFilterControlName): void {
+    this.patchArrayControl(controlName, []);
+  }
+
+  trackByFacetValue(_: number, item: { value: string }): string {
+    return String(item.value || '');
+  }
+
+  trackByTechnicalFilterKey(_: number, item: StorefrontCatalogFilterDefinition): string {
+    return String(item.key || '');
+  }
+
+  resolveBrandLogoUrl(item: StorefrontCountedTaxonomyItem): string {
+    const media = item?.logo;
+    const url =
+      media?.formats?.['small']?.url ||
+      media?.formats?.['thumbnail']?.url ||
+      media?.url ||
+      '';
+
+    return this.storefrontApi.resolveMediaUrl(url);
+  }
+
+  getBrandInitial(name?: string | null): string {
+    return String(name || '').trim().charAt(0).toUpperCase() || 'M';
   }
 
   private parseNumber(value: number | string | null | undefined): number | null {
     if (value === null || value === undefined) return null;
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private normalizeIdList(values?: Array<number | string | null | undefined> | null): number[] {
+    return Array.from(
+      new Set(
+        (values || [])
+          .map((value) => this.parseNumber(value))
+          .filter((value): value is number => value !== null && value > 0)
+      )
+    ).sort((a, b) => a - b);
+  }
+
+  private normalizeTextList(values?: Array<string | null | undefined> | null): string[] {
+    return Array.from(
+      new Set(
+        (values || [])
+          .map((value) => String(value || '').trim())
+          .filter(Boolean)
+      )
+    );
+  }
+
+  private getStringArrayControlValue(controlName: StringFilterControlName): string[] {
+    const controls = this.form.controls as unknown as Record<StringFilterControlName, { value: string[] }>;
+    return this.normalizeTextList(controls[controlName]?.value || []);
+  }
+
+  private getIdArrayControlValue(controlName: NumericFilterControlName): number[] {
+    const controls = this.form.controls as unknown as Record<NumericFilterControlName, { value: number[] }>;
+    return this.normalizeIdList(controls[controlName]?.value || []);
+  }
+
+  private patchArrayControl(
+    controlName: 'brandIds' | StringFilterControlName | NumericFilterControlName,
+    value: string[] | number[]
+  ): void {
+    this.form.patchValue(
+      { [controlName]: Array.isArray(value) ? [...value] : value } as never,
+      { emitEvent: false }
+    );
+    this.scheduleAutoApply();
   }
 
   private resolvePriceSelection(minValue?: number | string | null, maxValue?: number | string | null): { min: number; max: number } {
@@ -351,6 +614,7 @@ export class FiltersDrawerComponent implements OnChanges {
   }
 
   private syncFromState(): void {
+    this.clearAutoApplyTimer();
     const priceSelection = this.resolvePriceSelection(
       this.state.min ?? null,
       this.state.max ?? null,
@@ -364,14 +628,14 @@ export class FiltersDrawerComponent implements OnChanges {
         petId: this.state.petId ?? null,
         category: this.state.category ?? null,
         subcategory: this.state.subcategory ?? null,
-        brandId: this.state.brandId ?? null,
-        form: this.state.form ?? null,
-        proteinSource: this.state.proteinSource ?? null,
-        specieId: this.state.specieId ?? null,
-        lifeStageId: this.state.lifeStageId ?? null,
-        dietTagId: this.state.dietTagId ?? null,
-        healthConditionId: this.state.healthConditionId ?? null,
-        ingredientId: this.state.ingredientId ?? null,
+        brandIds: this.normalizeIdList(this.state.brandIds),
+        forms: this.normalizeTextList(this.state.forms),
+        proteinSources: this.normalizeTextList(this.state.proteinSources),
+        specieIds: this.normalizeIdList(this.state.specieIds),
+        lifeStageIds: this.normalizeIdList(this.state.lifeStageIds),
+        dietTagIds: this.normalizeIdList(this.state.dietTagIds),
+        healthConditionIds: this.normalizeIdList(this.state.healthConditionIds),
+        ingredientIds: this.normalizeIdList(this.state.ingredientIds),
       },
       { emitEvent: false }
     );
@@ -381,9 +645,13 @@ export class FiltersDrawerComponent implements OnChanges {
   }
 
   private syncPriceSelectionToCurrentRange(): void {
+    // Treat 0 as "not yet initialized" so resolvePriceSelection falls back to
+    // the range floor/ceil instead of clamping 0 up to the floor value.
+    const prevMin = this.priceMinSelection > 0 ? this.priceMinSelection : null;
+    const prevMax = this.priceMaxSelection > 0 ? this.priceMaxSelection : null;
     const normalized = this.resolvePriceSelection(
-      this.state.min ?? this.priceMinSelection ?? null,
-      this.state.max ?? this.priceMaxSelection ?? null,
+      this.state.min ?? prevMin,
+      this.state.max ?? prevMax,
     );
     this.priceMinSelection = normalized.min;
     this.priceMaxSelection = normalized.max;
@@ -400,13 +668,13 @@ export class FiltersDrawerComponent implements OnChanges {
     if (thumb === 'min') {
       const next = this.clamp(rawValue, this.priceRangeMin, this.priceMaxSelection);
       this.priceMinSelection = next;
-      this.form.patchValue({ min: next }, { emitEvent: false });
+      this.form.patchValue({ min: next });
       return;
     }
 
     const next = this.clamp(rawValue, this.priceMinSelection, this.priceRangeMax);
     this.priceMaxSelection = next;
-    this.form.patchValue({ max: next }, { emitEvent: false });
+    this.form.patchValue({ max: next });
   }
 
   private resolvePriceValueFromClientX(clientX: number): number {

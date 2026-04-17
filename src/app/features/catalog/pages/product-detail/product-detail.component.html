@@ -14,10 +14,23 @@
       </div>
 
       <ng-container *ngIf="!errorMsg && product as p">
+        <div class="pdp-back">
+          <button type="button" class="back-link" (click)="goBack()">
+            <mat-icon>arrow_back</mat-icon>
+            <span>Regresar a la búsqueda</span>
+          </button>
+        </div>
+
         <article class="pdp-grid">
           <div class="media-col">
             <figure class="main-media card">
+              <div class="media-flags" *ngIf="badgeLabel || discountPct">
+                <span class="media-flag media-flag--primary" *ngIf="badgeLabel">{{ badgeLabel }}</span>
+                <span class="media-flag media-flag--discount" *ngIf="discountPct">-{{ discountPct }}%</span>
+              </div>
+
               <img [src]="selectedImage" [alt]="p.name" loading="lazy" />
+
               <span class="stock-tag" [class.out]="!inStock">
                 {{ inStock ? 'En stock' : 'Sin stock' }}
               </span>
@@ -34,65 +47,144 @@
                 <img [src]="photo.url" [alt]="photo.alt" loading="lazy" />
               </button>
             </div>
+
+            <div class="support-strip" *ngIf="supportHighlights.length">
+              <article class="support-card" *ngFor="let item of supportHighlights">
+                <span class="support-card__icon">
+                  <mat-icon>{{ item.icon }}</mat-icon>
+                </span>
+                <div>
+                  <strong>{{ item.title }}</strong>
+                  <p>{{ item.detail }}</p>
+                </div>
+              </article>
+            </div>
           </div>
 
           <div class="info-col">
-            <div class="eyebrow">
-              <span>{{ categoryLabel ? 'Categoria: ' + categoryLabel : 'Producto' }}</span>
-              <span *ngIf="subcategoryLabel">Subcategoria: {{ subcategoryLabel }}</span>
-              <span *ngIf="p.brand?.name">Marca: {{ p.brand?.name }}</span>
+            <nav class="eyebrow" aria-label="Categoría del producto">
+              <a routerLink="/catalog" class="breadcrumb-link">Tienda</a>
+              <span class="breadcrumb-sep" aria-hidden="true">/</span>
+              <a *ngIf="categoryLabel" [routerLink]="['/catalog']" class="breadcrumb-link">{{ categoryLabel }}</a>
+              <span *ngIf="categoryLabel && subcategoryLabel" class="breadcrumb-sep" aria-hidden="true">/</span>
+              <span *ngIf="subcategoryLabel" class="breadcrumb-current">{{ subcategoryLabel }}</span>
+            </nav>
+
+            <div class="brand-row" *ngIf="brandLogoUrl || p.brand?.name">
+              <img *ngIf="brandLogoUrl" [src]="brandLogoUrl" [alt]="p.brand?.name || 'Marca'" loading="lazy" />
+              <span>{{ p.brand?.name }}</span>
             </div>
 
             <h1>{{ p.name }}</h1>
 
             <p class="description" *ngIf="leadText; else noDescription">{{ leadText }}</p>
             <ng-template #noDescription>
-              <p class="description muted">Este producto estara disponible pronto con una ficha mas completa.</p>
+              <p class="description muted">Este producto estará disponible pronto con una ficha más completa.</p>
             </ng-template>
 
-            <div class="price-row">
-              <div class="price-stack">
-                <div class="price-main">
-                  <strong class="price">{{ p.price | currency:'GTQ':'symbol-narrow':'1.0-2' }}</strong>
-                  <span *ngIf="compareAtPrice" class="price-old">{{ compareAtPrice | currency:'GTQ':'symbol-narrow':'1.0-2' }}</span>
-                  <span *ngIf="discountPct" class="price-discount">-{{ discountPct }}%</span>
+            <div class="tag-row" *ngIf="heroTokens.length">
+              <span class="token token--neutral" *ngFor="let tag of heroTokens">{{ tag }}</span>
+            </div>
+
+            <section class="purchase-panel card">
+              <div class="price-row">
+                <div class="price-stack">
+                  <div class="price-main">
+                    <strong class="price">{{ activePrice | currency:'GTQ':'symbol-narrow':'1.2-2' }}</strong>
+                    <span *ngIf="compareAtPrice" class="price-old">{{ compareAtPrice | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+                    <span *ngIf="discountPct" class="price-discount">-{{ discountPct }}%</span>
+                  </div>
+
+                  <div class="price-note-row" *ngIf="priceSavings || discountPct">
+                    <span class="price-savings" *ngIf="priceSavings">
+                      Ahorra {{ priceSavings | currency:'GTQ':'symbol-narrow':'1.2-2' }}
+                    </span>
+                    <span class="price-discount-copy" *ngIf="discountPct">Descuento activo</span>
+                  </div>
                 </div>
-              </div>
-              <span class="member-price">
-                Con membresia ({{ membershipDiscountPct }}%):
-                <strong>{{ membershipPrice | currency:'GTQ':'symbol-narrow':'1.0-2' }}</strong>
-              </span>
-              <span
-                class="stock-count"
-                [class.stock-count--low]="stockTone === 'low'"
-                [class.stock-count--none]="stockTone === 'none'"
-              >
-                {{ stockLabel }}
-              </span>
-            </div>
 
-            <div class="actions card">
-              <label class="qty-label">Cantidad</label>
-              <div class="qty-control">
-                <button type="button" (click)="decQty()" [disabled]="!inStock || qty <= 1">-</button>
-                <span class="qty-value" aria-live="polite">{{ qty }}</span>
-                <button type="button" (click)="incQty()" [disabled]="!inStock || qty >= maxQty">+</button>
+                <span
+                  class="stock-count"
+                  [class.stock-count--low]="stockTone === 'low'"
+                  [class.stock-count--none]="stockTone === 'none'"
+                >
+                  {{ stockLabel }}
+                </span>
               </div>
 
-              <button class="btn primary add-btn" type="button" [disabled]="!inStock || adding" (click)="addToCart()">
-                <span class="btn-loader" *ngIf="adding" aria-hidden="true"></span>
-                {{ adding ? 'Agregando...' : 'Agregar al carrito' }}
-              </button>
+              <div class="member-price-strip">
+                <div class="member-price-strip__copy">
+                  <mat-icon>bolt</mat-icon>
+                  <span *ngIf="isPremiumMember; else memberInvite">
+                    Por ser miembro pagas
+                    <strong>{{ membershipPrice | currency:'GTQ':'symbol-narrow':'1.2-2' }}</strong>
+                  </span>
+                  <ng-template #memberInvite>
+                    <span>
+                      Con membresía pagas
+                      <strong>{{ membershipPrice | currency:'GTQ':'symbol-narrow':'1.2-2' }}</strong>
+                    </span>
+                  </ng-template>
+                </div>
 
-              <p class="feedback" *ngIf="addFeedback">{{ addFeedback }}</p>
-              <p class="feedback feedback--error" *ngIf="cartError">{{ cartError }}</p>
-            </div>
+                <a
+                  *ngIf="!isPremiumMember"
+                  routerLink="/memberships/plans"
+                  class="member-price-strip__cta"
+                >
+                  Hazte miembro
+                </a>
+              </div>
+
+              <div class="actions">
+                <div class="variant-picker" *ngIf="presentationOptions.length">
+                  <label class="qty-label">Presentación</label>
+                  <div class="variant-options">
+                    <button
+                      type="button"
+                      class="variant-chip"
+                      *ngFor="let variant of presentationOptions"
+                      [class.active]="variant.id === selectedVariantId"
+                      (click)="selectVariant(variant.id)"
+                    >
+                      <span>{{ variant.label }}</span>
+                      <small>{{ variant.price | currency:'GTQ':'symbol-narrow':'1.2-2' }}</small>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="purchase-actions">
+                  <div class="qty-block">
+                    <label class="qty-label">Cantidad</label>
+                    <div class="qty-control">
+                      <button type="button" (click)="decQty()" [disabled]="!inStock || qty <= 1">-</button>
+                      <span class="qty-value" aria-live="polite">{{ qty }}</span>
+                      <button type="button" (click)="incQty()" [disabled]="!inStock || qty >= maxQty">+</button>
+                    </div>
+                  </div>
+
+                  <button class="btn primary add-btn" type="button" [disabled]="!inStock || adding" (click)="addToCart()">
+                    <span class="btn-loader" *ngIf="adding" aria-hidden="true"></span>
+                    {{ adding ? 'Agregando...' : 'Agregar al carrito' }}
+                  </button>
+                </div>
+
+                <p class="feedback" *ngIf="addFeedback">{{ addFeedback }}</p>
+                <p class="feedback feedback--error" *ngIf="cartError">{{ cartError }}</p>
+              </div>
+            </section>
 
             <section class="pet-fit card" *ngIf="petRecommendations.length">
               <div class="pet-fit__head">
                 <span class="section-kicker">Compatibilidad</span>
-                <h2>Como se ve este producto para tus mascotas</h2>
-                <p>Tomamos especie, etapa, peso y alergias registradas para darte una guia rapida antes de comprar.</p>
+                <h2>{{ petCompatibilityTitle }}</h2>
+                <p>{{ petCompatibilitySummary }}</p>
+
+                <div class="pet-fit__recommended" *ngIf="recommendedPetRecommendations.length">
+                  <span class="pet-fit__recommended-chip" *ngFor="let item of recommendedPetRecommendations">
+                    {{ item.petName }}
+                  </span>
+                </div>
               </div>
 
               <div class="pet-fit__grid">
@@ -118,102 +210,119 @@
                 </article>
               </div>
             </section>
-
-            <div class="tags" *ngIf="tags.length">
-              <span class="chip" *ngFor="let tag of tags">{{ tag }}</span>
-            </div>
-
-            <div class="benefits">
-              <article>
-                <h3>Compra con contexto</h3>
-                <p>La ficha conecta categoria, marca, ingredientes y orientacion de uso para ayudar a decidir mas rapido.</p>
-              </article>
-              <article>
-                <h3>Ficha adaptable</h3>
-                <p>Podemos combinar contenido editorial de Strapi con datos tecnicos del catalogo sin rehacer la pantalla.</p>
-              </article>
-            </div>
           </div>
         </article>
 
-        <section class="detail-strip card" *ngIf="detailFacts.length">
-          <div class="detail-strip__intro">
-            <span class="section-kicker">Ficha enriquecida</span>
-            <h2>Detalles rapidos para decidir mejor</h2>
-            <p>Esta zona combina descripcion editorial con metadatos del catalogo para volver la ficha mas util.</p>
+        <section class="detail-tabs card">
+          <div class="tab-bar" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              class="tab-btn"
+              [class.active]="activeTab === 'description'"
+              (click)="setTab('description')"
+              [attr.aria-selected]="activeTab === 'description'"
+            >Descripción</button>
+            <button
+              *ngIf="hasCharacteristicsContent"
+              type="button"
+              role="tab"
+              class="tab-btn"
+              [class.active]="activeTab === 'characteristics'"
+              (click)="setTab('characteristics')"
+              [attr.aria-selected]="activeTab === 'characteristics'"
+            >Características</button>
+            <button
+              *ngIf="hasBenefitsContent"
+              type="button"
+              role="tab"
+              class="tab-btn"
+              [class.active]="activeTab === 'benefits'"
+              (click)="setTab('benefits')"
+              [attr.aria-selected]="activeTab === 'benefits'"
+            >Beneficios</button>
           </div>
 
-          <div class="detail-strip__grid">
-            <article class="detail-fact" *ngFor="let fact of detailFacts">
-              <span>{{ fact.label }}</span>
-              <strong>{{ fact.value }}</strong>
-              <p>{{ fact.note }}</p>
-            </article>
-          </div>
-        </section>
-
-        <section class="detail-layout">
-          <div class="detail-main card">
-            <div class="section-head">
-              <span class="section-kicker">Descripcion del producto</span>
-              <h2>Contenido comercial y tecnico</h2>
+          <div class="tab-content" *ngIf="activeTab === 'description'" role="tabpanel">
+            <div class="tab-panel-head">
+              <h3>Descripción del producto</h3>
+              <p>Todo lo necesario para entender de un vistazo para qué sirve y a quién va dirigido.</p>
             </div>
 
             <div class="rich-copy" *ngIf="descriptionHtml; else generatedDescription" [innerHTML]="descriptionHtml"></div>
-
             <ng-template #generatedDescription>
-              <div class="rich-copy">
-                <p>{{ leadText }}</p>
-                <p class="muted">
-                  Cuando el equipo cargue mas bloques en Strapi, esta seccion podra mostrar parrafos, listas y encabezados sin tocar frontend otra vez.
-                </p>
-              </div>
+              <div class="rich-copy"><p>{{ leadText }}</p></div>
             </ng-template>
           </div>
 
-          <aside class="detail-side">
-            <section class="detail-panel card" *ngIf="productSpecs.length">
-              <h3>Especificaciones rapidas</h3>
-              <dl class="spec-list">
-                <div class="spec-row" *ngFor="let spec of productSpecs">
-                  <dt>{{ spec.label }}</dt>
-                  <dd>{{ spec.value }}</dd>
-                </div>
-              </dl>
-            </section>
+          <div class="tab-content" *ngIf="activeTab === 'characteristics'" role="tabpanel">
+            <div class="tab-panel-head">
+              <h3>Ficha técnica</h3>
+              <p>Datos prácticos, composición y contexto útil para comparar antes de comprar.</p>
+            </div>
 
-            <section class="detail-panel card" *ngIf="ingredientNames.length">
-              <h3>Ingredientes relacionados</h3>
+            <div class="rich-copy" *ngIf="characteristicsHtml" [innerHTML]="characteristicsHtml"></div>
+
+            <div class="detail-facts" *ngIf="!characteristicsHtml && detailFacts.length">
+              <article class="detail-fact" *ngFor="let fact of detailFacts">
+                <span class="fact-label">{{ fact.label }}</span>
+                <strong class="fact-value">{{ fact.value }}</strong>
+                <p class="fact-note">{{ fact.note }}</p>
+              </article>
+            </div>
+
+            <dl class="spec-list" *ngIf="!characteristicsHtml && productSpecs.length">
+              <div class="spec-row" *ngFor="let spec of productSpecs">
+                <dt>{{ spec.label }}</dt>
+                <dd>{{ spec.value }}</dd>
+              </div>
+            </dl>
+
+            <div class="tab-subsection" *ngIf="ingredientNames.length">
+              <h4 class="tab-subsection__title">Ingredientes relacionados</h4>
               <div class="token-grid">
                 <span class="token" *ngFor="let ingredient of ingredientNames">{{ ingredient }}</span>
               </div>
-            </section>
+            </div>
 
-            <section class="detail-panel card" *ngIf="wellnessTags.length">
-              <h3>Beneficios y necesidades</h3>
-              <div class="token-grid token-grid--soft">
+            <div class="tab-subsection" *ngIf="tags.length">
+              <h4 class="tab-subsection__title">Etiquetas</h4>
+              <div class="token-grid">
+                <span class="chip" *ngFor="let tag of tags">{{ tag }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-content" *ngIf="activeTab === 'benefits'" role="tabpanel">
+            <div class="tab-panel-head">
+              <h3>Beneficios</h3>
+              <p>Razones para elegirlo y señales rápidas de valor al momento de decidir.</p>
+            </div>
+
+            <div class="rich-copy" *ngIf="benefitsHtml" [innerHTML]="benefitsHtml"></div>
+
+            <div class="tab-subsection" *ngIf="!benefitsHtml && wellnessTags.length">
+              <h4 class="tab-subsection__title">Propiedades y necesidades</h4>
+              <div class="token-grid">
                 <span class="token token--soft" *ngFor="let item of wellnessTags">{{ item }}</span>
               </div>
-            </section>
+            </div>
 
-            <section class="detail-panel card" *ngIf="brandSummary">
-              <h3>Sobre la marca</h3>
-              <p>{{ brandSummary }}</p>
-            </section>
-          </aside>
+            <p class="brand-blurb" *ngIf="!benefitsHtml && brandSummary">{{ brandSummary }}</p>
+          </div>
         </section>
 
         <section class="related" *ngIf="related.length">
           <header class="related-head">
-            <h2>Tambien te puede interesar</h2>
-            <a routerLink="/catalog" class="link">Ver mas</a>
+            <h2>También te puede interesar</h2>
+            <a routerLink="/catalog" class="link">Ver más</a>
           </header>
 
           <div class="related-grid">
             <app-product-card
               *ngFor="let item of related"
               [product]="item"
-              (addToCart)="addRelatedToCart(item)">
+              (addToCart)="addRelatedToCart(item, $event)">
             </app-product-card>
           </div>
         </section>

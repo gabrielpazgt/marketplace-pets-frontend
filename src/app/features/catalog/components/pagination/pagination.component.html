@@ -1,5 +1,10 @@
 <nav class="pager" aria-label="Paginación">
-  <button class="btn" [disabled]="page === 1" (click)="prev()">Anterior</button>
+  <button class="pager__nav" [disabled]="page === 1" aria-label="Primera página" (click)="first()">
+    <mat-icon>first_page</mat-icon>
+  </button>
+  <button class="pager__nav" [disabled]="page === 1" aria-label="Página anterior" (click)="prev()">
+    <mat-icon>chevron_left</mat-icon>
+  </button>
 
   <ng-container *ngFor="let p of pages">
     <span *ngIf="p === 'gap'" class="gap">…</span>
@@ -13,5 +18,10 @@
     </button>
   </ng-container>
 
-  <button class="btn" [disabled]="page === totalPages" (click)="next()">Siguiente</button>
+  <button class="pager__nav" [disabled]="page === totalPages" aria-label="Página siguiente" (click)="next()">
+    <mat-icon>chevron_right</mat-icon>
+  </button>
+  <button class="pager__nav" [disabled]="page === totalPages" aria-label="Última página" (click)="last()">
+    <mat-icon>last_page</mat-icon>
+  </button>
 </nav>

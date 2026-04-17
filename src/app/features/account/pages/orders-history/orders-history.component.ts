@@ -5,8 +5,15 @@ import { catchError, concatMap, finalize } from 'rxjs/operators';
 import { AppHttpError } from '../../../../core/models/http.models';
 import { StorefrontOrder } from '../../../../core/models/storefront.models';
 import { StorefrontApiService } from '../../../../core/services/storefront-api.service';
+import { resolveApiBaseUrl } from '../../../../core/config/api-base-url';
 
 type OrderStatus = 'pending' | 'paid' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
+
+interface TrackingStep {
+  label: string;
+  done: boolean;
+  date?: string;
+}
 
 interface Order {
   id: string;
@@ -41,6 +48,8 @@ export class OrdersHistoryComponent implements OnInit {
   actionMsg = '';
   actionError = '';
   busyOrderId: string | null = null;
+  trackingOpen = new Set<string>();
+  private readonly apiBase = resolveApiBaseUrl();
 
   constructor(
     private storefrontApi: StorefrontApiService,
@@ -131,6 +140,86 @@ export class OrdersHistoryComponent implements OnInit {
 
   retryLoad(): void {
     this.loadOrders();
+  }
+
+  toggleTracking(orderId: string): void {
+    if (this.trackingOpen.has(orderId)) {
+      this.trackingOpen.delete(orderId);
+    } else {
+      this.trackingOpen.add(orderId);
+    }
+    this.cdr.markForCheck();
+  }
+
+  isTrackingOpen(orderId: string): boolean {
+    return this.trackingOpen.has(orderId);
+  }
+
+  itemImages(order: Order): string[] {
+    return (order.source.order_items || [])
+      .map(item => {
+        const url = item.product?.images?.[0]?.url ?? '';
+        if (!url) return '';
+        return url.startsWith('http') ? url : `${this.apiBase}${url}`;
+      })
+      .filter(Boolean)
+      .slice(0, 3);
+  }
+
+  itemNames(order: Order): string {
+    return (order.source.order_items || [])
+      .map(item => item.nameSnapshot || item.product?.name || '')
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  statusIcon(status: OrderStatus): string {
+    const map: Record<OrderStatus, string> = {
+      pending:    'schedule',
+      paid:       'check_circle',
+      processing: 'inventory_2',
+      shipped:    'local_shipping',
+      delivered:  'verified',
+      cancelled:  'cancel',
+      refunded:   'undo',
+    };
+    return map[status] || 'help_outline';
+  }
+
+  progressPercent(status: OrderStatus): number {
+    const steps: Partial<Record<OrderStatus, number>> = {
+      pending: 20, paid: 40, processing: 60, shipped: 80, delivered: 100,
+    };
+    return steps[status] ?? 0;
+  }
+
+  progressStep(status: OrderStatus): string {
+    const steps: Partial<Record<OrderStatus, string>> = {
+      pending: '1/5 pasos', paid: '2/5 pasos', processing: '3/5 pasos',
+      shipped: '4/5 pasos', delivered: '5/5 pasos',
+    };
+    return steps[status] ?? '';
+  }
+
+  trackingSteps(order: Order): TrackingStep[] {
+    const STATUS_RANK: Partial<Record<OrderStatus, number>> = {
+      pending: 0, paid: 1, processing: 2, shipped: 3, delivered: 4,
+    };
+    const rank = STATUS_RANK[order.status] ?? 0;
+
+    const STEP_LABELS = [
+      'Pedido confirmado', 'Pago confirmado', 'Preparando pedido', 'En camino', 'Entregado',
+    ];
+    const LOG_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered'];
+
+    const logs = order.source.statusLogs || [];
+    const logMap = new Map(logs.map(l => [l.status, l.createdAt]));
+
+    return STEP_LABELS.map((label, i) => ({
+      label,
+      done: i <= rank,
+      date: logMap.get(LOG_STATUSES[i]),
+    }));
   }
 
   statusLabel(status: OrderStatus): string {

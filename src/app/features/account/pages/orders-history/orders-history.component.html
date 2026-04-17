@@ -1,158 +1,162 @@
-﻿<section class="section orders-history">
-  <div class="container">
-    <div class="card p">
-      <header class="head">
-        <h2>Historial de Compras</h2>
-        <p class="muted">
-          Revisa tus pedidos, estados, facturas y repite compras en pocos clics.
-        </p>
-      </header>
-      <p class="muted" *ngIf="actionMsg">{{ actionMsg }}</p>
-      <p class="muted" *ngIf="actionError">{{ actionError }}</p>
+<div class="oh-page">
 
-      <div class="state" *ngIf="loading">
-        <p class="muted">Cargando historial...</p>
+  <!-- Page header -->
+  <div class="oh-head">
+    <h2 class="oh-head__title">Mis Pedidos</h2>
+    <p class="oh-head__sub">Revisa tus pedidos, estados y repite compras en un clic.</p>
+  </div>
+
+  <!-- Action messages -->
+  <p class="oh-msg oh-msg--ok" *ngIf="actionMsg">{{ actionMsg }}</p>
+  <p class="oh-msg oh-msg--err" *ngIf="actionError">{{ actionError }}</p>
+
+  <!-- Skeleton loading -->
+  <div *ngIf="loading" class="oh-skeletons">
+    <div class="oh-skeleton" *ngFor="let i of [1,2,3]"></div>
+  </div>
+
+  <!-- Error state -->
+  <div class="oh-error" *ngIf="!loading && errorMsg">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ errorMsg }}</p>
+    <button class="oh-btn oh-btn--ghost" (click)="retryLoad()">Reintentar</button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="oh-toolbar" *ngIf="!loading && !errorMsg">
+    <div class="oh-search">
+      <mat-icon class="oh-search__icon">search</mat-icon>
+      <input
+        class="oh-search__input"
+        [(ngModel)]="q"
+        placeholder="Buscar por número de orden..." />
+    </div>
+    <select class="oh-select" [(ngModel)]="status">
+      <option value="all">Todos los estados</option>
+      <option value="pending">Pendiente</option>
+      <option value="paid">Pagado</option>
+      <option value="processing">En preparación</option>
+      <option value="shipped">Enviado</option>
+      <option value="delivered">Entregado</option>
+      <option value="cancelled">Cancelado</option>
+      <option value="refunded">Reembolsado</option>
+    </select>
+    <select class="oh-select" [(ngModel)]="range">
+      <option value="30">Últimos 30 días</option>
+      <option value="90">Últimos 90 días</option>
+      <option value="365">Último año</option>
+      <option value="all">Todo el tiempo</option>
+    </select>
+    <button
+      class="oh-btn oh-btn--ghost oh-btn--sm"
+      *ngIf="q || status !== 'all' || range !== '30'"
+      (click)="clearFilters()">
+      <mat-icon>close</mat-icon>
+      Limpiar
+    </button>
+  </div>
+
+  <!-- Order list -->
+  <div class="oh-list" *ngIf="!loading && !errorMsg">
+
+    <!-- Empty state -->
+    <div class="oh-empty" *ngIf="!filtered.length">
+      <mat-icon>inventory_2</mat-icon>
+      <p>No hay pedidos que coincidan con los filtros.</p>
+      <button class="oh-btn oh-btn--ghost oh-btn--sm" (click)="clearFilters()">Limpiar filtros</button>
+    </div>
+
+    <!-- Order card -->
+    <div class="oh-card" *ngFor="let o of filtered">
+
+      <!-- Header -->
+      <div class="oh-card__head">
+        <div class="oh-card__id">
+          <strong class="oh-card__number">{{ o.number }}</strong>
+          <span class="oh-card__meta">
+            {{ o.date | date:'d MMM yyyy' }} · {{ o.itemsCount }} {{ o.itemsCount === 1 ? 'producto' : 'productos' }}
+          </span>
+        </div>
+        <span class="oh-status" [class]="'oh-status--' + o.status">
+          <mat-icon>{{ statusIcon(o.status) }}</mat-icon>
+          {{ statusLabel(o.status) }}
+        </span>
+        <strong class="oh-card__total">Q{{ o.total | number:'1.2-2' }}</strong>
       </div>
 
-      <div class="state state--error" *ngIf="!loading && errorMsg">
-        <p>{{ errorMsg }}</p>
-        <button class="btn ghost" (click)="retryLoad()">Reintentar</button>
-      </div>
-
-      <div class="toolbar toolbar--compact">
-        <mat-form-field appearance="outline" class="search-field">
-          <span class="i i-search" matPrefix aria-hidden="true"></span>
-          <input
-            matInput
-            [(ngModel)]="q"
-            placeholder="Buscar por #orden (ej. #0012)" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="sel">
-          <mat-label>Estado</mat-label>
-          <mat-select [(value)]="status">
-            <mat-option value="all">Todos</mat-option>
-            <mat-option value="pending">Pendiente</mat-option>
-            <mat-option value="paid">Pagado</mat-option>
-            <mat-option value="processing">En preparacion</mat-option>
-            <mat-option value="shipped">Enviado</mat-option>
-            <mat-option value="delivered">Entregado</mat-option>
-            <mat-option value="cancelled">Cancelado</mat-option>
-            <mat-option value="refunded">Reembolsado</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="sel">
-          <mat-label>Rango</mat-label>
-          <mat-select [(value)]="range">
-            <mat-option value="30">Ultimos 30 dias</mat-option>
-            <mat-option value="90">Ultimos 90 dias</mat-option>
-            <mat-option value="365">Ultimos 12 meses</mat-option>
-            <mat-option value="all">Todo</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <div class="toolbar-actions" *ngIf="q || status !== 'all' || range !== '30'">
-        <button class="btn ghost" (click)="clearFilters()">Limpiar filtros</button>
-      </div>
-
-      <div class="table-wrap hide-mobile">
-        <table class="table orders">
-          <thead>
-            <tr>
-              <th>Orden</th>
-              <th>Fecha</th>
-              <th>Estado</th>
-              <th>Total</th>
-              <th>Items</th>
-              <th class="actions-col">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <ng-container *ngFor="let o of filtered">
-              <tr class="row" (click)="toggleExpand(o)">
-                <td class="number">{{ o.number }}</td>
-                <td>{{ o.date | date:'mediumDate' }}</td>
-                <td><span class="chip status" [class]="o.status">{{ statusLabel(o.status) }}</span></td>
-                <td>{{ o.total | currency:'GTQ':'symbol-narrow':'1.0-2' }}</td>
-                <td>{{ o.itemsCount }}</td>
-                <td class="actions-col">
-                  <div class="inline-actions" (click)="$event.stopPropagation()">
-                    <button class="btn ghost tiny" (click)="downloadInvoice(o)">Factura</button>
-                    <button class="btn tiny" [disabled]="busyOrderId === o.id" (click)="reorder(o)">
-                      {{ busyOrderId === o.id ? 'Agregando...' : 'Repetir' }}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              <tr class="expand" *ngIf="expandedId === o.id">
-                <td colspan="6">
-                  <div class="expand__content">
-                    <div class="col">
-                      <h4>Resumen</h4>
-                      <ul class="dl">
-                        <li><span class="k">Pago</span><span class="v">{{ o.paymentMethod }}</span></li>
-                        <li><span class="k">Envio</span><span class="v">{{ o.addressShort }}</span></li>
-                        <li *ngIf="o.tracking"><span class="k">Tracking</span><span class="v">{{ o.tracking }}</span></li>
-                      </ul>
-                    </div>
-                    <div class="col">
-                      <h4>Timeline</h4>
-                      <ol class="timeline">
-                        <li [class.done]="o.status !== 'pending'">Pago confirmado</li>
-                        <li [class.done]="o.status === 'shipped' || o.status === 'delivered'">Enviado</li>
-                        <li [class.done]="o.status === 'delivered'">Entregado</li>
-                      </ol>
-                    </div>
-                    <div class="col actions">
-                      <button class="btn invoice" (click)="downloadInvoice(o)">Descargar factura</button>
-                      <button class="btn ghost" [disabled]="busyOrderId === o.id" (click)="reorder(o)">
-                        {{ busyOrderId === o.id ? 'Agregando...' : 'Repetir compra' }}
-                      </button>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </ng-container>
-
-            <tr *ngIf="!filtered.length">
-              <td colspan="6">
-                <div class="empty muted">No hay ordenes que coincidan con los filtros.</div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="cards show-mobile">
-        <article *ngFor="let o of filtered" class="order-card">
-          <header>
-            <strong class="number">{{ o.number }}</strong>
-            <span class="chip status" [class]="o.status">{{ statusLabel(o.status) }}</span>
-          </header>
-          <div class="rows">
-            <div><span class="k">Fecha</span><span class="v">{{ o.date | date:'mediumDate' }}</span></div>
-            <div><span class="k">Total</span><span class="v">{{ o.total | currency:'GTQ':'symbol-narrow' }}</span></div>
-            <div><span class="k">Items</span><span class="v">{{ o.itemsCount }}</span></div>
+      <!-- Progress bar -->
+      <div class="oh-progress" *ngIf="o.status !== 'cancelled' && o.status !== 'refunded'">
+        <div class="oh-progress__labels">
+          <span class="oh-progress__status">{{ statusLabel(o.status) }}</span>
+          <span class="oh-progress__steps">{{ progressStep(o.status) }}</span>
+        </div>
+        <div class="oh-progress__track">
+          <div
+            class="oh-progress__fill"
+            [class]="'oh-progress__fill--' + o.status"
+            [style.width.%]="progressPercent(o.status)">
           </div>
-          <div class="mini">
-            <span>Pago: <strong>{{ o.paymentMethod }}</strong></span>
-            <span>Envio: <strong>{{ o.addressShort }}</strong></span>
-          </div>
-          <div class="cta">
-            <button class="btn invoice" (click)="downloadInvoice(o)">Factura</button>
-            <button class="btn ghost" [disabled]="busyOrderId === o.id" (click)="reorder(o)">
-              {{ busyOrderId === o.id ? 'Agregando...' : 'Repetir' }}
-            </button>
-          </div>
-        </article>
-
-        <div class="empty muted" *ngIf="!filtered.length">
-          No hay ordenes que coincidan con los filtros.
         </div>
       </div>
-    </div>
-  </div>
-</section>
+
+      <!-- Product thumbnails -->
+      <div class="oh-card__products" *ngIf="o.source.order_items.length">
+        <div class="oh-thumbs" *ngIf="itemImages(o).length">
+          <img
+            *ngFor="let img of itemImages(o)"
+            class="oh-thumb"
+            [src]="img"
+            alt="" />
+          <div class="oh-thumb oh-thumb--more" *ngIf="o.source.order_items.length > 3">
+            +{{ o.source.order_items.length - 3 }}
+          </div>
+        </div>
+        <span class="oh-card__names">{{ itemNames(o) }}</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="oh-card__actions">
+        <a class="oh-btn oh-btn--outline" [routerLink]="['/account/orders', o.source.id]">
+          <mat-icon>receipt_long</mat-icon>
+          Ver detalle completo
+        </a>
+        <button class="oh-btn oh-btn--ghost" (click)="toggleTracking(o.id)">
+          <mat-icon>local_shipping</mat-icon>
+          {{ isTrackingOpen(o.id) ? 'Ocultar tracking' : 'Ver tracking rápido' }}
+          <mat-icon>{{ isTrackingOpen(o.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+        <button
+          class="oh-btn oh-btn--ghost"
+          [disabled]="busyOrderId === o.id"
+          (click)="reorder(o)">
+          <mat-icon>refresh</mat-icon>
+          {{ busyOrderId === o.id ? 'Agregando...' : 'Volver a pedir' }}
+        </button>
+      </div>
+
+      <!-- Inline tracking timeline -->
+      <div class="oh-tracking" *ngIf="isTrackingOpen(o.id)">
+        <div class="oh-timeline">
+          <div
+            class="oh-step"
+            *ngFor="let step of trackingSteps(o); let last = last"
+            [class.oh-step--done]="step.done">
+            <div class="oh-step__indicator">
+              <div class="oh-step__circle">
+                <mat-icon *ngIf="step.done">check</mat-icon>
+              </div>
+              <div class="oh-step__line" *ngIf="!last"></div>
+            </div>
+            <div class="oh-step__content">
+              <p class="oh-step__label">{{ step.label }}</p>
+              <p class="oh-step__date" *ngIf="step.date">{{ step.date | date:'d MMM, h:mm a' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /oh-card -->
+
+  </div><!-- /oh-list -->
+
+</div>

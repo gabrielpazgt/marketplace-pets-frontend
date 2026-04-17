@@ -1,86 +1,327 @@
-<section class="memberships">
-  <div class="container memberships__container">
-    <header class="memberships-hero">
-      <span class="kicker">MEMBRESÍAS</span>
-      <h1>Elige entre plan Gratuito o plan Premium</h1>
-      <p>
-        Todos los usuarios registrados tienen membresía gratuita por defecto. También puedes
-        optar por Premium para obtener beneficios adicionales y ahorrar en tus compras.
-      </p>
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 1 — HERO
+══════════════════════════════════════════════════ -->
+<section class="mp-hero">
+  <div class="mp-hero__decor mp-hero__decor--1" aria-hidden="true"></div>
+  <div class="mp-hero__decor mp-hero__decor--2" aria-hidden="true"></div>
 
-      <div class="hero-meta" aria-label="Resumen de membresías">
-        <span class="meta-chip">Gratuita desde Q0</span>
-        <span class="meta-chip">Premium por Q75/mes</span>
-        <span class="meta-chip">5% de descuento en productos</span>
+  <div class="mp-container mp-hero__inner">
+    <div class="mp-hero__badge">
+      <mat-icon>pets</mat-icon>
+      <span>Membresía Aumakki</span>
+    </div>
+
+    <h1 class="mp-hero__title">
+      Ahorra más en<br>cada pedido.
+    </h1>
+
+    <p class="mp-hero__sub">
+      Los miembros Premium ahorran automáticamente en cada compra con
+      <strong>5% de descuento</strong> y beneficios exclusivos para sus mascotas.
+    </p>
+
+    <div class="mp-hero__stats">
+      <div class="mp-hero__stat">
+        <span class="mp-hero__stat-value">1K+</span>
+        <span class="mp-hero__stat-label">Miembros activos</span>
       </div>
-    </header>
+      <div class="mp-hero__stat">
+        <span class="mp-hero__stat-value">Q300</span>
+        <span class="mp-hero__stat-label">Ahorro promedio anual</span>
+      </div>
+      <div class="mp-hero__stat">
+        <span class="mp-hero__stat-value">4.9★</span>
+        <span class="mp-hero__stat-label">Satisfacción</span>
+      </div>
+    </div>
 
-    <section class="plans-grid" aria-label="Planes de membresía disponibles">
-      <article class="card plan-card" *ngFor="let plan of plans" [class.plan-card--active]="isCurrentPlan(plan.id)">
-        <div class="plan-head">
-          <span class="plan-label">{{ plan.name }}</span>
-          <span class="plan-state" *ngIf="isCurrentPlan(plan.id)">Plan activo</span>
+    <button class="mp-btn mp-btn--hero" type="button" (click)="scrollToPlans()">
+      Ver planes
+      <mat-icon>arrow_forward</mat-icon>
+    </button>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 2 — CÓMO FUNCIONA
+══════════════════════════════════════════════════ -->
+<section class="mp-section mp-how">
+  <div class="mp-container">
+    <div mpFadeIn>
+      <p class="mp-label">SIMPLE Y TRANSPARENTE</p>
+      <h2 class="mp-section__title">Cómo funciona la membresía</h2>
+    </div>
+
+    <div class="mp-how__steps">
+      <div class="mp-how__step" mpFadeIn [mpFadeInDelay]="0">
+        <div class="mp-how__icon-wrap">
+          <mat-icon>auto_awesome</mat-icon>
+        </div>
+        <p class="mp-how__num">PASO 01</p>
+        <h3 class="mp-how__step-title">Crea tu cuenta</h3>
+        <p class="mp-how__step-desc">Regístrate en 30 segundos. Sin costo, sin tarjeta de crédito requerida.</p>
+      </div>
+
+      <div class="mp-how__connector" aria-hidden="true"></div>
+
+      <div class="mp-how__step" mpFadeIn [mpFadeInDelay]="100">
+        <div class="mp-how__icon-wrap">
+          <mat-icon>percent</mat-icon>
+        </div>
+        <p class="mp-how__num">PASO 02</p>
+        <h3 class="mp-how__step-title">Ahorra al hacer checkout</h3>
+        <p class="mp-how__step-desc">Tu 5% de descuento se aplica automáticamente en todos los productos.</p>
+      </div>
+
+      <div class="mp-how__connector" aria-hidden="true"></div>
+
+      <div class="mp-how__step" mpFadeIn [mpFadeInDelay]="200">
+        <div class="mp-how__icon-wrap">
+          <mat-icon>workspace_premium</mat-icon>
+        </div>
+        <p class="mp-how__num">PASO 03</p>
+        <h3 class="mp-how__step-title">Beneficios exclusivos</h3>
+        <p class="mp-how__step-desc">Atención prioritaria y acceso anticipado a lanzamientos y promos especiales.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 3 — PLANES
+══════════════════════════════════════════════════ -->
+<section class="mp-section mp-plans" id="planes">
+  <div class="mp-container">
+    <div mpFadeIn>
+      <h2 class="mp-section__title">Elige tu plan</h2>
+      <p class="mp-section__sub">Sin contratos. Cancela cuando quieras.</p>
+    </div>
+
+    <div class="mp-plans__grid">
+      <article
+        *ngFor="let plan of plans; let i = index"
+        class="mp-plan-card"
+        [class.mp-plan-card--premium]="plan.id === 'premium'"
+        [class.mp-plan-card--active]="isCurrentPlan(plan.id)"
+        mpFadeIn
+        [mpFadeInDelay]="i * 100"
+      >
+        <div class="mp-plan-card__head">
+          <span class="mp-plan-card__name">{{ plan.name }}</span>
+          <span class="mp-plan-card__popular" *ngIf="plan.id === 'premium'">
+            <mat-icon>auto_awesome</mat-icon> MÁS POPULAR
+          </span>
+          <span class="mp-plan-card__active-badge" *ngIf="isCurrentPlan(plan.id)">Activo</span>
         </div>
 
-        <h2>{{ plan.highlight }}</h2>
-
-        <div class="price-row">
-          <strong class="price">Q{{ getPlanPrice(plan) }}</strong>
-          <span class="cycle">/ mes</span>
+        <div class="mp-plan-card__price">
+          <strong class="mp-plan-card__amount">Q{{ getPlanPrice(plan) }}</strong>
+          <span class="mp-plan-card__cycle">/mes</span>
         </div>
 
-        <p class="muted" *ngIf="plan.id === 'free'">
-          Ideal para empezar. Acceso total a la tienda sin costo mensual.
-        </p>
-        <p class="muted" *ngIf="plan.id === 'premium'">
-          Incluye 5% de descuento y atención prioritaria para una experiencia más completa.
+        <p class="mp-plan-card__tagline">
+          <ng-container *ngIf="plan.id === 'free'">Acceso básico, sin compromiso</ng-container>
+          <ng-container *ngIf="plan.id === 'premium'">Todos los beneficios, máximo ahorro</ng-container>
         </p>
 
-        <ul class="ticks">
+        <ul class="mp-plan-card__perks">
           <li *ngFor="let perk of plan.perks">
-            <span class="tick" aria-hidden="true">&#10003;</span>
+            <span class="mp-plan-card__tick" aria-hidden="true">
+              <mat-icon>check</mat-icon>
+            </span>
             <span>{{ perk }}</span>
           </li>
         </ul>
 
         <button
-          class="btn"
+          class="mp-btn"
+          [class.mp-btn--primary]="plan.id === 'premium' && !isCurrentPlan(plan.id)"
+          [class.mp-btn--outline]="plan.id === 'free' && !isCurrentPlan(plan.id)"
+          [class.mp-btn--ghost]="isCurrentPlan(plan.id)"
           type="button"
-          [class.primary]="!isCurrentPlan(plan.id)"
-          [class.ghost]="isCurrentPlan(plan.id)"
-          [disabled]="saving || isCurrentPlan(plan.id)"
+          [disabled]="isCurrentPlan(plan.id)"
           (click)="selectPlan(plan.id)"
         >
-          {{ isCurrentPlan(plan.id) ? 'Plan activo' : (saving ? 'Actualizando...' : 'Seleccionar plan') }}
+          <ng-container *ngIf="isCurrentPlan(plan.id)">Plan activo</ng-container>
+          <ng-container *ngIf="!isCurrentPlan(plan.id) && plan.id === 'free'">Empezar gratis</ng-container>
+          <ng-container *ngIf="!isCurrentPlan(plan.id) && plan.id === 'premium'">Obtener Premium</ng-container>
         </button>
       </article>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <section class="impact-note card">
-      <h3>Compromiso social</h3>
-      <p>
-        Destinamos un porcentaje de nuestras ganancias a fundaciones que apoyan animales enfermos
-        y en situación de calle.
-      </p>
-    </section>
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 4 — CALCULADORA ROI
+══════════════════════════════════════════════════ -->
+<section class="mp-section mp-roi">
+  <div class="mp-container">
+    <div class="mp-roi__card" mpFadeIn>
+      <div class="mp-roi__icon-wrap" aria-hidden="true">
+        <mat-icon>trending_up</mat-icon>
+      </div>
+      <div class="mp-roi__body">
+        <h3 class="mp-roi__title">Calculadora de ahorro</h3>
+        <p class="mp-roi__desc">
+          ¿Cuánto gastas al mes en productos para tu mascota?
+        </p>
+        <div class="mp-roi__input-row">
+          <span class="mp-roi__prefix">Q</span>
+          <input
+            class="mp-roi__input"
+            type="number"
+            min="0"
+            step="100"
+            [(ngModel)]="roiSpend"
+            aria-label="Gasto mensual en productos para mascota"
+          />
+          <span class="mp-roi__suffix">/mes</span>
+        </div>
+        <p class="mp-roi__result">
+          Si gastas <strong>Q{{ roiSpend }}/mes</strong>, ahorras
+          <strong>Q{{ roiSavingsPerYear }}</strong> en descuentos al año.
+          <ng-container *ngIf="roiNet > 0">
+            La membresía cuesta <strong>Q{{ roiMembershipCostPerYear }}/año</strong>.
+            ¡Quedas <strong>Q{{ roiNet }} adelante</strong>!
+          </ng-container>
+          <ng-container *ngIf="roiNet <= 0">
+            Con un gasto mayor a <strong>Q1,500/mes</strong> la membresía se paga sola.
+          </ng-container>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <section class="faq" aria-label="Preguntas frecuentes de membresía">
-      <h2>Preguntas rápidas</h2>
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 5 — BENEFICIOS PREMIUM
+══════════════════════════════════════════════════ -->
+<section class="mp-section mp-benefits">
+  <div class="mp-container">
+    <div mpFadeIn>
+      <p class="mp-label">TODO INCLUIDO</p>
+      <h2 class="mp-section__title">Beneficios Premium, explicados</h2>
+    </div>
 
-      <details>
-        <summary>¿La membresía gratuita incluye todo lo básico?</summary>
-        <p>Sí. Puedes comprar sin límites y acceder al flujo completo de tienda.</p>
-      </details>
+    <div class="mp-benefits__grid">
+      <div
+        *ngFor="let benefit of benefits; let i = index"
+        class="mp-benefit-card"
+        [class.mp-benefit-card--highlight]="benefit.highlight"
+        mpFadeIn
+        [mpFadeInDelay]="i * 70"
+      >
+        <div class="mp-benefit-card__icon-wrap">
+          <mat-icon>{{ benefit.icon }}</mat-icon>
+        </div>
+        <h3 class="mp-benefit-card__title">{{ benefit.title }}</h3>
+        <p class="mp-benefit-card__desc">{{ benefit.description }}</p>
+        <span class="mp-benefit-card__badge" *ngIf="benefit.badge">{{ benefit.badge }}</span>
+      </div>
+    </div>
+  </div>
+</section>
 
-      <details>
-        <summary>¿Qué gano con Premium por Q75 al mes?</summary>
-        <p>Obtienes 5% de descuento en productos seleccionados y atención prioritaria.</p>
-      </details>
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 6 — TABLA COMPARATIVA
+══════════════════════════════════════════════════ -->
+<section class="mp-section mp-compare">
+  <div class="mp-container">
+    <div mpFadeIn>
+      <p class="mp-label">VE LA DIFERENCIA</p>
+      <h2 class="mp-section__title">Miembro vs no miembro</h2>
+    </div>
 
-      <details>
-        <summary>¿Necesito cuenta para comprar?</summary>
-        <p>Puedes comprar como invitado o iniciar sesión para guardar tus datos.</p>
-      </details>
-    </section>
+    <div class="mp-compare__wrap" mpFadeIn [mpFadeInDelay]="100">
+      <table class="mp-compare__table" aria-label="Comparación de beneficios por plan">
+        <thead>
+          <tr>
+            <th scope="col" class="mp-compare__col-label">Beneficio</th>
+            <th scope="col" class="mp-compare__col-free">Gratuito</th>
+            <th scope="col" class="mp-compare__col-premium">Premium</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Descuento en productos</td>
+            <td class="mp-compare__dash">—</td>
+            <td class="mp-compare__value">5% en todo</td>
+          </tr>
+          <tr>
+            <td>Atención al cliente</td>
+            <td class="mp-compare__muted">Estándar</td>
+            <td class="mp-compare__value">Prioritaria WhatsApp</td>
+          </tr>
+          <tr>
+            <td>Lanzamientos</td>
+            <td class="mp-compare__muted">Acceso normal</td>
+            <td class="mp-compare__value">24h antes</td>
+          </tr>
+          <tr>
+            <td>Devoluciones</td>
+            <td class="mp-compare__muted">30 días</td>
+            <td class="mp-compare__value">60 días</td>
+          </tr>
+          <tr>
+            <td>Cumpleaños mascota</td>
+            <td class="mp-compare__dash">—</td>
+            <td class="mp-compare__value">Regalo sorpresa</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 7 — FAQ
+══════════════════════════════════════════════════ -->
+<section class="mp-section mp-faq">
+  <div class="mp-container">
+    <div mpFadeIn>
+      <h2 class="mp-section__title">Preguntas frecuentes</h2>
+    </div>
+
+    <div class="mp-faq__list">
+      <div
+        *ngFor="let faq of faqs; let i = index"
+        class="mp-faq__item"
+        [class.mp-faq__item--open]="activeFaqIndex === i"
+        mpFadeIn
+        [mpFadeInDelay]="i * 50"
+      >
+        <button
+          class="mp-faq__trigger"
+          type="button"
+          [attr.aria-expanded]="activeFaqIndex === i"
+          (click)="toggleFaq(i)"
+        >
+          <span>{{ faq.question }}</span>
+          <mat-icon class="mp-faq__chevron">{{ activeFaqIndex === i ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+        <div
+          class="mp-faq__body"
+          [@expandCollapse]="activeFaqIndex === i ? 'expanded' : 'collapsed'"
+        >
+          <p class="mp-faq__answer">{{ faq.answer }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 8 — CTA FINAL
+══════════════════════════════════════════════════ -->
+<section class="mp-cta-final">
+  <div class="mp-cta-final__decor mp-cta-final__decor--1" aria-hidden="true"></div>
+  <div class="mp-cta-final__decor mp-cta-final__decor--2" aria-hidden="true"></div>
+  <div class="mp-container mp-cta-final__inner" mpFadeIn>
+    <h2 class="mp-cta-final__title">Tu mascota merece lo mejor</h2>
+    <p class="mp-cta-final__sub">Únete a más de 1,000 dueños que ya ahorran con Aumakki Premium.</p>
+    <button class="mp-btn mp-btn--cta-final" type="button" (click)="scrollToPlans()">
+      Empezar ahora
+      <mat-icon>arrow_forward</mat-icon>
+    </button>
   </div>
 </section>

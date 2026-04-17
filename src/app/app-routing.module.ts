@@ -3,6 +3,8 @@ import { RouterModule, Routes } from '@angular/router';
 import { AuthLayoutComponent }  from './layouts/layouts/auth-layout/auth-layout.component';
 import { FullLayoutComponent }  from './layouts/layouts/full-layout/full-layout.component';
 import { AuthGuard } from './core/guards/auth.guard';
+import { OpsGuard } from './core/guards/ops.guard';
+import { RegularUserGuard } from './core/guards/regular-user.guard';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },
@@ -41,14 +43,14 @@ const routes: Routes = [
   },
   {
     path: 'checkout',
+    canActivate: [RegularUserGuard],
     loadChildren: () => import('./features/checkout/checkout.module').then(m => m.CheckoutModule)
   },
 
-  /* Área del usuario (sin AuthGuard por ahora) */
   {
     path: 'account',
     component: FullLayoutComponent,
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RegularUserGuard],
     loadChildren: () => import('./features/account/account.module').then(m => m.AccountModule),
   },
 
@@ -59,6 +61,12 @@ const routes: Routes = [
     .then(m => m.MembershipsModule)
   },
 
+
+  {
+    path: 'gx-ops',
+    canActivate: [AuthGuard, OpsGuard],
+    loadChildren: () => import('./features/ops/ops.module').then(m => m.OpsModule),
+  },
 
   { path: '**', redirectTo: 'home' }
 ];

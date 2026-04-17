@@ -59,6 +59,8 @@ export class PaginationComponent {
     if (typeof p === 'number') this.go(p);
   }
 
+  first(): void { this.go(1); }
   prev(): void { this.go(this.page - 1); }
   next(): void { this.go(this.page + 1); }
+  last(): void { this.go(this.totalPages); }
 }

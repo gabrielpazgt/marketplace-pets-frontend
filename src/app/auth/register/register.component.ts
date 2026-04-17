@@ -5,6 +5,7 @@ import { EMPTY, TimeoutError, defer } from 'rxjs';
 import { catchError, finalize, startWith, take, timeout } from 'rxjs/operators';
 import { AppHttpError } from '../../core/models/http.models';
 import { AuthService } from '../services/auth.service';
+import { AuthApiService } from '../services/auth-api.service';
 
 type StrengthLevel = 'low' | 'medium' | 'high';
 
@@ -68,7 +69,8 @@ export class RegisterComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private route: ActivatedRoute,
-    private auth: AuthService
+    private auth: AuthService,
+    private authApi: AuthApiService
   ) {}
 
   ngOnInit(): void {
@@ -143,6 +145,11 @@ export class RegisterComponent implements OnInit {
 
   get passwordStrengthClass(): string {
     return `level-${this.passwordStrength.level}`;
+  }
+
+  loginWithGoogle(): void {
+    sessionStorage.setItem('oauth_provider', 'google');
+    window.location.href = this.authApi.getOAuthUrl('google');
   }
 
   togglePasswordVisibility(): void {

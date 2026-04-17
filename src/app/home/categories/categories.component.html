@@ -1,37 +1,47 @@
-<section class="categories container" aria-labelledby="cat-title">
-  <h2 id="cat-title" class="title">Explora por categoría</h2>
+<section class="hc-cats container" aria-labelledby="cat-title">
+
+  <div class="hc-cats__head" mpFadeIn>
+    <div>
+      <p class="hc-cats__label">EXPLORA POR MASCOTA</p>
+      <h2 id="cat-title" class="hc-cats__title">Todo para tu compañero</h2>
+    </div>
+    <a class="hc-cats__link" routerLink="/catalog" aria-label="Ver todo el catálogo">
+      Ver todo el catálogo <mat-icon>arrow_forward</mat-icon>
+    </a>
+  </div>
 
   <ng-container *ngIf="data.length; else skeleton">
-    <div class="grid" role="list">
+    <div class="hc-cats__grid" role="list">
       <a
-        class="card"
+        *ngFor="let c of data; let first = first; let i = index"
+        class="hc-cat"
+        [class.hc-cat--featured]="first"
         role="listitem"
-        *ngFor="let c of data"
         [routerLink]="['/catalog', c.slug]"
         [title]="c.name"
+        mpFadeIn
+        [mpFadeInDelay]="i * 60"
       >
-        <figure class="media">
-          <img [src]="c.image" [alt]="c.name" loading="lazy" />
-          <span class="glow" aria-hidden="true"></span>
-        </figure>
+        <!-- Imagen full-bleed -->
+        <img class="hc-cat__img" [src]="c.image" [alt]="c.name" loading="lazy" />
 
-        <div class="meta">
-          <span class="name">{{ c.name }}</span>
-          <span class="arrow" aria-hidden="true">→</span>
+        <!-- Overlay oscuro -->
+        <div class="hc-cat__overlay" aria-hidden="true"></div>
+
+        <!-- Texto encima de la imagen -->
+        <div class="hc-cat__meta">
+          <span class="hc-cat__name">{{ c.name }}</span>
+          <span class="hc-cat__count" *ngIf="c.count">{{ c.count }} productos</span>
         </div>
       </a>
     </div>
   </ng-container>
 
   <ng-template #skeleton>
-    <div class="grid">
-      <div class="card skel" *ngFor="let i of [1,2,3,4,5,6]">
-        <div class="media skel"></div>
-        <div class="meta">
-          <div class="name skel skel--text"></div>
-          <span class="arrow skel skel--icon"></span>
-        </div>
-      </div>
+    <div class="hc-cats__grid">
+      <div class="hc-cat hc-cat--featured hc-cat--skel"></div>
+      <div class="hc-cat hc-cat--skel" *ngFor="let i of [1,2,3,4]"></div>
     </div>
   </ng-template>
+
 </section>

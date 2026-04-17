@@ -1,64 +1,84 @@
 <aside class="summary" [class.summary--busy]="(busy$ | async) ?? false">
-  <div class="panel totals">
-    <h4>Resumen</h4>
+  <div class="panel">
+    <h2 class="summary__title">Resumen</h2>
+
+    <div class="coupon-box">
+      <div class="coupon-box__row">
+        <input
+          type="text"
+          placeholder="C&oacute;digo de descuento"
+          [formControl]="form.controls.code"
+          [disabled]="(busy$ | async) ?? false">
+        <button class="coupon-box__button" (click)="apply()" [disabled]="(busy$ | async) ?? false">
+          {{ ((busy$ | async) ?? false) ? 'Procesando...' : 'Aplicar' }}
+        </button>
+      </div>
+
+      <p class="coupon-box__hint">Se aplica al instante sobre tu compra.</p>
+
+      <p
+        class="coupon-box__status"
+        *ngIf="statusMessage"
+        [class.coupon-box__status--error]="statusType === 'error'">
+        {{ statusMessage }}
+      </p>
+
+      <div class="coupon-box__active" *ngIf="(coupon$ | async) as c">
+        <span class="ticket">{{ c }}</span>
+        <button class="text-link" (click)="clearCoupon()" [disabled]="(busy$ | async) ?? false">Quitar</button>
+      </div>
+    </div>
 
     <div class="split">
       <span>Subtotal</span>
       <strong>{{ subtotal$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
     </div>
-    <div class="split">
-      <span>Descuento</span>
-      <strong>-{{ discount$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
-    </div>
-    <div class="split">
-      <span>Envío</span>
-      <strong>{{ shippingEstimate$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
+
+    <div class="split" *ngIf="(savings$ | async) as savings">
+      <ng-container *ngIf="savings > 0">
+        <span>Ahorro</span>
+        <strong>-{{ savings | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
+      </ng-container>
     </div>
 
-    <hr>
+    <div class="split" *ngIf="shippingEstimate$ | async as shipping">
+      <span>Env&iacute;o</span>
+      <strong [class.summary__free]="shipping === 0">
+        {{ shipping === 0 ? 'Gratis' : (shipping | currency:'GTQ':'symbol-narrow':'1.0-0') }}
+      </strong>
+    </div>
 
-    <div class="split total">
+    <div class="summary__divider"></div>
+
+    <div class="split split--total">
       <span>Total</span>
-      <strong>{{ total$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
+      <div class="summary__total">
+        <strong>{{ total$ | async | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
+        <small>Impuestos ya incluidos</small>
+      </div>
     </div>
 
     <button
-      class="cta button_pay"
+      class="cta"
       [disabled]="!(hasItems$ | async) || ((busy$ | async) ?? false)"
-      aria-label="Pagar ahora"
+      aria-label="Proceder al pago"
       (click)="checkout()">
-      Pagar ahora
+      Proceder al pago
     </button>
 
-    <p class="hint">Pagos seguros con tarjetas y transferencias.</p>
-  </div>
-
-  <div class="panel promo">
-    <div class="promo__header">
-      <h5>¿Tienes un código?</h5>
-    </div>
-
-    <div class="row">
-      <input
-        type="text"
-        placeholder="Código de descuento"
-        [formControl]="form.controls.code"
-        [disabled]="(busy$ | async) ?? false">
-      <button class="btn" (click)="apply()" [disabled]="(busy$ | async) ?? false">
-        {{ ((busy$ | async) ?? false) ? 'Procesando...' : 'Aplicar' }}
-      </button>
-    </div>
-
-    <p
-      class="promo__status"
-      *ngIf="statusMessage"
-      [class.promo__status--error]="statusType === 'error'">
-      {{ statusMessage }}
-    </p>
-
-    <div class="coupon" *ngIf="(coupon$ | async) as c">
-      <span class="ticket">CUPÓN: {{ c }}</span>
-      <button class="link" (click)="clearCoupon()" [disabled]="(busy$ | async) ?? false">Quitar</button>
-    </div>
+    <ul class="trust-list">
+      <li>
+        <mat-icon aria-hidden="true">shield</mat-icon>
+        <span>Pago seguro y encriptado con SSL</span>
+      </li>
+      <li>
+        <mat-icon aria-hidden="true">local_shipping</mat-icon>
+        <span>Env&iacute;o r&aacute;pido a toda Guatemala</span>
+      </li>
+      <li>
+        <mat-icon aria-hidden="true">support_agent</mat-icon>
+        <span>Soporte para cambios en tu pedido</span>
+      </li>
+    </ul>
   </div>
 </aside>

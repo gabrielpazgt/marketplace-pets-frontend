@@ -12,13 +12,23 @@ export class CheckoutShellComponent {
   constructor(public state: CheckoutStateService, public router: Router) {}
 
   steps = [
-    { key: 'contact', label: 'Contacto y Envío' },
-    { key: 'shipping', label: 'Método de Envío' },
-    { key: 'payment', label: 'Pago' },
-    { key: 'review', label: 'Revisión' },
+    { key: 'contact',  label: 'Contacto',  icon: 'person'         },
+    { key: 'shipping', label: 'Envío',      icon: 'local_shipping' },
+    { key: 'payment',  label: 'Pago',       icon: 'credit_card'    },
+    { key: 'review',   label: 'Revisión',   icon: 'checklist'      },
   ];
 
-  isActive(key: string) { return this.router.url.includes('/' + key); }
+  isActive(key: string): boolean { return this.router.url.includes('/' + key); }
+
+  isDone(key: string): boolean {
+    const snap = this.state.snapshot;
+    switch (key) {
+      case 'contact':  return snap.step1Done;
+      case 'shipping': return snap.step2Done;
+      case 'payment':  return snap.step3Done;
+      default: return false;
+    }
+  }
 
   progressPct() {
     const idx = this.steps.findIndex(s => this.isActive(s.key));

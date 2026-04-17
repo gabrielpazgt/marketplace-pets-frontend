@@ -1,0 +1,27 @@
+<section class="hs-steps">
+  <div class="hs-container">
+    <div class="hs-steps__head" mpFadeIn>
+      <p class="hs-label">SIMPLE Y SEGURO</p>
+      <h2 class="hs-title">¿Cómo funciona Aumakki?</h2>
+      <p class="hs-subtitle">Comprar para tu mascota nunca fue tan fácil ni tan confiable.</p>
+    </div>
+
+    <div class="hs-steps__grid">
+      <div
+        *ngFor="let step of steps; let i = index; let last = last"
+        class="hs-step"
+        mpFadeIn
+        [mpFadeInDelay]="i * 100"
+      >
+        <div class="hs-step__icon-wrap" [attr.data-color]="step.color">
+          <mat-icon>{{ step.icon }}</mat-icon>
+        </div>
+        <p class="hs-step__num">{{ step.num }}</p>
+        <h3 class="hs-step__title">{{ step.title }}</h3>
+        <p class="hs-step__desc">{{ step.description }}</p>
+
+        <div class="hs-step__connector" *ngIf="!last" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map, switchMap, take, tap } from 'rxjs/operators';
 import { AuthService } from '../../../auth/services/auth.service';
 import {
+  StorefrontCatalogAnimalRef,
   StorefrontPet,
   StorefrontPetPayload,
   StorefrontPetTaxonomy,
@@ -44,6 +45,13 @@ const SPECIES_NAME_PRIORITY: Record<Species, string[]> = {
   'small-pet': ['pequena mascota', 'pequenas mascotas', 'small pet', 'hamster', 'conejo', 'cobayo'],
   other: ['other'],
 };
+
+const normalizeLookupValue = (value: string | null | undefined): string =>
+  String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 
 @Injectable({ providedIn: 'root' })
 export class PetsStateService {
@@ -127,11 +135,19 @@ export class PetsStateService {
     const mergedDraft: PetDraft = {
       name: patch.name ?? current.name,
       species: patch.species ?? current.species,
+      specieId: patch.specieId ?? current.specieId,
+      catalogAnimalId: patch.catalogAnimalId ?? current.catalogAnimalId,
+      lifeStageId: patch.lifeStageId ?? current.lifeStageId,
+      dietTagIds: patch.dietTagIds ?? current.dietTagIds,
       breed: patch.breed ?? current.breed,
       color: patch.color ?? current.color,
       avatarHex: patch.avatarHex ?? current.avatarHex,
+      avatarUrl: patch.avatarUrl ?? current.avatarUrl,
       size: patch.size ?? current.size,
+      weightKg: patch.weightKg ?? current.weightKg,
       ageYears: patch.ageYears ?? current.ageYears,
+      birthMonth: patch.birthMonth ?? current.birthMonth,
+      birthYear: patch.birthYear ?? current.birthYear,
       sex: patch.sex ?? current.sex,
       notes: patch.notes ?? current.notes,
       lifeStage: patch.lifeStage ?? current.lifeStage,
@@ -168,6 +184,36 @@ export class PetsStateService {
     );
   }
 
+  uploadAvatar(id: string, file: File): Observable<Pet | null> {
+    if (!this.auth.isLoggedIn) return of(null);
+
+    return this.storefrontApi.uploadMyPetAvatar(id, file).pipe(
+      map((response) => {
+        const userId = this.auth.userId || 'self';
+        return this.fromApiPet(response.data, userId);
+      }),
+      tap((updated) => {
+        this.petsSubject.next(this.petsSubject.value.map((pet) => (pet.id === id ? updated : pet)));
+      }),
+      catchError(() => of(null))
+    );
+  }
+
+  removeAvatar(id: string): Observable<Pet | null> {
+    if (!this.auth.isLoggedIn) return of(null);
+
+    return this.storefrontApi.deleteMyPetAvatar(id).pipe(
+      map((response) => {
+        const userId = this.auth.userId || 'self';
+        return this.fromApiPet(response.data, userId);
+      }),
+      tap((updated) => {
+        this.petsSubject.next(this.petsSubject.value.map((pet) => (pet.id === id ? updated : pet)));
+      }),
+      catchError(() => of(null))
+    );
+  }
+
   private ensureTaxonomy$(): Observable<StorefrontPetTaxonomy> {
     if (this.taxonomy) return of(this.taxonomy);
 
@@ -180,20 +226,28 @@ export class PetsStateService {
   }
 
   private fromApiPet(pet: StorefrontPet, userId: string): Pet {
-    const species = this.resolveFrontSpecies(pet.specie) ?? 'dog';
+    const species = this.resolveFrontCatalogAnimalSpecies(pet.catalogAnimal) ?? this.resolveFrontSpecies(pet.specie) ?? 'dog';
     const ageYears = this.resolveAgeYears(pet.birthdate);
+    const birthParts = this.resolveBirthParts(pet.birthdate);
 
     return {
       id: String(pet.id),
       userId,
       name: pet.name,
       species,
+      specieId: pet.specie?.id ?? undefined,
+      catalogAnimalId: pet.catalogAnimal?.id ?? undefined,
+      lifeStageId: pet.lifeStage?.id ?? undefined,
+      dietTagIds: (pet.dietTags || []).map((d: any) => d.id).filter((id: any) => id > 0),
       breed: pet.breed || undefined,
       color: pet.color || undefined,
       avatarHex: pet.avatarHex || undefined,
+      avatarUrl: pet.avatar?.url ? this.storefrontApi.resolveMediaUrl(pet.avatar.url) : undefined,
       size: this.resolveFrontSize(pet.size),
       weightKg: Number.isFinite(Number(pet.weightKg)) ? Number(pet.weightKg) : undefined,
       ageYears,
+      birthMonth: birthParts?.month,
+      birthYear: birthParts?.year,
       sex: this.resolveFrontSex(pet.sex),
       notes: pet.notes || undefined,
       createdAt: pet.createdAt || new Date().toISOString(),
@@ -223,23 +277,31 @@ export class PetsStateService {
       allergies: draft.allergies,
     };
 
-    if (typeof draft.ageYears === 'number' && Number.isFinite(draft.ageYears)) {
-      payload.birthdate = this.birthdateFromAge(draft.ageYears);
+    const birthdate = this.birthdateFromDraft(draft);
+    if (birthdate) {
+      payload.birthdate = birthdate;
+    }
+
+    if (draft.catalogAnimalId && draft.catalogAnimalId > 0) {
+      payload.catalogAnimalId = draft.catalogAnimalId;
     }
 
     if (this.taxonomy) {
-      const specieId = this.resolveSpecieId(draft.species);
+      // Prefer cached taxonomy IDs over slug-based resolution (more reliable)
+      const specieId = draft.specieId ?? this.resolveSpecieId(draft.species);
       if (specieId) payload.specieId = specieId;
 
-      const lifeStageId = this.resolveLifeStageId(draft.lifeStage, draft.species);
+      const lifeStageId = draft.lifeStageId ?? this.resolveLifeStageId(draft.lifeStage, draft.species);
       if (lifeStageId) payload.lifeStageId = lifeStageId;
 
-      if (draft.diet?.length) {
+      if (Array.isArray(draft.diet)) {
         const dietTagIds = draft.diet
           .map((diet) => this.resolveDietTagId(diet))
           .filter((id): id is number => Number.isFinite(id));
 
         payload.dietTagIds = Array.from(new Set(dietTagIds));
+      } else if (draft.dietTagIds?.length) {
+        payload.dietTagIds = Array.from(new Set(draft.dietTagIds));
       }
 
       if (draft.allergies?.length) {
@@ -258,13 +320,13 @@ export class PetsStateService {
 
   private resolveSpecieId(species: Species): number | undefined {
     const taxonomy = this.taxonomy?.species || [];
-    const expectedSlugs = SPECIES_SLUG_PRIORITY[species] || [];
-    const expectedNames = SPECIES_NAME_PRIORITY[species] || [];
+    const expectedSlugs = (SPECIES_SLUG_PRIORITY[species] || []).map((value) => normalizeLookupValue(value));
+    const expectedNames = (SPECIES_NAME_PRIORITY[species] || []).map((value) => normalizeLookupValue(value));
 
-    const bySlug = taxonomy.find((item) => expectedSlugs.includes((item.slug || '').toLowerCase()));
+    const bySlug = taxonomy.find((item) => expectedSlugs.includes(normalizeLookupValue(item.slug)));
     if (bySlug?.id) return bySlug.id;
 
-    const byName = taxonomy.find((item) => expectedNames.includes((item.name || '').toLowerCase()));
+    const byName = taxonomy.find((item) => expectedNames.includes(normalizeLookupValue(item.name)));
     return byName?.id;
   }
 
@@ -278,29 +340,31 @@ export class PetsStateService {
     const taxonomy = this.taxonomy?.lifeStages || [];
     const speciesIsCat = species === 'cat';
 
-    const expectedSlugs =
+    const expectedSlugs = (
       normalized === 'puppy'
         ? speciesIsCat ? ['gatito'] : ['cachorro']
         : normalized === 'adult'
           ? ['adulto', 'adult']
-          : ['senior'];
+          : ['senior']
+    ).map((value) => normalizeLookupValue(value));
 
-    const bySlug = taxonomy.find((item) => expectedSlugs.includes((item.slug || '').toLowerCase()));
+    const bySlug = taxonomy.find((item) => expectedSlugs.includes(normalizeLookupValue(item.slug)));
     if (bySlug?.id) return bySlug.id;
 
-    const expectedNames =
+    const expectedNames = (
       normalized === 'puppy'
         ? speciesIsCat ? ['gatito'] : ['cachorro']
         : normalized === 'adult'
           ? ['adulto', 'adult']
-          : ['senior'];
+          : ['senior']
+    ).map((value) => normalizeLookupValue(value));
 
-    const byName = taxonomy.find((item) => expectedNames.includes((item.name || '').toLowerCase()));
+    const byName = taxonomy.find((item) => expectedNames.includes(normalizeLookupValue(item.name)));
     return byName?.id;
   }
 
   private resolveDietTagId(diet: string): number | undefined {
-    const normalized = String(diet || '').toLowerCase();
+    const normalized = normalizeLookupValue(diet);
     const taxonomy = this.taxonomy?.dietTags || [];
     const aliases: Record<string, string[]> = {
       grain_free: ['grain_free', 'grain-free', 'grain free', 'libre de granos'],
@@ -308,41 +372,71 @@ export class PetsStateService {
       low_calorie: ['low_calorie', 'low-calorie', 'low calorie', 'control_peso', 'control-peso', 'control de peso', 'bajas calorias'],
       urinary: ['urinary', 'cuidado_urinario', 'cuidado-urinario', 'cuidado urinario', 'salud urinaria'],
       renal: ['renal', 'soporte_renal', 'soporte-renal', 'soporte renal'],
-      hypoallergenic: ['hypoallergenic', 'hipoalergenico', 'hypoallergenic'],
+      hypoallergenic: ['hypoallergenic', 'hipoalergenico'],
     };
-    const candidates = aliases[normalized] || [normalized, normalized.replace(/_/g, '-'), normalized.replace(/_/g, ' ')];
+    const candidates = (aliases[normalized] || [normalized, normalized.replace(/_/g, '-'), normalized.replace(/_/g, ' ')])
+      .map((value) => normalizeLookupValue(value));
 
-    const bySlug = taxonomy.find((item) => candidates.includes((item.slug || '').toLowerCase()));
+    const bySlug = taxonomy.find((item) => candidates.includes(normalizeLookupValue(item.slug)));
     if (bySlug?.id) return bySlug.id;
 
-    const byName = taxonomy.find((item) => candidates.includes((item.name || '').toLowerCase()));
+    const byName = taxonomy.find((item) => candidates.includes(normalizeLookupValue(item.name)));
     return byName?.id;
   }
 
   private resolveHealthConditionId(raw: string): number | undefined {
-    const normalized = String(raw || '').trim().toLowerCase();
+    const normalized = normalizeLookupValue(raw);
     if (!normalized) return undefined;
 
     const taxonomy = this.taxonomy?.healthConditions || [];
 
-    const bySlug = taxonomy.find((item) => (item.slug || '').toLowerCase() === normalized.replace(/\s+/g, '-'));
+    const bySlug = taxonomy.find((item) => normalizeLookupValue(item.slug) === normalized.replace(/\s+/g, '-'));
     if (bySlug?.id) return bySlug.id;
 
-    const byName = taxonomy.find((item) => (item.name || '').toLowerCase() === normalized);
+    const byName = taxonomy.find((item) => normalizeLookupValue(item.name) === normalized);
     return byName?.id;
   }
 
   private resolveFrontSpecies(specie?: StorefrontTaxonomyItem | null): Species | null {
-    const slug = (specie?.slug || '').toLowerCase();
-    const name = (specie?.name || '').toLowerCase();
+    const slug = normalizeLookupValue(specie?.slug);
+    const name = normalizeLookupValue(specie?.name);
 
     if (slug.includes('perro') || name.includes('perro') || slug === 'dog' || name === 'dog') return 'dog';
     if (slug.includes('gato') || name.includes('gato') || slug === 'cat' || name === 'cat') return 'cat';
     if (slug.includes('ave') || name.includes('ave') || slug === 'bird' || name === 'bird') return 'bird';
     if (slug.includes('pez') || name.includes('pez') || slug.includes('fish') || name.includes('fish') || slug.includes('acuario') || name.includes('acuario')) return 'fish';
     if (slug.includes('rept') || name.includes('rept') || slug.includes('tortuga') || name.includes('tortuga') || slug === 'turtle' || name === 'turtle') return 'reptile';
-    if (slug.includes('hamster') || name.includes('hamster') || slug.includes('conejo') || name.includes('conejo') || slug.includes('cobayo') || name.includes('cobayo') || slug.includes('small')) return 'small-pet';
+    if (slug.includes('hamster') || name.includes('hamster') || slug.includes('conejo') || name.includes('conejo') || slug.includes('cobayo') || name.includes('cobayo') || slug.includes('small') || slug.includes('pequena') || name.includes('pequena')) return 'small-pet';
     return null;
+  }
+
+  private resolveFrontCatalogAnimalSpecies(animal?: StorefrontCatalogAnimalRef | null): Species | null {
+    const key = normalizeLookupValue(animal?.key);
+
+    switch (key) {
+      case 'dog':
+        return 'dog';
+      case 'cat':
+        return 'cat';
+      case 'bird':
+        return 'bird';
+      case 'fish':
+        return 'fish';
+      case 'reptile':
+        return 'reptile';
+      case 'other':
+        return 'other';
+      case 'small-pet':
+      case 'small_pet':
+      case 'smallpet':
+        return 'small-pet';
+      default:
+        return this.resolveFrontSpecies({
+          id: animal?.id ?? 0,
+          slug: animal?.slug || null,
+          name: animal?.label,
+        });
+    }
   }
 
   private resolveFrontSize(size?: string | null): Size | undefined {
@@ -400,7 +494,7 @@ export class PetsStateService {
   private resolveAgeYears(birthdate?: string | null): number | undefined {
     if (!birthdate) return undefined;
 
-    const parsed = new Date(birthdate);
+    const parsed = new Date(`${birthdate}T00:00:00`);
     if (Number.isNaN(parsed.getTime())) return undefined;
 
     const now = new Date();
@@ -411,6 +505,36 @@ export class PetsStateService {
     }
 
     return Math.max(0, age);
+  }
+
+  private resolveBirthParts(birthdate?: string | null): { month: number; year: number } | null {
+    if (!birthdate) return null;
+
+    const [yearRaw, monthRaw] = String(birthdate).split('-');
+    const year = Number(yearRaw);
+    const month = Number(monthRaw) - 1;
+
+    if (!Number.isFinite(year) || !Number.isFinite(month) || month < 0 || month > 11) {
+      return null;
+    }
+
+    return { month, year };
+  }
+
+  private birthdateFromDraft(draft: PetDraft): string | undefined {
+    if (typeof draft.birthYear === 'number' && Number.isFinite(draft.birthYear)) {
+      const month = typeof draft.birthMonth === 'number' && Number.isFinite(draft.birthMonth)
+        ? Math.max(0, Math.min(11, draft.birthMonth))
+        : 0;
+      const birth = new Date(Date.UTC(draft.birthYear, month, 1));
+      return birth.toISOString().slice(0, 10);
+    }
+
+    if (typeof draft.ageYears === 'number' && Number.isFinite(draft.ageYears)) {
+      return this.birthdateFromAge(draft.ageYears);
+    }
+
+    return undefined;
   }
 
   private birthdateFromAge(ageYears: number): string {

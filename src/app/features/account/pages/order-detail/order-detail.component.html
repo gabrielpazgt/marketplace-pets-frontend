@@ -1,0 +1,185 @@
+<div class="od-page">
+
+  <!-- Back nav -->
+  <button class="od-back" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+    Mis Pedidos
+  </button>
+
+  <!-- Loading -->
+  <div class="od-skeletons" *ngIf="loading">
+    <div class="od-skeleton od-skeleton--head"></div>
+    <div class="od-skeleton od-skeleton--body"></div>
+    <div class="od-skeleton od-skeleton--body"></div>
+  </div>
+
+  <!-- Error -->
+  <div class="od-error" *ngIf="!loading && errorMsg">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ errorMsg }}</p>
+    <button class="od-btn od-btn--ghost" (click)="goBack()">Volver a Mis Pedidos</button>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading && order">
+
+    <!-- Header -->
+    <div class="od-header">
+      <div class="od-header__left">
+        <h2 class="od-header__number">Pedido {{ order.orderNumber || ('#' + order.id) }}</h2>
+        <p class="od-header__date">Realizado el {{ order.createdAt | date:'d MMM yyyy' }}</p>
+      </div>
+      <div class="od-header__right">
+        <span class="od-badge" [class]="'od-badge--' + currentStatus">
+          <mat-icon>{{ statusIcon(currentStatus) }}</mat-icon>
+          {{ statusLabel(currentStatus) }}
+        </span>
+        <div class="od-header__total-wrap">
+          <strong class="od-header__total">Q{{ (order.grandTotal || 0) | number:'1.2-2' }}</strong>
+          <span class="od-header__count">{{ order.order_items.length }} productos</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tracking card -->
+    <div class="od-card od-tracking">
+      <div class="od-card__head">
+        <div class="od-card__icon-wrap">
+          <mat-icon>local_shipping</mat-icon>
+        </div>
+        <h3 class="od-card__title">Seguimiento del pedido</h3>
+      </div>
+
+      <!-- Order number / tracking code -->
+      <div class="od-track-code">
+        <div class="od-track-code__field">
+          <span class="od-track-code__label">Número de pedido</span>
+          <strong class="od-track-code__value">{{ order.orderNumber || ('#' + order.id) }}</strong>
+        </div>
+        <button class="od-btn od-btn--ghost od-btn--sm" (click)="copyOrderNumber()">
+          <mat-icon>{{ copiedNumber ? 'check' : 'content_copy' }}</mat-icon>
+          {{ copiedNumber ? 'Copiado' : 'Copiar' }}
+        </button>
+      </div>
+
+      <!-- Timeline -->
+      <div class="od-timeline" *ngIf="timelineSteps.length">
+        <div
+          *ngFor="let step of timelineSteps; let last = last"
+          class="od-step"
+          [class.od-step--done]="!step.isFuture"
+          [class.od-step--future]="step.isFuture">
+
+          <div class="od-step__indicator">
+            <div class="od-step__circle">
+              <mat-icon *ngIf="!step.isFuture">check</mat-icon>
+            </div>
+            <div class="od-step__line" *ngIf="!last"></div>
+          </div>
+
+          <div class="od-step__body">
+            <div class="od-step__main">
+              <div class="od-step__texts">
+                <p class="od-step__label">{{ statusLabel(step.status) }}</p>
+                <p class="od-step__desc" *ngIf="!step.isFuture">{{ statusDescription(step.status) }}</p>
+              </div>
+              <span class="od-step__time" *ngIf="step.log">
+                {{ step.log.createdAt | date:'d MMM, h:mm a' }}
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <p class="od-timeline-empty" *ngIf="!timelineSteps.length">
+        Aún no hay actualizaciones para este pedido.
+      </p>
+    </div>
+
+    <!-- Info cards row -->
+    <div class="od-info-row">
+      <div class="od-info-card">
+        <div class="od-info-card__label">
+          <mat-icon>location_on</mat-icon>
+          Dirección de envío
+        </div>
+        <p class="od-info-card__value">{{ formattedAddress }}</p>
+      </div>
+      <div class="od-info-card">
+        <div class="od-info-card__label">
+          <mat-icon>local_shipping</mat-icon>
+          Método de envío
+        </div>
+        <p class="od-info-card__value">{{ shippingMethodLabel }}</p>
+      </div>
+    </div>
+
+    <!-- Products card -->
+    <div class="od-card">
+      <div class="od-card__head">
+        <div class="od-card__icon-wrap">
+          <mat-icon>inventory_2</mat-icon>
+        </div>
+        <h3 class="od-card__title">Productos ({{ order.order_items.length }})</h3>
+      </div>
+
+      <ul class="od-items">
+        <li *ngFor="let item of order.order_items" class="od-item">
+          <div class="od-item__img-wrap">
+            <img
+              *ngIf="item.product?.images?.[0]?.url"
+              class="od-item__img"
+              [src]="resolveImageUrl(item.product!.images![0]!.url)"
+              [alt]="item.nameSnapshot"
+              loading="lazy" />
+            <div class="od-item__img od-item__img--placeholder" *ngIf="!item.product?.images?.[0]?.url">
+              <mat-icon>pets</mat-icon>
+            </div>
+          </div>
+          <div class="od-item__info">
+            <p class="od-item__name">{{ item.nameSnapshot }}</p>
+            <p class="od-item__meta">Cant: {{ item.qty }}</p>
+          </div>
+          <span class="od-item__price">Q{{ item.lineTotal | number:'1.2-2' }}</span>
+        </li>
+      </ul>
+
+      <!-- Totals -->
+      <div class="od-totals">
+        <div class="od-totals__row" *ngIf="order.discountTotal > 0">
+          <span class="od-totals__disc-label">
+            <mat-icon>check_circle</mat-icon> Descuento
+          </span>
+          <span class="od-totals__disc-val">−Q{{ order.discountTotal | number:'1.2-2' }}</span>
+        </div>
+        <div class="od-totals__row od-totals__row--grand">
+          <span>Total del pedido</span>
+          <strong>Q{{ order.grandTotal | number:'1.2-2' }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <p class="od-msg od-msg--ok" *ngIf="reorderMsg">{{ reorderMsg }}</p>
+    <p class="od-msg od-msg--err" *ngIf="reorderError">{{ reorderError }}</p>
+
+    <!-- Actions -->
+    <div class="od-actions">
+      <button class="od-btn od-btn--primary" [disabled]="reordering" (click)="reorder()">
+        <mat-icon>refresh</mat-icon>
+        {{ reordering ? 'Agregando al carrito...' : 'Volver a pedir' }}
+      </button>
+      <button class="od-btn od-btn--outline" (click)="downloadInvoice()">
+        <mat-icon>star_border</mat-icon>
+        Descargar factura
+      </button>
+      <button class="od-btn od-btn--outline">
+        <mat-icon>mail_outline</mat-icon>
+        Necesito ayuda
+      </button>
+    </div>
+
+  </div><!-- /content -->
+
+</div>

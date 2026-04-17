@@ -1,0 +1,127 @@
+<div class="ops-page">
+  <div class="ops-page__head">
+    <h1 class="ops-page__title">Dashboard</h1>
+    <!-- Period tabs -->
+    <div class="period-tabs">
+      <button class="period-tab" [class.period-tab--active]="period === 'today'" (click)="setPeriod('today')">Hoy</button>
+      <button class="period-tab" [class.period-tab--active]="period === 'week'" (click)="setPeriod('week')">Semana</button>
+      <button class="period-tab" [class.period-tab--active]="period === 'month'" (click)="setPeriod('month')">Mes</button>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Cargando métricas...</p>
+  </div>
+
+  <p class="error-msg" *ngIf="error">{{ error }}</p>
+
+  <ng-container *ngIf="!loading && metrics">
+
+    <!-- Row 1: Revenue KPIs with comparatives -->
+    <div class="metrics-grid metrics-grid--4">
+      <div class="metric-card metric-card--green">
+        <span class="metric-card__icon">💰</span>
+        <div>
+          <p class="metric-card__value">Q{{ metrics.revenuePeriod | number:'1.0-0' }}</p>
+          <p class="metric-card__label">Ingresos — {{ periodLabel }}</p>
+          <span class="trend" [ngClass]="pctClass(metrics.revenuePeriod, metrics.revenuePrev)">
+            {{ pctLabel(metrics.revenuePeriod, metrics.revenuePrev) }} {{ cmpLabel }}
+          </span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-card__icon">📦</span>
+        <div>
+          <p class="metric-card__value">{{ metrics.totalOrders }}</p>
+          <p class="metric-card__label">Total pedidos</p>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-card__icon">📊</span>
+        <div>
+          <p class="metric-card__value">Q{{ metrics.avgOrderValue | number:'1.2-2' }}</p>
+          <p class="metric-card__label">AOV — {{ periodLabel }}</p>
+        </div>
+      </div>
+
+      <div class="metric-card metric-card--red">
+        <span class="metric-card__icon">❌</span>
+        <div>
+          <p class="metric-card__value">{{ metrics.cancellationRate | number:'1.1-1' }}%</p>
+          <p class="metric-card__label">Tasa de cancelación</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Order status KPIs -->
+    <div class="metrics-grid metrics-grid--4">
+      <div class="metric-card">
+        <span class="metric-card__icon">📦</span>
+        <div>
+          <p class="metric-card__value">{{ metrics.totalOrders }}</p>
+          <p class="metric-card__label">Total pedidos</p>
+        </div>
+      </div>
+      <div class="metric-card metric-card--orange">
+        <span class="metric-card__icon">⏳</span>
+        <div>
+          <p class="metric-card__value">{{ metrics.pendingOrders }}</p>
+          <p class="metric-card__label">Pendientes</p>
+        </div>
+      </div>
+      <div class="metric-card metric-card--blue">
+        <span class="metric-card__icon">⚙️</span>
+        <div>
+          <p class="metric-card__value">{{ metrics.processingOrders }}</p>
+          <p class="metric-card__label">Procesando</p>
+        </div>
+      </div>
+      <div class="metric-card metric-card--purple">
+        <span class="metric-card__icon">🚚</span>
+        <div>
+          <p class="metric-card__value">{{ metrics.shippedOrders }}</p>
+          <p class="metric-card__label">Enviados</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent orders table -->
+    <div class="ops-card">
+      <div class="ops-card__head">
+        <h2 class="ops-card__title">Últimos pedidos</h2>
+        <a class="ops-link" routerLink="/gx-ops/orders">Ver todos →</a>
+      </div>
+
+      <div class="orders-empty" *ngIf="!metrics.recentOrders.length">
+        <p>Aún no hay pedidos registrados.</p>
+      </div>
+
+      <table class="orders-table" *ngIf="metrics.recentOrders.length">
+        <thead>
+          <tr>
+            <th># Pedido</th>
+            <th>Cliente</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of metrics.recentOrders">
+            <td class="order-num">{{ order.orderNumber }}</td>
+            <td>{{ order.customerName || order.email }}</td>
+            <td class="order-total">Q{{ order.grandTotal | number:'1.2-2' }}</td>
+            <td><span class="status-pill" [ngClass]="statusClass(order.statusOrder)">{{ statusLabel(order.statusOrder) }}</span></td>
+            <td class="order-date">{{ order.createdAt | date:'dd/MM/yy HH:mm' }}</td>
+            <td><a class="ops-link" [routerLink]="['/gx-ops/orders', order.id]">Ver</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </ng-container>
+</div>

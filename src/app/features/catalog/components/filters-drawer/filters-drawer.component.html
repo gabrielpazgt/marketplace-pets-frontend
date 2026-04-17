@@ -1,19 +1,41 @@
-﻿<div class="drawer" [class.is-open]="open" (click)="close.emit()"></div>
+<div *ngIf="isDrawerMode" class="drawer" [class.is-open]="open" (click)="onCloseRequested()"></div>
 
-<aside class="panel" [class.is-open]="open" (click)="$event.stopPropagation()" role="dialog" aria-label="Filtros de tienda">
+<aside
+  class="panel"
+  [class.is-open]="!isDrawerMode || open"
+  [class.panel--sidebar]="!isDrawerMode"
+  (click)="isDrawerMode && $event.stopPropagation()"
+  [attr.role]="isDrawerMode ? 'dialog' : 'complementary'"
+  aria-label="Filtros de tienda"
+>
   <header class="panel__header">
     <div class="title">
-      <span class="dot" aria-hidden="true"></span>
+      <mat-icon aria-hidden="true">filter_list</mat-icon>
       <h4>Filtros</h4>
       <span *ngIf="activeCount" class="badge">{{ activeCount }}</span>
     </div>
 
-    <button class="icon" (click)="close.emit()" aria-label="Cerrar filtros">×</button>
+    <div class="panel__header-actions">
+      <button
+        *ngIf="activeCount"
+        type="button"
+        class="clear-all-btn"
+        (click)="onClearRequested()"
+        aria-label="Limpiar todos los filtros"
+      >
+        Limpiar
+      </button>
+      <button *ngIf="isDrawerMode" class="icon" type="button" (click)="onCloseRequested()" aria-label="Cerrar filtros">×</button>
+    </div>
   </header>
 
   <form (submit)="$event.preventDefault()" class="panel__body">
-    <section class="group group--price">
-      <h5 id="flt-price" class="group__title group__title--price">Filtrar por precio</h5>
+    <section class="group group--price" *ngIf="showFilter('price')">
+      <div class="group__head">
+        <h5 id="flt-price" class="group__title group__title--price">Filtrar por precio</h5>
+        <span class="group__pill" *ngIf="hasCustomPriceSelection">Activo</span>
+      </div>
+
       <div class="price-meter" role="group" aria-labelledby="flt-price" *ngIf="hasPriceRange; else noPriceRange">
         <div class="price-meter__bounds">
           <span>{{ priceRangeMin | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
@@ -67,156 +89,388 @@
       </ng-template>
     </section>
 
-    <section class="group" *ngIf="showPetFilter && pets.length">
+    <section class="group group--pet" *ngIf="showPetFilter && pets.length">
       <div class="group__head">
-        <h5 class="group__title">Mascota plantilla</h5>
-        <span class="group__pill" *ngIf="selectedPetProfile">Activa</span>
+        <h5 class="group__title">
+          <span aria-hidden="true">🐾</span> Mascota plantilla
+        </h5>
+        <span class="group__pill group__pill--active" *ngIf="selectedPetProfile">Activa</span>
       </div>
-      <p class="group__hint">
-        Usa un perfil para aplicar especie, etapa, peso, preferencias y alertas relacionadas como contexto del catalogo.
+
+      <p class="group__hint" *ngIf="!selectedPetProfile">
+        Elige una mascota para aplicar sus filtros automáticamente al catálogo.
       </p>
+
+      <div class="pet-template-hero" *ngIf="selectedPetProfile">
+        <div class="pet-template-hero__top">
+          <span class="pet-template-hero__avatar">{{ speciesEmoji(selectedPetProfile.species) }}</span>
+          <div class="pet-template-hero__info">
+            <p class="pet-template-hero__label">Filtrando para</p>
+            <strong class="pet-template-hero__name">{{ selectedPetProfile.name }}</strong>
+          </div>
+          <button
+            type="button"
+            class="pet-template-hero__close"
+            (click)="clearPetFilter()"
+            aria-label="Quitar mascota plantilla"
+          >×</button>
+        </div>
+        <div class="pet-template-hero__tags" *ngIf="selectedPetSummaryTags.length">
+          <span class="pet-template-chip" *ngFor="let tag of selectedPetSummaryTags">{{ tag }}</span>
+        </div>
+        <p class="pet-template-hero__hint">
+          Especie, etapa de vida y preferencias ajustadas automáticamente.
+        </p>
+      </div>
+
       <mat-form-field appearance="outline" class="select-field">
         <mat-select [formControl]="form.controls.petId" panelClass="catalog-select-panel">
-          <mat-option [value]="null">Todas mis mascotas</mat-option>
-          <mat-option *ngFor="let pet of pets" [value]="pet.id">{{ pet.name }}</mat-option>
+          <mat-option [value]="null">— Sin mascota plantilla —</mat-option>
+          <mat-option *ngFor="let pet of pets" [value]="pet.id">
+            {{ speciesEmoji(pet.species) }} {{ pet.name }}
+          </mat-option>
         </mat-select>
       </mat-form-field>
+    </section>
 
-      <div class="template-state" *ngIf="selectedPetProfile; else templateIdle">
-        <strong>{{ selectedPetProfile.name }} esta guiando este filtro</strong>
-        <p>{{ petTemplateSummary }}</p>
-        <div class="template-state__chips" *ngIf="selectedPetSummaryTags.length">
-          <span class="template-chip" *ngFor="let tag of selectedPetSummaryTags">{{ tag }}</span>
+    <section class="group" *ngIf="showFilter('brand') && facets?.brands?.length">
+      <div class="group__head">
+        <h5 class="group__title">Marca</h5>
+        <span class="group__pill" *ngIf="selectedBrandCount">
+          {{ selectedBrandCount }} {{ selectedBrandCount === 1 ? 'seleccionada' : 'seleccionadas' }}
+        </span>
+      </div>
+      <button
+        *ngIf="selectedBrandCount"
+        type="button"
+        class="group__link"
+        (click)="clearBrandSelection()"
+      >
+        Mostrar todas
+      </button>
+
+      <div class="brand-list" role="group" aria-label="Selección de marcas">
+        <div
+          class="brand-option"
+          *ngFor="let item of facets?.brands; trackBy: trackByBrandId"
+          [class.is-selected]="isBrandSelected(item.id)"
+          [class.is-disabled]="isBrandDisabled(item)"
+          (click)="!isBrandDisabled(item) && onBrandToggle(item.id)"
+        >
+          <input
+            type="checkbox"
+            class="brand-option__checkbox"
+            [checked]="isBrandSelected(item.id)"
+            [disabled]="isBrandDisabled(item)"
+            (click)="$event.stopPropagation()"
+            (change)="onBrandToggle(item.id, $event)"
+          />
+
+          <span class="brand-option__logo" [class.brand-option__logo--empty]="!item.logo">
+            <ng-container *ngIf="resolveBrandLogoUrl(item) as logoUrl; else brandFallback">
+              <img [src]="logoUrl" [alt]="item.name" loading="lazy" />
+            </ng-container>
+            <ng-template #brandFallback>
+              <span>{{ getBrandInitial(item.name) }}</span>
+            </ng-template>
+          </span>
+
+          <span class="brand-option__name">{{ item.name }}</span>
+          <span
+            class="catalog-option__meta catalog-option__meta--count"
+            [class.catalog-option__meta--zero]="item.count <= 0"
+          >
+            {{ getOptionCountLabel(item.count) }}
+          </span>
         </div>
       </div>
+    </section>
 
-      <ng-template #templateIdle>
-        <p class="group__hint">Si eliges una mascota, la especie, etapa y preferencias se vuelven sugerencias fijas para este filtrado.</p>
-      </ng-template>
+    <section class="group" *ngIf="showFilter('form') && showFacetControl('form') && facets?.forms?.length">
+      <div class="group__head">
+        <h5 class="group__title">Formato</h5>
+        <span class="group__pill" *ngIf="selectedStringFilterCount('forms')">
+          {{ selectedStringFilterCount('forms') }} {{ selectedStringFilterCount('forms') === 1 ? 'seleccionado' : 'seleccionados' }}
+        </span>
+      </div>
+      <button *ngIf="selectedStringFilterCount('forms')" type="button" class="group__link" (click)="clearStringFilterSelection('forms')">
+        Mostrar todos
+      </button>
+      <div class="filter-list" role="group" aria-label="Selección de formatos">
+        <div
+          class="filter-option"
+          *ngFor="let item of facets?.forms; trackBy: trackByFacetValue"
+          [class.is-selected]="isStringFilterSelected('forms', item.value)"
+          [class.is-disabled]="isStringFilterDisabled('forms', item)"
+          (click)="!isStringFilterDisabled('forms', item) && onStringFilterToggle('forms', item.value)"
+        >
+          <input
+            type="checkbox"
+            class="filter-option__checkbox"
+            [checked]="isStringFilterSelected('forms', item.value)"
+            [disabled]="isStringFilterDisabled('forms', item)"
+            (click)="$event.stopPropagation()"
+            (change)="onStringFilterToggle('forms', item.value, $event)"
+          />
+          <span class="filter-option__name">{{ item.label }}</span>
+          <span
+            class="catalog-option__meta catalog-option__meta--count"
+            [class.catalog-option__meta--zero]="item.count <= 0"
+          >
+            {{ getOptionCountLabel(item.count) }}
+          </span>
+        </div>
+      </div>
+    </section>
 
-      <p class="group__hint" *ngIf="lockBiologyFilters">
-        La mascota elegida ya define especie y etapa sugerida para el filtrado.
+    <section class="group" *ngIf="showFilter('proteinSource') && showFacetControl('proteinSource') && facets?.proteinSources?.length">
+      <div class="group__head">
+        <h5 class="group__title">Proteína o sabor</h5>
+        <span class="group__pill" *ngIf="selectedStringFilterCount('proteinSources')">
+          {{ selectedStringFilterCount('proteinSources') }} {{ selectedStringFilterCount('proteinSources') === 1 ? 'seleccionado' : 'seleccionados' }}
+        </span>
+      </div>
+      <button *ngIf="selectedStringFilterCount('proteinSources')" type="button" class="group__link" (click)="clearStringFilterSelection('proteinSources')">
+        Mostrar todos
+      </button>
+      <div class="filter-list" role="group" aria-label="Selección de proteínas o sabores">
+        <div
+          class="filter-option"
+          *ngFor="let item of facets?.proteinSources; trackBy: trackByFacetValue"
+          [class.is-selected]="isStringFilterSelected('proteinSources', item.value)"
+          [class.is-disabled]="isStringFilterDisabled('proteinSources', item)"
+          (click)="!isStringFilterDisabled('proteinSources', item) && onStringFilterToggle('proteinSources', item.value)"
+        >
+          <input
+            type="checkbox"
+            class="filter-option__checkbox"
+            [checked]="isStringFilterSelected('proteinSources', item.value)"
+            [disabled]="isStringFilterDisabled('proteinSources', item)"
+            (click)="$event.stopPropagation()"
+            (change)="onStringFilterToggle('proteinSources', item.value, $event)"
+          />
+          <span class="filter-option__name">{{ item.label }}</span>
+          <span
+            class="catalog-option__meta catalog-option__meta--count"
+            [class.catalog-option__meta--zero]="item.count <= 0"
+          >
+            {{ getOptionCountLabel(item.count) }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section class="group" *ngIf="showFilter('species') && showFacetControl('specieId') && facets?.species?.length">
+      <div class="group__head">
+        <h5 class="group__title">Especie</h5>
+        <span class="group__pill group__pill--locked" *ngIf="lockBiologyFilters">🐾 Mascota</span>
+        <span class="group__pill" *ngIf="selectedIdFilterCount('specieIds') && !lockBiologyFilters">
+          {{ selectedIdFilterCount('specieIds') }} {{ selectedIdFilterCount('specieIds') === 1 ? 'seleccionada' : 'seleccionadas' }}
+        </span>
+      </div>
+      <button *ngIf="selectedIdFilterCount('specieIds') && !lockBiologyFilters" type="button" class="group__link" (click)="clearIdFilterSelection('specieIds')">
+        Mostrar todas
+      </button>
+      <div class="filter-list" role="group" aria-label="Selección de especies">
+        <div
+          class="filter-option"
+          *ngFor="let item of facets?.species; trackBy: trackByBrandId"
+          [class.is-selected]="isIdFilterSelected('specieIds', item.id)"
+          [class.is-disabled]="lockBiologyFilters || isIdFilterDisabled('specieIds', item)"
+          (click)="!(lockBiologyFilters || isIdFilterDisabled('specieIds', item)) && onIdFilterToggle('specieIds', item.id)"
+        >
+          <input
+            type="checkbox"
+            class="filter-option__checkbox"
+            [checked]="isIdFilterSelected('specieIds', item.id)"
+            [disabled]="lockBiologyFilters || isIdFilterDisabled('specieIds', item)"
+            (click)="$event.stopPropagation()"
+            (change)="onIdFilterToggle('specieIds', item.id, $event)"
+          />
+          <span class="filter-option__name">{{ item.name }}</span>
+          <span
+            class="catalog-option__meta catalog-option__meta--count"
+            [class.catalog-option__meta--zero]="item.count <= 0"
+          >
+            {{ getOptionCountLabel(item.count) }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section class="group" *ngIf="showFilter('lifeStage') && showFacetControl('lifeStageId') && facets?.lifeStages?.length">
+      <div class="group__head">
+        <h5 class="group__title">Etapa de vida</h5>
+        <span class="group__pill group__pill--locked" *ngIf="lockBiologyFilters">🐾 Mascota</span>
+        <span class="group__pill" *ngIf="selectedIdFilterCount('lifeStageIds') && !lockBiologyFilters">
+          {{ selectedIdFilterCount('lifeStageIds') }} {{ selectedIdFilterCount('lifeStageIds') === 1 ? 'seleccionada' : 'seleccionadas' }}
+        </span>
+      </div>
+      <button *ngIf="selectedIdFilterCount('lifeStageIds') && !lockBiologyFilters" type="button" class="group__link" (click)="clearIdFilterSelection('lifeStageIds')">
+        Mostrar todas
+      </button>
+      <div class="filter-list" role="group" aria-label="Selección de etapas de vida">
+        <div
+          class="filter-option"
+          *ngFor="let item of facets?.lifeStages; trackBy: trackByBrandId"
+          [class.is-selected]="isIdFilterSelected('lifeStageIds', item.id)"
+          [class.is-disabled]="lockBiologyFilters || isIdFilterDisabled('lifeStageIds', item)"
+          (click)="!(lockBiologyFilters || isIdFilterDisabled('lifeStageIds', item)) && onIdFilterToggle('lifeStageIds', item.id)"
+        >
+          <input
+            type="checkbox"
+            class="filter-option__checkbox"
+            [checked]="isIdFilterSelected('lifeStageIds', item.id)"
+            [disabled]="lockBiologyFilters || isIdFilterDisabled('lifeStageIds', item)"
+            (click)="$event.stopPropagation()"
+            (change)="onIdFilterToggle('lifeStageIds', item.id, $event)"
+          />
+          <span class="filter-option__name">{{ item.name }}</span>
+          <span
+            class="catalog-option__meta catalog-option__meta--count"
+            [class.catalog-option__meta--zero]="item.count <= 0"
+          >
+            {{ getOptionCountLabel(item.count) }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section class="group" *ngIf="showFilter('dietTag') && showFacetControl('dietTagId') && facets?.dietTags?.length">
+      <div class="group__head">
+        <h5 class="group__title">Necesidad alimentaria</h5>
+        <span class="group__pill group__pill--locked" *ngIf="lockDietFilters">🐾 Mascota</span>
+        <span class="group__pill" *ngIf="selectedIdFilterCount('dietTagIds') && !lockDietFilters">
+          {{ selectedIdFilterCount('dietTagIds') }} {{ selectedIdFilterCount('dietTagIds') === 1 ? 'seleccionada' : 'seleccionadas' }}
+        </span>
+      </div>
+      <button *ngIf="selectedIdFilterCount('dietTagIds') && !lockDietFilters" type="button" class="group__link" (click)="clearIdFilterSelection('dietTagIds')">
+        Mostrar todas
+      </button>
+      <div class="filter-list" role="group" aria-label="Selección de necesidades alimentarias">
+        <div
+          class="filter-option"
+          *ngFor="let item of facets?.dietTags; trackBy: trackByBrandId"
+          [class.is-selected]="isIdFilterSelected('dietTagIds', item.id)"
+          [class.is-disabled]="lockDietFilters || isIdFilterDisabled('dietTagIds', item)"
+          (click)="!(lockDietFilters || isIdFilterDisabled('dietTagIds', item)) && onIdFilterToggle('dietTagIds', item.id)"
+        >
+          <input
+            type="checkbox"
+            class="filter-option__checkbox"
+            [checked]="isIdFilterSelected('dietTagIds', item.id)"
+            [disabled]="lockDietFilters || isIdFilterDisabled('dietTagIds', item)"
+            (click)="$event.stopPropagation()"
+            (change)="onIdFilterToggle('dietTagIds', item.id, $event)"
+          />
+          <span class="filter-option__name">{{ item.name }}</span>
+          <span
+            class="catalog-option__meta catalog-option__meta--count"
+            [class.catalog-option__meta--zero]="item.count <= 0"
+          >
+            {{ getOptionCountLabel(item.count) }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section class="group" *ngIf="showFilter('healthCondition') && showFacetControl('healthConditionId') && facets?.healthConditions?.length">
+      <div class="group__head">
+        <h5 class="group__title">Objetivo de salud</h5>
+        <span class="group__pill" *ngIf="selectedIdFilterCount('healthConditionIds')">
+          {{ selectedIdFilterCount('healthConditionIds') }} {{ selectedIdFilterCount('healthConditionIds') === 1 ? 'seleccionado' : 'seleccionados' }}
+        </span>
+      </div>
+      <button *ngIf="selectedIdFilterCount('healthConditionIds')" type="button" class="group__link" (click)="clearIdFilterSelection('healthConditionIds')">
+        Mostrar todos
+      </button>
+      <div class="filter-list" role="group" aria-label="Selección de objetivos de salud">
+        <div
+          class="filter-option"
+          *ngFor="let item of facets?.healthConditions; trackBy: trackByBrandId"
+          [class.is-selected]="isIdFilterSelected('healthConditionIds', item.id)"
+          [class.is-disabled]="isIdFilterDisabled('healthConditionIds', item)"
+          (click)="!isIdFilterDisabled('healthConditionIds', item) && onIdFilterToggle('healthConditionIds', item.id)"
+        >
+          <input
+            type="checkbox"
+            class="filter-option__checkbox"
+            [checked]="isIdFilterSelected('healthConditionIds', item.id)"
+            [disabled]="isIdFilterDisabled('healthConditionIds', item)"
+            (click)="$event.stopPropagation()"
+            (change)="onIdFilterToggle('healthConditionIds', item.id, $event)"
+          />
+          <span class="filter-option__name">{{ item.name }}</span>
+          <span
+            class="catalog-option__meta catalog-option__meta--count"
+            [class.catalog-option__meta--zero]="item.count <= 0"
+          >
+            {{ getOptionCountLabel(item.count) }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section class="group" *ngIf="showFilter('ingredient') && showFacetControl('ingredientId') && facets?.ingredients?.length">
+      <div class="group__head">
+        <h5 class="group__title">Ingrediente principal</h5>
+        <span class="group__pill" *ngIf="selectedIdFilterCount('ingredientIds')">
+          {{ selectedIdFilterCount('ingredientIds') }} {{ selectedIdFilterCount('ingredientIds') === 1 ? 'seleccionado' : 'seleccionados' }}
+        </span>
+      </div>
+      <button *ngIf="selectedIdFilterCount('ingredientIds')" type="button" class="group__link" (click)="clearIdFilterSelection('ingredientIds')">
+        Mostrar todos
+      </button>
+      <div class="filter-list" role="group" aria-label="Selección de ingredientes principales">
+        <div
+          class="filter-option"
+          *ngFor="let item of facets?.ingredients; trackBy: trackByBrandId"
+          [class.is-selected]="isIdFilterSelected('ingredientIds', item.id)"
+          [class.is-disabled]="isIdFilterDisabled('ingredientIds', item)"
+          (click)="!isIdFilterDisabled('ingredientIds', item) && onIdFilterToggle('ingredientIds', item.id)"
+        >
+          <input
+            type="checkbox"
+            class="filter-option__checkbox"
+            [checked]="isIdFilterSelected('ingredientIds', item.id)"
+            [disabled]="isIdFilterDisabled('ingredientIds', item)"
+            (click)="$event.stopPropagation()"
+            (change)="onIdFilterToggle('ingredientIds', item.id, $event)"
+          />
+          <span class="filter-option__name">{{ item.name }}</span>
+          <span
+            class="catalog-option__meta catalog-option__meta--count"
+            [class.catalog-option__meta--zero]="item.count <= 0"
+          >
+            {{ getOptionCountLabel(item.count) }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section class="group group--taxonomy" *ngIf="technicalFilterDefinitions.length">
+      <div class="group__head">
+        <h5 class="group__title">Refinamientos por categoria</h5>
+        <span class="group__pill">
+          {{ technicalFilterDefinitions.length }} {{ technicalFilterDefinitions.length === 1 ? 'definido' : 'definidos' }}
+        </span>
+      </div>
+      <p class="group__hint">
+        Estos filtros ya estan definidos en la taxonomia y se volveran interactivos automaticamente cuando existan datos de producto para ellos.
       </p>
-    </section>
-
-    <section class="group" *ngIf="facets?.brands?.length">
-      <h5 class="group__title">Marca</h5>
-      <mat-form-field appearance="outline" class="select-field">
-        <mat-select [formControl]="form.controls.brandId" panelClass="catalog-select-panel">
-          <mat-option [value]="null">Todas</mat-option>
-          <mat-option *ngFor="let item of facets?.brands" [value]="item.id">
-            <span class="catalog-option">
-              <span>{{ item.name }}</span>
-              <span class="catalog-option__meta">{{ item.count }}</span>
-            </span>
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-    </section>
-
-    <section class="group" *ngIf="showFacetControl('form') && facets?.forms?.length">
-      <h5 class="group__title">Formato</h5>
-      <mat-form-field appearance="outline" class="select-field">
-        <mat-select [formControl]="form.controls.form" panelClass="catalog-select-panel">
-          <mat-option [value]="null">Todos</mat-option>
-          <mat-option *ngFor="let item of facets?.forms" [value]="item.value">
-            <span class="catalog-option">
-              <span>{{ item.label }}</span>
-              <span class="catalog-option__meta">{{ item.count }}</span>
-            </span>
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-    </section>
-
-    <section class="group" *ngIf="showFacetControl('proteinSource') && facets?.proteinSources?.length">
-      <h5 class="group__title">Proteína o sabor</h5>
-      <mat-form-field appearance="outline" class="select-field">
-        <mat-select [formControl]="form.controls.proteinSource" panelClass="catalog-select-panel">
-          <mat-option [value]="null">Todos</mat-option>
-          <mat-option *ngFor="let item of facets?.proteinSources" [value]="item.value">
-            <span class="catalog-option">
-              <span>{{ item.label }}</span>
-              <span class="catalog-option__meta">{{ item.count }}</span>
-            </span>
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-    </section>
-
-    <section class="group" *ngIf="showFacetControl('specieId') && facets?.species?.length">
-      <h5 class="group__title">Especie</h5>
-      <mat-form-field appearance="outline" class="select-field">
-        <mat-select [formControl]="form.controls.specieId" [disabled]="lockBiologyFilters" panelClass="catalog-select-panel">
-          <mat-option [value]="null">Todas</mat-option>
-          <mat-option *ngFor="let item of facets?.species" [value]="item.id">
-            <span class="catalog-option">
-              <span>{{ item.name }}</span>
-              <span class="catalog-option__meta">{{ item.count }}</span>
-            </span>
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-    </section>
-
-    <section class="group" *ngIf="showFacetControl('lifeStageId') && facets?.lifeStages?.length">
-      <h5 class="group__title">Etapa de vida</h5>
-      <mat-form-field appearance="outline" class="select-field">
-        <mat-select [formControl]="form.controls.lifeStageId" [disabled]="lockBiologyFilters" panelClass="catalog-select-panel">
-          <mat-option [value]="null">Todas</mat-option>
-          <mat-option *ngFor="let item of facets?.lifeStages" [value]="item.id">
-            <span class="catalog-option">
-              <span>{{ item.name }}</span>
-              <span class="catalog-option__meta">{{ item.count }}</span>
-            </span>
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-    </section>
-
-    <section class="group" *ngIf="showFacetControl('dietTagId') && facets?.dietTags?.length">
-      <h5 class="group__title">Necesidad alimentaria</h5>
-      <mat-form-field appearance="outline" class="select-field">
-        <mat-select [formControl]="form.controls.dietTagId" panelClass="catalog-select-panel">
-          <mat-option [value]="null">Todas</mat-option>
-          <mat-option *ngFor="let item of facets?.dietTags" [value]="item.id">
-            <span class="catalog-option">
-              <span>{{ item.name }}</span>
-              <span class="catalog-option__meta">{{ item.count }}</span>
-            </span>
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-    </section>
-
-    <section class="group" *ngIf="showFacetControl('healthConditionId') && facets?.healthConditions?.length">
-      <h5 class="group__title">Objetivo de salud</h5>
-      <mat-form-field appearance="outline" class="select-field">
-        <mat-select [formControl]="form.controls.healthConditionId" panelClass="catalog-select-panel">
-          <mat-option [value]="null">Todos</mat-option>
-          <mat-option *ngFor="let item of facets?.healthConditions" [value]="item.id">
-            <span class="catalog-option">
-              <span>{{ item.name }}</span>
-              <span class="catalog-option__meta">{{ item.count }}</span>
-            </span>
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-    </section>
-
-    <section class="group" *ngIf="showFacetControl('ingredientId') && facets?.ingredients?.length">
-      <h5 class="group__title">Ingrediente principal</h5>
-      <mat-form-field appearance="outline" class="select-field">
-        <mat-select [formControl]="form.controls.ingredientId" panelClass="catalog-select-panel">
-          <mat-option [value]="null">Todos</mat-option>
-          <mat-option *ngFor="let item of facets?.ingredients" [value]="item.id">
-            <span class="catalog-option">
-              <span>{{ item.name }}</span>
-              <span class="catalog-option__meta">{{ item.count }}</span>
-            </span>
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <div class="taxonomy-filter-list" role="list" aria-label="Refinamientos definidos para la categoria actual">
+        <article
+          class="taxonomy-filter-card"
+          role="listitem"
+          *ngFor="let filter of technicalFilterDefinitions; trackBy: trackByTechnicalFilterKey"
+        >
+          <div class="taxonomy-filter-card__head">
+            <strong class="taxonomy-filter-card__title">{{ filter.label }}</strong>
+            <span class="taxonomy-filter-card__status">Listo en taxonomia</span>
+          </div>
+          <p class="taxonomy-filter-card__text">{{ filter.rationale }}</p>
+        </article>
+      </div>
     </section>
 
     <section class="group group--stock">
@@ -225,9 +479,12 @@
       </mat-checkbox>
     </section>
 
+    <p class="panel__note">
+      Puedes combinar varias opciones. Si una combinación deja una opción sin resultados, se mantiene visible pero bloqueada.
+    </p>
+
     <div class="actions">
-      <button type="button" class="btn ghost" (click)="clear.emit()">Limpiar</button>
-      <button class="btn primary" type="button" (click)="onSubmit()">Aplicar</button>
+      <button type="button" class="btn ghost" (click)="onClearRequested()">Limpiar</button>
     </div>
   </form>
 </aside>

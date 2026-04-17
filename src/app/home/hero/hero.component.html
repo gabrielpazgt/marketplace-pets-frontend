@@ -1,54 +1,68 @@
-<section class="hero" aria-label="Aumakki Hero">
-  <div class="hero__inner container">
+<section class="hh-hero" aria-label="Aumakki Hero">
+  <div class="hs-container hh-hero__inner">
 
     <!-- Copy -->
-    <div class="hero__copy">
-      <div class="hero__promo" *ngIf="promo.text">
-        <i class="fa-solid fa-gift" aria-hidden="true"></i>
-        <span>{{ promo.text }}</span>
+    <div class="hh-hero__copy">
+      <div class="hh-hero__badge">
+        <mat-icon>auto_awesome</mat-icon>
+        <span>La tienda de mascotas que Guatemala necesitaba</span>
       </div>
 
-      <h1 class="hero__title">{{ title }}</h1>
-      <p class="hero__subtitle">{{ subtitle }}</p>
+      <h1 class="hh-hero__title">
+        Porque tu mascota
+        <span class="hh-hero__title--accent">merece lo mejor.</span>
+      </h1>
 
-      <!-- Beneficios con tus íconos -->
-      <ul class="hero__features" aria-label="Beneficios de la tienda">
-        <li class="feature" *ngFor="let f of features">
-          <img class="feature__icon" [src]="f.img" [alt]="f.title" width="28" height="28" />
-          <div class="txt">
-            <strong>{{ f.title }}</strong>
-            <small *ngIf="f.caption">{{ f.caption }}</small>
-          </div>
-        </li>
-      </ul>
+      <p class="hh-hero__sub">
+        Nutrición premium, juguetes seguros y accesorios de calidad — todo
+        seleccionado con cuidado y entregado a tu puerta en toda Guatemala.
+      </p>
 
-      <!-- CTAs (alineados al DS: .btn .primary / .ghost) -->
-      <div class="hero__actions">
-        <a
-          *ngFor="let c of ctas"
-          class="btn"
-          [class.primary]="c.variant === 'primary'"
-          [class.ghost]="c.variant === 'ghost'"
-          [routerLink]="c.link">
-          {{ c.label }}
+      <div class="hh-hero__actions">
+        <a class="hh-btn hh-btn--primary" routerLink="/catalog">
+          Explorar Tienda
+          <mat-icon>arrow_forward</mat-icon>
+        </a>
+        <a class="hh-btn hh-btn--secondary" routerLink="/memberships/plans">
+          <mat-icon class="hh-btn__icon-accent">percent</mat-icon>
+          Membresía — Ahorra 5%
         </a>
       </div>
 
-      <!-- Atajos -->
-      <nav class="hero__tags" aria-label="Atajos de categoría">
-        <a *ngFor="let t of quickTags" class="tag" [routerLink]="t.link">{{ t.label }}</a>
-      </nav>
+      <!-- Trust row -->
+      <div class="hh-hero__trust">
+        <div class="hh-trust-chip">
+          <mat-icon>verified_user</mat-icon>
+          <span>Pago 100% seguro</span>
+        </div>
+        <div class="hh-trust-chip">
+          <mat-icon>local_shipping</mat-icon>
+          <span>Envío a toda Guatemala</span>
+        </div>
+        <div class="hh-trust-chip">
+          <mat-icon>verified</mat-icon>
+          <span>Devolución garantizada</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Imagen -->
-    <div class="hero__media" aria-hidden="true">
-      <picture>
-        <source *ngIf="image.webpLg" type="image/webp" media="(min-width: 900px)" [srcset]="image.webpLg" />
-        <source *ngIf="image.webp" type="image/webp" [srcset]="image.webp" />
-        <source *ngIf="image.srcLg" media="(min-width: 900px)" [srcset]="image.srcLg" />
-        <img [src]="image.src" [alt]="image.alt" loading="lazy" />
-      </picture>
-      <span class="blob"></span>
+    <!-- Media -->
+    <div class="hh-hero__media" aria-hidden="true">
+      <div class="hh-hero__img-wrap">
+        <img [src]="image.src" [alt]="image.alt" loading="eager" />
+        <div class="hh-hero__img-overlay"></div>
+      </div>
+
+      <!-- Floating card -->
+      <div class="hh-hero__float">
+        <div class="hh-hero__float-icon">
+          <mat-icon>auto_awesome</mat-icon>
+        </div>
+        <div>
+          <p class="hh-hero__float-value">5% off</p>
+          <p class="hh-hero__float-label">Con membresía Premium</p>
+        </div>
+      </div>
     </div>
 
   </div>

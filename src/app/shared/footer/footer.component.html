@@ -1,138 +1,79 @@
 <footer class="footer" role="contentinfo">
-  <section class="promo" aria-label="Promocion activa" *ngIf="promoText && promoCode">
-    <div class="promo__inner container">
-      <p class="promo__text">{{ promoText }}</p>
-      <div class="promo__code" aria-label="Codigo del cupon">
-        <span>Codigo</span>
-        <strong>{{ promoCode }}</strong>
-      </div>
+  <section class="footer__trust">
+    <div class="container footer__trust-grid">
+      <article class="footer__trust-item" *ngFor="let pill of trustPills">
+        <span class="footer__trust-icon">
+          <mat-icon>{{ pill.icon }}</mat-icon>
+        </span>
+        <span>{{ pill.title }}</span>
+      </article>
     </div>
-    <svg class="promo__wave" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
-      <path d="M0,48 C150,92 360,12 600,56 C840,100 1050,18 1200,48 L1200,0 L0,0 Z"></path>
-    </svg>
   </section>
 
-  <section class="footer__shell">
-    <div class="container footer__grid">
+  <section class="footer__main">
+    <div class="container footer__main-grid">
       <div class="footer__brand">
-        <a routerLink="/" class="brand" aria-label="Aumakki inicio">
-          <span class="brand__logo" aria-hidden="true">A</span>
-          <span class="brand__name">Aumakki</span>
+        <a routerLink="/" class="footer__logo" aria-label="Aumakki inicio">
+          <img src="assets/images/logo_marketpets.png" alt="Aumakki" loading="lazy" />
+          <span>Aumakki</span>
         </a>
 
         <p class="footer__lead">
-          Ecommerce de mascotas con catalogo curado, filtros inteligentes y recomendaciones mas utiles para cada perfil.
+          Suplementos, alimento y cuidado diario para mascotas felices y familias que compran más claro.
         </p>
 
-        <ul class="trust-list" aria-label="Puntos de confianza">
-          <li *ngFor="let pill of trustPills">
-            <span class="trust-list__icon" aria-hidden="true">{{ pill.icon }}</span>
-            <span class="trust-list__body">
-              <strong>{{ pill.title }}</strong>
-              <small>{{ pill.subtitle }}</small>
-            </span>
-          </li>
-        </ul>
-
-        <nav class="social" aria-label="Redes sociales">
-          <a
-            *ngFor="let item of socialLinks"
-            class="social__link"
-            [href]="item.href || null"
-            [attr.aria-label]="item.alt"
-            [attr.title]="item.alt"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img class="social__icon" [src]="item.src" [alt]="item.alt" loading="lazy" />
-          </a>
-        </nav>
-      </div>
-
-      <div class="footer__stack">
-        <article class="link-group" *ngFor="let group of footerGroups">
-          <h3>{{ group.title }}</h3>
-          <ul>
-            <li *ngFor="let link of group.links">
-              <a [routerLink]="link.href">{{ link.label }}</a>
-            </li>
-          </ul>
-        </article>
-
-        <article class="link-group link-group--contact">
-          <h3>Contacto</h3>
-          <ul class="contact-list">
-            <li>
-              <span class="contact-list__label">Ciudad</span>
-              <span>Guatemala, Guatemala</span>
-            </li>
-            <li>
-              <span class="contact-list__label">Telefono</span>
-              <a href="tel:+50200000000">+502 0000 0000</a>
-            </li>
-            <li>
-              <span class="contact-list__label">Correo</span>
-              <a href="mailto:hola&#64;aumakki.com">hola&#64;aumakki.com</a>
-            </li>
-            <li>
-              <span class="contact-list__label">Horario</span>
-              <span>Lun - Sab, 9:00 a. m. a 6:00 p. m.</span>
-            </li>
-          </ul>
-        </article>
-      </div>
-
-      <div class="footer__newsletter">
-        <h3>Newsletter</h3>
-        <p>Recibe lanzamientos, cupones y tips de compra utiles. Sin spam.</p>
+        <h3>Obtén 10% en tu primera compra</h3>
 
         <form
-          class="newsletter"
+          class="footer__newsletter"
           (submit)="$event.preventDefault(); submitNewsletter(newsletterEmail.value); newsletterEmail.value = ''"
-          aria-label="Suscripcion al newsletter"
+          aria-label="Suscripción al newsletter"
         >
-          <label class="sr-only" for="newsletter-email">Correo electronico</label>
+          <label class="sr-only" for="footer-newsletter-email">Correo electrónico</label>
           <input
             #newsletterEmail
-            id="newsletter-email"
+            id="footer-newsletter-email"
             type="email"
-            name="newsletterEmail"
             autocomplete="email"
-            placeholder="tu@correo.com"
+            placeholder="Ingresa tu correo"
           />
           <button type="submit" class="btn primary">Suscribirme</button>
         </form>
 
         <p
-          class="newsletter__message"
+          class="footer__message"
           *ngIf="newsletterMessage"
           [attr.data-state]="newsletterState"
         >
           {{ newsletterMessage }}
         </p>
 
-        <div class="quick-links" aria-label="Accesos rapidos">
-          <a routerLink="/catalog">Ver tienda</a>
-          <a routerLink="/catalog/perros">Comprar para perros</a>
-          <a routerLink="/catalog/gatos">Comprar para gatos</a>
-        </div>
-
-        <article class="footer__ad" [class.footer__ad--empty]="!footerPromoImageUrl" aria-hidden="{{ !footerPromoImageUrl }}">
-          <img *ngIf="footerPromoImageUrl" [src]="footerPromoImageUrl" [alt]="footerPromoImageAlt" loading="lazy" />
-          <div class="footer__ad-placeholder" *ngIf="!footerPromoImageUrl" aria-hidden="true">
-            <mat-icon>campaign</mat-icon>
-          </div>
-        </article>
+        <nav class="footer__social" aria-label="Redes sociales">
+          <a
+            *ngFor="let item of socialLinks"
+            [href]="item.href"
+            [attr.aria-label]="item.alt"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img [src]="item.iconSrc" [alt]="item.alt" loading="lazy" />
+          </a>
+        </nav>
       </div>
+
+      <nav class="footer__links" *ngFor="let group of footerGroups" [attr.aria-label]="group.title">
+        <h3>{{ group.title }}</h3>
+        <a *ngFor="let link of group.links" [routerLink]="link.href">{{ link.label }}</a>
+      </nav>
     </div>
   </section>
 
   <section class="footer__bottom">
     <div class="container footer__bottom-inner">
-      <p>&copy; {{ currentYear }} Aumakki. Todos los derechos reservados.</p>
+      <p>© {{ currentYear }} Aumakki. Todos los derechos reservados.</p>
       <nav class="footer__legal" aria-label="Legal">
         <a routerLink="/terms">Privacidad</a>
-        <a routerLink="/terms">Terminos</a>
+        <a routerLink="/terms">Términos</a>
         <a routerLink="/terms">Cookies</a>
       </nav>
     </div>

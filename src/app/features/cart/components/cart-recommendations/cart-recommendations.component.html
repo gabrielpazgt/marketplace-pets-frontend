@@ -1,16 +1,30 @@
-<section class="recs container">
-  <h4>También te puede gustar</h4>
-
-  <div class="grid">
-    <div class="rec" *ngFor="let it of items">
-      <div class="media">
-        <img [src]="it.image" [alt]="it.name" width="220" height="220" loading="lazy">
-      </div>
-      <div class="name">{{ it.name }}</div>
-      <div class="row">
-        <span class="price">Q {{ it.price }}</span>
-        <button class="btn">Añadir</button>
-      </div>
+<section class="recs" *ngIf="recommendations$ | async as items">
+  <ng-container *ngIf="items.length">
+    <div class="recs__header">
+      <h2>Tambi&eacute;n te puede gustar</h2>
+      <p>Recomendaciones basadas en lo que llevas en tu carrito.</p>
     </div>
-  </div>
+
+    <div class="grid">
+      <article class="rec" *ngFor="let product of items">
+        <a class="media" [routerLink]="['/catalog/product', product.slug]">
+          <img [src]="image(product)" [alt]="product.name" width="220" height="220" loading="lazy">
+        </a>
+
+        <div class="rec__copy">
+          <div class="rec__brand" *ngIf="product.brand?.name">{{ product.brand?.name }}</div>
+          <a class="name" [routerLink]="['/catalog/product', product.slug]">{{ product.name }}</a>
+          <div class="rec__meta">
+            <span *ngIf="product.catalogAnimals?.length">{{ product.catalogAnimals?.[0]?.label }}</span>
+            <span *ngIf="product.catalogCategory?.label">{{ product.catalogCategory?.label }}</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <span class="price">{{ product.price | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
+          <button class="btn" type="button" (click)="add(product)">A&ntilde;adir</button>
+        </div>
+      </article>
+    </div>
+  </ng-container>
 </section>

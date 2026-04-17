@@ -1,0 +1,27 @@
+<section class="hb-brands">
+  <div class="hs-container">
+
+    <div class="hb-brands__head" mpFadeIn>
+      <p class="hb-brands__label">TRABAJAMOS CON LOS MEJORES</p>
+      <h2 class="hb-brands__title">Marcas de confianza</h2>
+      <p class="hb-brands__sub">
+        Solo ofrecemos productos de marcas reconocidas y certificadas para
+        el bienestar de tu mascota.
+      </p>
+    </div>
+
+    <div class="hb-brands__track" mpFadeIn [mpFadeInDelay]="120">
+      <a
+        *ngFor="let b of brands"
+        class="hb-brand"
+        [routerLink]="['/catalog']"
+        [queryParams]="{ brand: b.slug }"
+        [title]="b.name"
+        [attr.aria-label]="b.name"
+      >
+        <span class="hb-brand__name">{{ b.name }}</span>
+      </a>
+    </div>
+
+  </div>
+</section>

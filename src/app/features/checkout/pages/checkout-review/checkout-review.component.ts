@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs/operators';
+import { forkJoin, map, of } from 'rxjs';
+import { finalize, take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { AppHttpError } from '../../../../core/models/http.models';
 import {
@@ -11,6 +12,14 @@ import { StorefrontApiService } from '../../../../core/services/storefront-api.s
 import { Address } from '../../models/checkout.models';
 import { CheckoutStateService } from '../../services/checkout-state.service';
 import { CartStateService } from '../../../cart/services/cart-state.service';
+import { MembershipsService } from '../../../memberships/services/memberships.service';
+
+interface UnavailableItem {
+  name: string;
+  qty: number;
+  unitPrice: number;
+  lineTotal: number;
+}
 
 @Component({
   standalone: false,
@@ -20,14 +29,22 @@ import { CartStateService } from '../../../cart/services/cart-state.service';
 })
 export class CheckoutReviewComponent {
   submitting = false;
+  removingItems = false;
   errorMsg = '';
+  unavailableItems: UnavailableItem[] = [];
+  adjustedTotal = 0;
+
+  readonly potentialSavings$ = this.state.subtotal$.pipe(map(s => Math.round(s * 0.05)));
+
+  get isMember(): boolean { return this.memberships.currentPlan === 'premium'; }
 
   constructor(
     public state: CheckoutStateService,
     private router: Router,
     private auth: AuthService,
     private cart: CartStateService,
-    private storefrontApi: StorefrontApiService
+    private storefrontApi: StorefrontApiService,
+    private memberships: MembershipsService,
   ) {}
 
   shippingMethodLabel(): string {
@@ -58,21 +75,20 @@ export class CheckoutReviewComponent {
 
   paymentIcon(): string {
     const kind = this.state.snapshot.paymentKind;
-    if (kind === 'card') return '??';
-    if (kind === 'bank') return '??';
-    return '??';
+    if (kind === 'card') return '💳';
+    if (kind === 'bank') return '🏦';
+    return '💰';
   }
 
   confirm(): void {
     if (this.submitting) return;
 
     const payload = this.buildCheckoutPayload();
-    if (!payload) {
-      return;
-    }
+    if (!payload) return;
 
     this.submitting = true;
     this.errorMsg = '';
+    this.unavailableItems = [];
 
     const request$ = this.auth.isLoggedIn
       ? this.storefrontApi.checkoutMy(payload)
@@ -98,13 +114,64 @@ export class CheckoutReviewComponent {
           this.router.navigate(['checkout/success']);
         },
         error: (error: AppHttpError) => {
-          this.errorMsg = error?.message || 'No se pudo confirmar el pedido.';
+          const details = error?.details as any;
+          if (details?.unavailable?.length) {
+            this.unavailableItems = details.unavailable as UnavailableItem[];
+            this.cart.cart$.pipe(take(1)).subscribe((currentCart) => {
+              const removedTotal = this.unavailableItems.reduce((s, i) => s + (i.lineTotal || 0), 0);
+              this.adjustedTotal = Math.max(0, (currentCart.grandTotal || 0) - removedTotal);
+            });
+          } else {
+            this.errorMsg = error?.message || 'No se pudo confirmar el pedido.';
+          }
         }
       });
   }
 
+  continueWithoutUnavailable(): void {
+    if (this.removingItems || !this.unavailableItems.length) return;
+
+    this.cart.cart$.pipe(
+      take(1),
+      switchMap((currentCart) => {
+        const itemsToRemove = (currentCart.items || []).filter((cartItem) =>
+          this.unavailableItems.some((u) => u.name === cartItem.product?.name)
+        );
+
+        if (!itemsToRemove.length) return of(null);
+
+        const removes$ = itemsToRemove.map((item) =>
+          this.auth.isLoggedIn
+            ? this.storefrontApi.removeMyCartItem(String(item.id))
+            : this.storefrontApi.removeGuestCartItem(this.cart.getGuestSessionKey(), String(item.id))
+        );
+
+        return forkJoin(removes$);
+      })
+    ).subscribe({
+      next: (results) => {
+        if (results) {
+          const lastCart = (results as any[])[results.length - 1];
+          if (lastCart?.data) this.cart.hydrateFromBackend(lastCart.data);
+        }
+        this.unavailableItems = [];
+        this.removingItems = false;
+        this.confirm();
+      },
+      error: () => {
+        this.removingItems = false;
+        this.errorMsg = 'No se pudieron eliminar los productos. Ve al carrito e inténtalo manualmente.';
+      }
+    });
+    this.removingItems = true;
+  }
+
   back(): void {
     this.router.navigate(['checkout/payment']);
+  }
+
+  goToCart(): void {
+    this.router.navigate(['/cart']);
   }
 
   private buildCheckoutPayload(): StorefrontCheckoutPayload | null {

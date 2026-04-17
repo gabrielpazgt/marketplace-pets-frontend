@@ -1,42 +1,61 @@
-﻿<article class="card" [class.is-loading]="loading">
+<article class="card" [class.is-loading]="loading">
   <div class="card__media">
     <ng-container *ngIf="!loading; else skel">
       <a [routerLink]="['/catalog/product', product.slug]" [attr.aria-label]="'Ver detalle de ' + product.name">
         <img [src]="product.image" [alt]="product.name" width="320" height="320" loading="lazy" decoding="async">
       </a>
-      <span *ngIf="product.badge" class="badge" [attr.data-type]="product.badge">{{ product.badge }}</span>
-      <span *ngIf="discount" class="discount">-{{ discount }}%</span>
+      <div class="card__badges">
+        <span *ngIf="discount" class="badge badge--discount">-{{ discount }}%</span>
+        <span *ngIf="product.badge" class="badge" [attr.data-type]="product.badge">{{ product.badge }}</span>
+      </div>
     </ng-container>
     <ng-template #skel><div class="skel skel--media"></div></ng-template>
   </div>
 
   <div class="card__body">
-    <h3 class="card__title" title="{{product.name}}" *ngIf="!loading; else skelTitle">
-      <a [routerLink]="['/catalog/product', product.slug]">{{ product.name }}</a>
-    </h3>
-    <ng-template #skelTitle><div class="skel skel--line"></div></ng-template>
+    <ng-container *ngIf="!loading; else skelBody">
+      <h3 class="card__title" [title]="product.name">
+        <a [routerLink]="['/catalog/product', product.slug]">{{ product.name }}</a>
+      </h3>
 
-    <p class="stock" *ngIf="!loading">
-      <span [class.low]="(product.stock || 0) <= 5">{{ (product.stock || 0) > 0 ? ((product.stock || 0) <= 5 ? 'Ultimas unidades' : 'Disponible') : 'Sin stock' }}</span>
-      <strong *ngIf="(product.stock || 0) > 0">{{ product.stock }}</strong>
-    </p>
-
-    <div class="price-stack" *ngIf="!loading; else skelPrice">
-      <div class="price price--regular">
-        <span class="price__label">Precio normal</span>
-        <span class="price__now">{{ product.price | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
-        <span *ngIf="product.oldPrice" class="price__old">{{ product.oldPrice | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
+      <div class="card__variants">
+        <ng-container *ngIf="product.variants && product.variants.length > 1">
+          <button
+            type="button"
+            class="variant-chip"
+            *ngFor="let v of product.variants"
+            [class.active]="v.id === (selectedVariantId || product.variants[0]?.id)"
+            (click)="selectVariant(v.id); $event.stopPropagation()"
+          >{{ v.label }}</button>
+        </ng-container>
       </div>
 
-      <div class="price price--member">
-        <span class="price__label">Con membresia ({{ membershipDiscountPct }}%)</span>
-        <span class="price__now">{{ membershipPrice | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
+      <div class="card__pricing">
+        <div class="card__price-main">
+          <span class="price-now">{{ activePrice | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+          <span *ngIf="activeOldPrice" class="price-old">{{ activeOldPrice | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+        </div>
+        <div class="card__price-member">
+          <span class="member-icon" aria-hidden="true">★</span>
+          <span class="member-label">Con membresía</span>
+          <span class="member-price">{{ membershipPrice | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+        </div>
       </div>
-    </div>
-    <ng-template #skelPrice><div class="skel skel--chip"></div></ng-template>
 
-    <button *ngIf="!loading" class="btn-add" type="button" (click)="addToCart.emit()" [disabled]="(product.stock || 0) <= 0">
-      {{ (product.stock || 0) > 0 ? 'Agregar al carrito' : 'Sin stock' }}
-    </button>
+      <p class="stock" [class.stock--low]="activeStock > 0 && activeStock <= 5" [class.stock--out]="activeStock <= 0">
+        <span class="stock__dot" aria-hidden="true"></span>
+        {{ activeStock > 0 ? (activeStock <= 5 ? 'Últimas unidades' : 'Disponible') : 'Sin stock' }}
+      </p>
+
+      <button class="btn-add" type="button" (click)="addToCart.emit(selectedVariantId || undefined)" [disabled]="activeStock <= 0">
+        <span>{{ activeStock > 0 ? 'Agregar al carrito' : 'Sin stock' }}</span>
+      </button>
+    </ng-container>
+
+    <ng-template #skelBody>
+      <div class="skel skel--line" style="width:75%"></div>
+      <div class="skel skel--line skel--short" style="width:50%; margin-top:4px"></div>
+      <div class="skel skel--chip" style="margin-top:8px"></div>
+    </ng-template>
   </div>
 </article>

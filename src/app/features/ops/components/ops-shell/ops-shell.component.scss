@@ -1,0 +1,116 @@
+.ops-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  background: #f1f5f9;
+}
+
+.ops-sidebar {
+  background: #0f172a;
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.ops-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.ops-sidebar__logo {
+  font-size: 1.6rem;
+}
+
+.ops-sidebar__title {
+  margin: 0;
+  font-size: .85rem;
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1.2;
+}
+
+.ops-sidebar__sub {
+  margin: 0;
+  font-size: .72rem;
+  color: #94a3b8;
+}
+
+.ops-nav {
+  list-style: none;
+  padding: 16px 12px;
+  margin: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ops-nav__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: .9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background .15s, color .15s;
+
+  &:hover { background: rgba(255,255,255,.07); color: #e2e8f0; }
+  &--active { background: rgba(217,119,6,.2); color: #fbbf24; }
+}
+
+.ops-nav__icon { font-size: 1rem; }
+
+.ops-nav__section {
+  font-size: .65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: #475569;
+  padding: 12px 12px 4px;
+  margin-top: 4px;
+  &:first-child { margin-top: 0; }
+}
+
+.ops-sidebar__footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.ops-sidebar__user {
+  margin: 0 0 6px;
+  font-size: .82rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.ops-sidebar__link {
+  font-size: .78rem;
+  color: #64748b;
+  text-decoration: none;
+  &:hover { color: #94a3b8; }
+}
+
+.ops-content {
+  padding: 32px;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .ops-layout { grid-template-columns: 1fr; }
+  .ops-sidebar { position: static; height: auto; flex-direction: row; flex-wrap: wrap; padding: 12px; }
+  .ops-sidebar__brand { border-bottom: none; padding: 8px 12px; }
+  .ops-nav { flex-direction: row; padding: 8px; }
+  .ops-sidebar__footer { display: none; }
+  .ops-content { padding: 16px; }
+}

@@ -15,6 +15,7 @@ type CardBrand = 'visa' | 'mastercard' | 'amex' | 'other';
 export class CheckoutPaymentComponent {
   kind: PaymentKind = 'card';
   cardBrand: CardBrand = 'other';
+  processing = false;
 
   form = this.fb.group({
     kind: new FormControl<PaymentKind>('card', { nonNullable: true, validators: [Validators.required] }),
@@ -126,7 +127,7 @@ export class CheckoutPaymentComponent {
   onHolderInput(event: Event) {
     const input = event.target as HTMLInputElement;
     const sanitized = input.value
-      .replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]/g, '')
+      .replace(/[^A-Za-zï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ]/g, '')
       .replace(/\s{2,}/g, ' ');
     this.form.get('card.holder')?.setValue(sanitized, { emitEvent: false });
   }
@@ -206,7 +207,11 @@ export class CheckoutPaymentComponent {
       this.state.setBillingAddress(undefined);
     }
 
-    this.router.navigate(['checkout/review']);
+    this.processing = true;
+    setTimeout(() => {
+      this.processing = false;
+      this.router.navigate(['checkout/review']);
+    }, 2000);
   }
 
   back() {
@@ -248,7 +253,7 @@ export class CheckoutPaymentComponent {
     if (!value) return null;
 
     // Nombre en tarjeta: solo letras (incluye acentos) y espacios.
-    const validPattern = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ ]+$/;
+    const validPattern = /^[A-Za-zï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ]+$/;
     if (!validPattern.test(value)) return { invalidHolder: true };
 
     const normalized = value.replace(/\s+/g, ' ').trim();

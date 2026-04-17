@@ -1,13 +1,58 @@
-﻿<section class="section">
+<section class="section">
   <div class="container account">
     <aside class="account__nav card" aria-label="Navegación de cuenta">
+
+      <!-- User card -->
+      <div class="user-card">
+        <div class="user-avatar" aria-hidden="true">{{ userInitials }}</div>
+        <div class="user-info">
+          <strong class="user-name">{{ userName }}</strong>
+          <span class="user-email muted">{{ userEmail }}</span>
+          <span class="membership-badge" [class.premium]="membershipTier === 'Premium'">
+            {{ membershipTier === 'Premium' ? '★ Premium' : 'Gratuito' }}
+          </span>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Nav links -->
       <nav>
-        <a routerLink="profile" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Mi Perfil</a>
-        <a routerLink="orders" routerLinkActive="active">Historial de Compras</a>
-        <a routerLink="pets" routerLinkActive="active">Mis Mascotas</a>
-        <a routerLink="membership" routerLinkActive="active">Membresía</a>
-        <a routerLink="settings" routerLinkActive="active">Configuración</a>
+        <a routerLink="profile" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <mat-icon>trending_up</mat-icon>
+          <span>Inicio</span>
+          <mat-icon class="arrow">chevron_right</mat-icon>
+        </a>
+        <a routerLink="orders" routerLinkActive="active">
+          <mat-icon>receipt_long</mat-icon>
+          <span>Mis Pedidos</span>
+          <mat-icon class="arrow">chevron_right</mat-icon>
+        </a>
+        <a routerLink="pets" routerLinkActive="active">
+          <mat-icon>pets</mat-icon>
+          <span>Mis Mascotas</span>
+          <mat-icon class="arrow">chevron_right</mat-icon>
+        </a>
+        <a routerLink="membership" routerLinkActive="active">
+          <mat-icon>workspace_premium</mat-icon>
+          <span>Membresía</span>
+          <mat-icon class="arrow">chevron_right</mat-icon>
+        </a>
+        <a routerLink="settings" routerLinkActive="active">
+          <mat-icon>settings</mat-icon>
+          <span>Configuración</span>
+          <mat-icon class="arrow">chevron_right</mat-icon>
+        </a>
       </nav>
+
+      <hr class="divider" />
+
+      <!-- Logout -->
+      <button class="logout-btn" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Cerrar sesión</span>
+      </button>
+
     </aside>
 
     <main class="account__content">

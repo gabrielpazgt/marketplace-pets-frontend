@@ -1,17 +1,34 @@
-﻿<div class="sortbar container">
+<div class="sortbar" [class.container]="useContainer">
   <div class="sortbar__left">
-    <strong>{{ total }}</strong> productos
+    <span class="total-count"><strong>{{ total }}</strong> productos</span>
+    <button
+      *ngIf="activeFilters > 0"
+      type="button"
+      class="clear-btn"
+      (click)="clearFilters.emit()"
+      aria-label="Limpiar todos los filtros activos"
+    >
+      <mat-icon>close</mat-icon>
+      Limpiar filtros
+      <span class="clear-badge">{{ activeFilters }}</span>
+    </button>
   </div>
 
   <div class="sortbar__right">
-    <button type="button" class="sort-btn" (click)="openFilters.emit()">
+    <button
+      *ngIf="showFiltersButton"
+      type="button"
+      class="sort-btn"
+      [class.sort-btn--mobile-only]="filtersButtonMobileOnly"
+      [class.sort-btn--active]="activeFilters > 0"
+      (click)="openFilters.emit()"
+    >
       <mat-icon>tune</mat-icon>
       <span>Filtros</span>
-      <span *ngIf="activeFilters>0" class="badge">{{ activeFilters }}</span>
+      <span *ngIf="activeFilters > 0" class="badge">{{ activeFilters }}</span>
     </button>
 
     <label class="sort">
-      <span class="sort__label">Ordenar:</span>
       <mat-form-field appearance="outline" class="sort__field">
         <mat-select [value]="sort" panelClass="catalog-select-panel" (selectionChange)="onSortChange($event.value)">
           <mat-select-trigger>
@@ -24,5 +41,26 @@
         </mat-select>
       </mat-form-field>
     </label>
+
+    <div class="view-toggle" aria-label="Tipo de vista">
+      <button
+        type="button"
+        class="view-toggle__btn"
+        [class.is-active]="viewMode === 'grid'"
+        aria-label="Vista en cuadrícula"
+        (click)="setViewMode('grid')"
+      >
+        <mat-icon>grid_view</mat-icon>
+      </button>
+      <button
+        type="button"
+        class="view-toggle__btn"
+        [class.is-active]="viewMode === 'list'"
+        aria-label="Vista en lista"
+        (click)="setViewMode('list')"
+      >
+        <mat-icon>view_agenda</mat-icon>
+      </button>
+    </div>
   </div>
 </div>

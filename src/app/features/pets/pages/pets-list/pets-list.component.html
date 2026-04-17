@@ -1,25 +1,35 @@
-<section class="section">
+<section class="section pets-list-page">
   <div class="container">
-    <header class="list-head">
+    <header class="pets-list-head">
       <div>
-        <h2>Mis Mascotas</h2>
-        <p class="muted">Crea perfiles para personalizar recomendaciones y filtros.</p>
+        <p class="pets-list-head__eyebrow">Cuenta / Mis mascotas</p>
+        <h2>Mis mascotas</h2>
+        <p class="muted">Crea perfiles para personalizar recomendaciones y comprar más rápido para cada una.</p>
       </div>
-      <button class="btn primary" routerLink="/account/pets/new">+ Nueva mascota</button>
+
+      <button class="btn primary" type="button" (click)="goNew()">Agregar mascota</button>
     </header>
 
-    <div class="empty card" *ngIf="pets.length === 0">
-      <div class="art"></div>
-      <div class="empty__body">
-        <h3>Sin mascotas aún</h3>
-        <p class="muted">Agrega tu primera mascota para obtener recomendaciones a su medida.</p>
-        <button class="btn accent" routerLink="/account/pets/new">Crear primera mascota</button>
-      </div>
+    <div class="pets-empty" *ngIf="pets.length === 0">
+      <div class="pets-empty__icon">+</div>
+      <h3>Agrega tu primera mascota</h3>
+      <p>Guarda su perfil para tener recomendaciones, filtros y accesos rápidos en la tienda.</p>
+      <button class="btn primary" type="button" (click)="goNew()">Crear perfil</button>
     </div>
 
-    <div class="grid" *ngIf="pets.length > 0">
-      <mp-pet-card *ngFor="let p of pets" [pet]="p"
-        (edit)="onEdit($event)" (remove)="onRemove($event)"></mp-pet-card>
+    <div class="pets-grid" *ngIf="pets.length > 0">
+      <mp-pet-card
+        *ngFor="let pet of pets"
+        [pet]="pet"
+        (edit)="onEdit($event)"
+        (remove)="onRemove($event)"
+      ></mp-pet-card>
+
+      <button class="pets-add-card" type="button" (click)="goNew()">
+        <span class="pets-add-card__icon">+</span>
+        <strong>Agregar una nueva mascota</strong>
+        <span>Crea otro perfil para recomendaciones personalizadas.</span>
+      </button>
     </div>
   </div>
 </section>

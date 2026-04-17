@@ -1,72 +1,100 @@
-<section class="section membership">
-  <div class="container">
-    <div class="card wrap">
-      <header class="head">
-        <h2>Membresías</h2>
-        <p class="muted">
-          Tu cuenta inicia con plan Gratuito. También puedes elegir Premium por Q75/mes.
-        </p>
-      </header>
+<div class="am-page">
 
-      <section class="plans-grid" aria-label="Planes disponibles para tu cuenta">
-        <article class="card panel" *ngFor="let plan of plans" [class.current]="isCurrentPlan(plan.id)">
-          <div class="panel__head">
-            <span class="chip plan">{{ plan.name }}</span>
-            <strong class="price">Q{{ plan.monthlyPrice }}</strong>
-          </div>
+  <!-- ── Hero Premium ── -->
+  <div class="am-hero am-hero--premium" *ngIf="isPremium">
+    <div class="am-hero__top">
+      <div class="am-hero__brand">
+        <mat-icon>workspace_premium</mat-icon>
+        <span class="am-hero__name">Aumakki Premium</span>
+      </div>
+      <span class="am-hero__badge">ACTIVA</span>
+    </div>
+    <p class="am-hero__sub">Estás disfrutando de todos los beneficios exclusivos.</p>
+  </div>
 
-          <p class="muted" *ngIf="plan.id === 'premium'">
-            Incluye <strong>5% de descuento</strong> y atención prioritaria para ayudarte más rápido.
-          </p>
-          <p class="muted" *ngIf="plan.id === 'free'">
-            Ideal para empezar y comprar sin costo mensual.
-          </p>
+  <!-- ── Hero Gratuito ── -->
+  <div class="am-hero am-hero--free" *ngIf="!isPremium">
+    <div class="am-hero__top">
+      <div class="am-hero__brand">
+        <mat-icon>person_outline</mat-icon>
+        <span class="am-hero__name">Plan Gratuito</span>
+      </div>
+      <span class="am-hero__badge am-hero__badge--free">GRATUITO</span>
+    </div>
+    <p class="am-hero__sub">Actualiza a Premium para desbloquear todos los beneficios.</p>
 
-          <ul class="ticks">
-            <li *ngFor="let perk of plan.perks">
-              <span class="tick" aria-hidden="true">&#10003;</span>
-              <span>{{ perk }}</span>
-            </li>
-          </ul>
+    <!-- Upsell CTA -->
+    <a class="am-upsell" routerLink="/memberships/checkout">
+      <div class="am-upsell__left">
+        <p class="am-upsell__price">Q75<span>/mes</span></p>
+        <p class="am-upsell__label">Hazte miembro Premium</p>
+      </div>
+      <div class="am-upsell__arrow">
+        <mat-icon>arrow_forward</mat-icon>
+      </div>
+    </a>
+  </div>
 
-          <button
-            type="button"
-            class="btn"
-            [class.primary]="!isCurrentPlan(plan.id)"
-            [class.ghost]="isCurrentPlan(plan.id)"
-            [disabled]="saving || isCurrentPlan(plan.id)"
-            (click)="selectPlan(plan.id)"
-          >
-            {{ isCurrentPlan(plan.id) ? 'Plan activo' : (saving ? 'Actualizando...' : 'Elegir plan') }}
-          </button>
-        </article>
-      </section>
+  <!-- ── Beneficios ── -->
+  <div class="am-card">
+    <h3 class="am-card__title">Tus Beneficios</h3>
 
-      <p class="muted" *ngIf="message">{{ message }}</p>
+    <ul class="am-benefits">
+      <li class="am-benefit" *ngFor="let b of benefits" [class.am-benefit--locked]="!isPremium">
+        <div class="am-benefit__icon-wrap">
+          <mat-icon>{{ b.icon }}</mat-icon>
+        </div>
+        <div class="am-benefit__body">
+          <p class="am-benefit__title">{{ b.title }}</p>
+          <p class="am-benefit__desc">{{ b.desc }}</p>
+        </div>
+        <mat-icon class="am-benefit__check" *ngIf="isPremium">check</mat-icon>
+        <mat-icon class="am-benefit__lock" *ngIf="!isPremium">lock</mat-icon>
+      </li>
+    </ul>
+  </div>
 
-      <section class="impact card">
-        <h3>Impacto social</h3>
-        <p>
-          Un porcentaje de nuestras ganancias será destinado a fundaciones que ayudan a animales
-          enfermos o en situación de calle.
-        </p>
-      </section>
+  <!-- ── Cambiar plan ── -->
+  <div class="am-card" *ngIf="isPremium">
+    <h3 class="am-card__title">Gestionar membresía</h3>
+    <p class="am-manage__desc">Puedes cancelar tu membresía Premium en cualquier momento y volver al plan Gratuito.</p>
+    <p class="am-msg am-msg--ok" *ngIf="message && currentPlan === 'free'">{{ message }}</p>
+    <p class="am-msg am-msg--err" *ngIf="message && currentPlan === 'premium'">{{ message }}</p>
+    <button
+      class="am-btn am-btn--ghost"
+      [disabled]="saving"
+      (click)="selectPlan('free')">
+      {{ saving ? 'Actualizando...' : 'Cancelar membresía Premium' }}
+    </button>
+  </div>
 
-      <section class="faq">
-        <header class="subhead">
-          <h3>Preguntas rápidas</h3>
-        </header>
-
-        <details>
-          <summary>¿La membresía se renueva automáticamente?</summary>
-          <p>Solo el plan Premium se renueva mensualmente; el plan Gratuito siempre está disponible.</p>
-        </details>
-
-        <details>
-          <summary>¿Necesito membresía para comprar?</summary>
-          <p>No. Puedes comprar como invitado o con tu cuenta registrada.</p>
-        </details>
-      </section>
+  <!-- ── Impacto social ── -->
+  <div class="am-impact">
+    <div class="am-impact__icon-wrap"><mat-icon>favorite</mat-icon></div>
+    <div>
+      <p class="am-impact__title">Tu membresía tiene impacto real</p>
+      <p class="am-impact__desc">Un porcentaje de nuestras ganancias va a fundaciones que ayudan a animales enfermos o en situación de calle.</p>
     </div>
   </div>
-</section>
+
+  <!-- ── FAQ ── -->
+  <div class="am-card am-faq">
+    <h3 class="am-card__title">Preguntas frecuentes</h3>
+
+    <details class="am-faq__item">
+      <summary class="am-faq__q">¿La membresía se renueva automáticamente?</summary>
+      <p class="am-faq__a">Solo el plan Premium se renueva mensualmente. El plan Gratuito siempre está disponible.</p>
+    </details>
+
+    <details class="am-faq__item">
+      <summary class="am-faq__q">¿Necesito membresía para comprar?</summary>
+      <p class="am-faq__a">No. Puedes comprar como invitado o con tu cuenta registrada sin membresía.</p>
+    </details>
+
+    <details class="am-faq__item">
+      <summary class="am-faq__q">¿El descuento aplica a todos los productos?</summary>
+      <p class="am-faq__a">El 5% aplica a productos seleccionados. Siempre se muestra el precio final antes de confirmar.</p>
+    </details>
+  </div>
+
+</div>

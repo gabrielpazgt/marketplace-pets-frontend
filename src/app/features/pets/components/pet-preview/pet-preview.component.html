@@ -1,73 +1,54 @@
-<section class="preview card">
-  <h4>Preview</h4>
-
-  <div class="canvas" [style.--bg]="displayColor">
-    <div class="ring"></div>
-    <div class="blob"></div>
-
-    <img class="pet-img" [src]="speciesImg" alt="Mascota" />
-
-    <div class="paws"></div>
+<section class="pet-preview-card" [style.--pet-color]="draft.avatarHex || '#ffd7a1'">
+  <div class="pet-preview-card__hero">
+    <img class="pet-preview-card__image" [src]="visualImage" [alt]="title" />
   </div>
 
-  <dl class="facts">
-    <div><dt>Nombre</dt><dd>{{ draft.name || '—' }}</dd></div>
+  <div class="pet-preview-card__body">
+    <h3>{{ title }}</h3>
+    <p>{{ subtitle }}</p>
 
-    <div>
-      <dt>Especie</dt>
-      <dd>{{ speciesLabel[draft.species || 'dog'] }}</dd>
+    <dl class="pet-preview-card__stats">
+      <div>
+        <dt>Género</dt>
+        <dd>{{ sexText }}</dd>
+      </div>
+      <div>
+        <dt>Edad</dt>
+        <dd>{{ ageText }}</dd>
+      </div>
+      <div>
+        <dt>Peso</dt>
+        <dd>{{ weightText }}</dd>
+      </div>
+      <div>
+        <dt>Esterilizado</dt>
+        <dd [class.is-positive]="draft.sterilized">{{ sterilizedText }}</dd>
+      </div>
+    </dl>
+
+    <div class="pet-preview-card__group" *ngIf="activityText">
+      <span class="pet-preview-card__label">ACTIVIDAD</span>
+      <div class="pet-preview-card__chips">
+        <span class="pet-preview-card__chip">{{ activityText }}</span>
+      </div>
     </div>
 
-    <div *ngIf="draft.breed">
-      <dt>Raza</dt><dd>{{ draft.breed }}</dd>
+    <div class="pet-preview-card__group" *ngIf="dietChips.length">
+      <span class="pet-preview-card__label">DIETA</span>
+      <div class="pet-preview-card__chips">
+        <span class="pet-preview-card__chip pet-preview-card__chip--accent" *ngFor="let diet of dietChips">
+          {{ diet }}
+        </span>
+      </div>
     </div>
 
-    <div *ngIf="draft.color">
-      <dt>Color</dt><dd>{{ draft.color }}</dd>
+    <div class="pet-preview-card__group" *ngIf="allergyChips.length">
+      <span class="pet-preview-card__label">ALERGIAS</span>
+      <div class="pet-preview-card__chips">
+        <span class="pet-preview-card__chip pet-preview-card__chip--warning" *ngFor="let allergy of allergyChips">
+          {{ allergy }}
+        </span>
+      </div>
     </div>
-
-    <div *ngIf="draft.avatarHex">
-      <dt>Favorito</dt>
-      <dd>
-        <span class="swatch" [style.--hex]="draft.avatarHex"></span>{{ draft.avatarHex }}
-      </dd>
-    </div>
-
-    <div *ngIf="draft.size">
-      <dt>Tamaño</dt><dd>{{ sizeLabel[draft.size!] }}</dd>
-    </div>
-
-    <div>
-      <dt>Edad</dt>
-      <dd>
-        {{ draft.ageYears ?? '—' }}
-        <ng-container *ngIf="draft.ageYears !== undefined"> años</ng-container>
-      </dd>
-    </div>
-
-    <div *ngIf="draft.sex">
-      <dt>Sexo</dt><dd>{{ sexLabel[draft.sex!] }}</dd>
-    </div>
-
-    <!-- NUEVOS -->
-    <div *ngIf="draft.lifeStage">
-      <dt>Etapa</dt><dd>{{ lifeLabel[draft.lifeStage!] }}</dd>
-    </div>
-
-    <div *ngIf="draft.sterilized !== undefined">
-      <dt>Esterilizado</dt><dd>{{ draft.sterilized ? 'Sí' : 'No' }}</dd>
-    </div>
-
-    <div *ngIf="draft.activity">
-      <dt>Actividad</dt><dd>{{ actLabel[draft.activity!] }}</dd>
-    </div>
-
-    <div *ngIf="draft.allergies?.length">
-      <dt>Alergias</dt><dd>{{ allergiesDisplay }}</dd>
-    </div>
-
-    <div *ngIf="draft.diet?.length">
-      <dt>Dieta</dt><dd>{{ dietDisplay }}</dd>
-    </div>
-  </dl>
+  </div>
 </section>

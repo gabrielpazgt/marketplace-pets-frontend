@@ -55,6 +55,12 @@ export class CartItemComponent implements OnChanges {
     return this.item.price * this.item.qty;
   }
 
+  get unitSavings(): number {
+    const oldPrice = Number(this.item.oldPrice || 0);
+    const price = Number(this.item.price || 0);
+    return oldPrice > price ? oldPrice - price : 0;
+  }
+
   private setLocalQty(value: number): void {
     const min = 1;
     const max = Math.max(1, Number(this.item.stock || 1));

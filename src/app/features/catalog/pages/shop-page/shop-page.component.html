@@ -2,246 +2,115 @@
   <div class="container">
     <header class="plp__hero">
       <div class="plp__hero-copy">
-        <div class="plp__eyebrow" *ngIf="contextPathSteps.length">
-          <ng-container *ngFor="let step of contextPathSteps; let isLast = last">
-            <button
-              type="button"
-              class="plp__eyebrow-chip"
-              [class.plp__eyebrow-chip--active]="step.active"
-              [class.plp__eyebrow-chip--clickable]="step.clickable"
-              [disabled]="!step.clickable"
-              (click)="onContextPathSelect(step.level)"
-            >
-              {{ step.label }}
-            </button>
-            <mat-icon class="plp__eyebrow-separator" *ngIf="!isLast">chevron_right</mat-icon>
-          </ng-container>
-        </div>
-
         <h1 class="plp__title">{{ pageTitle }}</h1>
         <p class="plp__subtitle">{{ pageSubtitle }}</p>
       </div>
-
-      <form class="shop-search" (submit)="onSearchSubmit($event)" novalidate>
-        <input
-          type="search"
-          class="input"
-          [value]="searchDraft"
-          (input)="onSearchDraftInput($event)"
-          [placeholder]="searchPlaceholder"
-          aria-label="Buscar productos"
-        />
-        <button type="submit" class="btn primary">Buscar</button>
-      </form>
     </header>
-
-    <div class="plp__toolbar">
-      <button type="button" class="plp__toolbar-btn" (click)="toggleDiscovery()">
-        <mat-icon>{{ discoveryOpen ? 'unfold_less' : 'unfold_more' }}</mat-icon>
-        <span>{{ discoveryToggleLabel }}</span>
-      </button>
-    </div>
-
-    <section
-      class="plp__discovery"
-      [class.plp__discovery--single]="!hasPetProfiles"
-      *ngIf="discoveryOpen"
-    >
-      <article class="context-card context-card--pet" *ngIf="hasPetProfiles">
-        <div class="context-card__header">
-          <div>
-            <span class="section-kicker">Plantilla de filtros</span>
-            <h2>
-              <mat-icon>pets</mat-icon>
-              <span>Compra segun tu mascota</span>
-            </h2>
-          </div>
-
-          <button
-            *ngIf="filters.petId"
-            type="button"
-            class="context-card__action"
-            (click)="setPetFilter(null)"
-          >
-            <mat-icon>close</mat-icon>
-            Quitar plantilla
-          </button>
-        </div>
-
-        <p class="context-card__copy">
-          Elige un perfil y el catalogo se ajusta con especie, etapa, peso, preferencias y alertas registradas. Las recomendaciones
-          detalladas siguen apareciendo dentro de cada ficha de producto.
-        </p>
-
-        <div class="pet-template-grid">
-          <button
-            type="button"
-            class="pet-template"
-            [class.is-active]="!filters.petId"
-            (click)="setPetFilter(null)"
-          >
-            <span class="pet-template__top">
-              <strong>
-                <mat-icon>pets</mat-icon>
-                <span>Todas mis mascotas</span>
-              </strong>
-              <span class="pet-template__state">General</span>
-            </span>
-            <span class="pet-template__meta">Mantiene solo el contexto general de la tienda.</span>
-            <span class="pet-template__tags">
-              <span class="mini-chip" *ngFor="let tag of petTemplateOptions[0].tags">{{ tag }}</span>
-            </span>
-          </button>
-
-          <button
-            type="button"
-            class="pet-template"
-            *ngFor="let pet of pets; let i = index; trackBy: trackByPetId"
-            [class.is-active]="filters.petId === (pet.id + '')"
-            (click)="setPetFilter(pet.id + '')"
-          >
-            <span class="pet-template__top">
-              <strong>
-                <mat-icon>{{ resolvePetIcon(resolveCatalogPetFromProfile(pet)) }}</mat-icon>
-                <span>{{ pet.name }}</span>
-              </strong>
-              <span class="pet-template__state">{{ filters.petId === (pet.id + '') ? 'Activa' : 'Usar' }}</span>
-            </span>
-            <span class="pet-template__meta">{{ petTemplateOptions[i + 1].meta }}</span>
-            <span class="pet-template__tags" *ngIf="petTemplateOptions[i + 1].tags.length">
-              <span class="mini-chip" *ngFor="let tag of petTemplateOptions[i + 1].tags">{{ tag }}</span>
-            </span>
-          </button>
-        </div>
-
-        <div class="context-note" [class.is-active]="!!selectedPetProfile">
-          <strong>{{ selectedPetProfile ? selectedPetProfile.name + ' como plantilla' : 'Sin plantilla activa' }}</strong>
-          <p>{{ petTemplateSummary }}</p>
-
-          <div class="context-note__chips" *ngIf="selectedPetTemplateTags.length">
-            <span class="mini-chip mini-chip--soft" *ngFor="let tag of selectedPetTemplateTags">{{ tag }}</span>
-          </div>
-        </div>
-      </article>
-
-      <article class="context-card context-card--browse">
-        <div class="context-card__header">
-          <div>
-            <span class="section-kicker">Navegacion</span>
-            <h2>
-              <mat-icon>dashboard_customize</mat-icon>
-              <span>Compra por necesidad</span>
-            </h2>
-          </div>
-        </div>
-
-        <p class="context-card__copy">
-          {{ selectedCategoryNote }}
-        </p>
-
-        <div class="taxonomy-shell">
-          <div class="taxonomy-shell__nav">
-            <button
-              type="button"
-              class="taxonomy-tab taxonomy-tab--all"
-              [class.is-active]="!filters.category"
-              (click)="clearCategoryFilter()"
-            >
-              <span class="taxonomy-tab__icon">
-                <mat-icon>{{ resolveCategoryIcon(null) }}</mat-icon>
-              </span>
-              <span class="taxonomy-tab__body">
-                <strong>Todas las categorías</strong>
-                <small>Ver el catalogo completo dentro del contexto actual</small>
-              </span>
-              <span class="taxonomy-tab__count">
-                {{ (navFacets.totalProducts || total || 0) + ' prod.' }}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              class="taxonomy-tab"
-              *ngFor="let category of categoryBrowseOptions"
-              [class.is-active]="filters.category === category.value"
-              (click)="selectCategory(category.value)"
-            >
-              <span class="taxonomy-tab__icon">
-                <mat-icon>{{ resolveCategoryIcon(category.value) }}</mat-icon>
-              </span>
-              <span class="taxonomy-tab__body">
-                <strong>{{ category.label }}</strong>
-                <small>{{ category.note }}</small>
-              </span>
-              <span class="taxonomy-tab__count">
-                {{ category.count > 0 ? (category.count + ' prod.') : 'Curada' }}
-              </span>
-            </button>
-          </div>
-        </div>
-
-        <div class="subcategory-panel" *ngIf="filters.category && subcategoryChips.length">
-          <div class="subcategory-panel__head">
-            <div>
-              <span class="section-kicker section-kicker--neutral">Subcategorias</span>
-              <strong>{{ subcategoryPanelTitle }}</strong>
-              <p>{{ veterinaryHint || subcategoryPanelCopy }}</p>
-            </div>
-
-            <button
-              *ngIf="filters.subcategory"
-              type="button"
-              class="context-card__action"
-              (click)="selectSubcategory('')"
-            >
-              <mat-icon>close</mat-icon>
-              Quitar subcategoria
-            </button>
-          </div>
-
-          <div class="subcategory-panel__chips" *ngIf="spotlightFilterTags.length">
-            <span class="mini-chip mini-chip--soft" *ngFor="let tag of spotlightFilterTags">{{ tag }}</span>
-          </div>
-
-          <div class="subcategory-chip-row">
-            <button
-              type="button"
-              class="subcategory-pill"
-              [class.is-active]="!filters.subcategory"
-              (click)="selectSubcategory('')"
-            >
-              <span>Todas</span>
-              <span class="subcategory-pill__meta">Vista general</span>
-            </button>
-
-            <button
-              type="button"
-              class="subcategory-pill"
-              *ngFor="let subcategory of subcategoryChips"
-              [class.is-active]="filters.subcategory === subcategory.value"
-              (click)="selectSubcategory(subcategory.value)"
-            >
-              <span>{{ subcategory.label }}</span>
-              <span class="subcategory-pill__count" *ngIf="subcategory.count > 0">{{ subcategory.count }}</span>
-              <span class="subcategory-pill__tag" *ngIf="subcategory.suggested && subcategory.count === 0">Sugerida</span>
-            </button>
-          </div>
-        </div>
-      </article>
-    </section>
   </div>
 
-  <app-sort-bar
-    class="plp__sort container"
-    [total]="total"
-    [sort]="sort"
-    [activeFilters]="activeFiltersCount"
-    (sortChange)="onSortChange($event)"
-    (openFilters)="onOpenFilters()"
-  >
-  </app-sort-bar>
+  <div class="container plp__catalog-shell">
+    <aside class="plp__filters-column">
+      <app-filters-drawer
+        class="plp__filters-sidebar"
+        [mode]="'sidebar'"
+        [state]="filters"
+        [pets]="pets"
+        [showPetFilter]="hasPetProfiles"
+        [categories]="categoryOptions"
+        [subcategories]="subcategoryChips"
+        [facets]="facets"
+        [priceRangeBounds]="priceRangeBounds"
+        [lockBiologyFilters]="lockBiologyFilters"
+        [petDerivedFilterIds]="petDerivedFilterIds"
+        [applicableFilterKeys]="applicableFilterKeys"
+        [visibleFacetControls]="visibleFacetControls"
+        [veterinaryHint]="veterinaryHint"
+        [veterinaryFocusTags]="veterinaryFocusTags"
+        [technicalFilterDefinitions]="technicalFilterDefinitions"
+        (apply)="onApplyFilters($event)"
+        (clear)="onClearFilters()"
+      >
+      </app-filters-drawer>
+    </aside>
+
+    <div class="plp__catalog-main">
+      <app-sort-bar
+        class="plp__sort"
+        [useContainer]="false"
+        [total]="total"
+        [sort]="sort"
+        [viewMode]="viewMode"
+        [activeFilters]="activeFiltersCount"
+        [showFiltersButton]="true"
+        [filtersButtonMobileOnly]="true"
+        (sortChange)="onSortChange($event)"
+        (viewModeChange)="onViewModeChange($event)"
+        (openFilters)="onOpenFilters()"
+        (clearFilters)="onClearFilters()"
+      >
+      </app-sort-bar>
+
+      <div class="plp__grid-wrap">
+        <ng-container *ngIf="!loading && items.length; else loadingOrEmpty">
+          <div class="plp__grid grid" [class.plp__grid--list]="viewMode === 'list'">
+            <app-product-card
+              *ngFor="let p of items; trackBy: trackByProductId"
+              [product]="p"
+              (addToCart)="onAddToCart(p, $event)">
+            </app-product-card>
+          </div>
+
+          <app-pagination
+            [total]="total"
+            [page]="page"
+            [pageSize]="pageSize"
+            (pageChange)="onPageChange($event)">
+          </app-pagination>
+        </ng-container>
+
+        <ng-template #loadingOrEmpty>
+          <div class="plp__grid grid" [class.plp__grid--list]="viewMode === 'list'" *ngIf="loading">
+            <app-product-card *ngFor="let _ of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]" [loading]="true"></app-product-card>
+          </div>
+
+          <div class="empty-state" *ngIf="!loading && errorMsg">
+            <div class="empty-state__icon" aria-hidden="true">
+              <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="36" cy="36" r="34" fill="#fff7ed" stroke="#f4d8a7" stroke-width="1.5"/>
+                <path d="M24 24l24 24M48 24L24 48" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3 class="empty-state__title">Algo salió mal</h3>
+            <p class="empty-state__desc">{{ errorMsg }}</p>
+            <button class="btn ghost" (click)="onClearFilters()">Limpiar filtros e intentar de nuevo</button>
+          </div>
+
+          <div class="empty-state" *ngIf="!loading && !errorMsg && !items.length">
+            <div class="empty-state__icon" aria-hidden="true">
+              <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="40" cy="40" r="38" fill="#fff7ed" stroke="#f4d8a7" stroke-width="1.5"/>
+                <circle cx="32" cy="35" r="10" stroke="#d97706" stroke-width="2" fill="none"/>
+                <path d="M39.5 43.5L50 54" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M29 31.5c0 0 2-2 6 0" stroke="#d97706" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="50" cy="28" r="4" fill="#fde68a"/>
+                <circle cx="53" cy="22" r="2.5" fill="#fbbf24"/>
+              </svg>
+            </div>
+            <h3 class="empty-state__title">Sin resultados</h3>
+            <p class="empty-state__desc">No encontramos productos con esa combinación de filtros.<br>Prueba ajustando o eliminando algunos filtros.</p>
+            <div class="empty-state__actions">
+              <button class="btn primary" (click)="onClearFilters()">Limpiar filtros</button>
+              <a class="btn ghost" routerLink="/catalog">Ver todo el catálogo</a>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
 
   <app-filters-drawer
+    class="plp__filters-mobile"
+    [mode]="'drawer'"
     [open]="filtersOpen"
     [state]="filters"
     [pets]="pets"
@@ -251,47 +120,15 @@
     [facets]="facets"
     [priceRangeBounds]="priceRangeBounds"
     [lockBiologyFilters]="lockBiologyFilters"
+    [petDerivedFilterIds]="petDerivedFilterIds"
+    [applicableFilterKeys]="applicableFilterKeys"
     [visibleFacetControls]="visibleFacetControls"
     [veterinaryHint]="veterinaryHint"
     [veterinaryFocusTags]="veterinaryFocusTags"
+    [technicalFilterDefinitions]="technicalFilterDefinitions"
     (apply)="onApplyFilters($event)"
     (clear)="onClearFilters()"
     (close)="onCloseFilters()"
   >
   </app-filters-drawer>
-
-  <div class="container plp__grid-wrap">
-    <ng-container *ngIf="!loading && items.length; else loadingOrEmpty">
-      <div class="plp__grid grid">
-        <app-product-card
-          *ngFor="let p of items; trackBy: trackByProductId"
-          [product]="p"
-          (addToCart)="onAddToCart(p)">
-        </app-product-card>
-      </div>
-
-      <app-pagination
-        [total]="total"
-        [page]="page"
-        [pageSize]="pageSize"
-        (pageChange)="onPageChange($event)">
-      </app-pagination>
-    </ng-container>
-
-    <ng-template #loadingOrEmpty>
-      <div class="plp__grid grid" *ngIf="loading">
-        <app-product-card *ngFor="let _ of [1,2,3,4,5,6,7,8,9,10,11,12]" [loading]="true"></app-product-card>
-      </div>
-
-      <div class="empty" *ngIf="!loading && errorMsg">
-        <p>{{ errorMsg }}</p>
-        <button class="btn btn--ghost" (click)="onClearFilters()">Limpiar filtros</button>
-      </div>
-
-      <div class="empty" *ngIf="!loading && !errorMsg && !items.length">
-        <p>No encontramos productos con ese contexto de mascota y filtros.</p>
-        <button class="btn btn--ghost" (click)="onClearFilters()">Limpiar filtros</button>
-      </div>
-    </ng-template>
-  </div>
 </section>

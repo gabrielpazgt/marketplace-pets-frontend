@@ -36,6 +36,7 @@ export class ProfileOverviewComponent implements OnInit, OnDestroy {
     id: 'dev-user',
     name: 'Usuario',
     email: 'usuario@aumakki.com',
+    avatar: '' as string | null,
     membership: 'Free',
     ordersCount: 0,
     petsCount: 0,
@@ -45,7 +46,7 @@ export class ProfileOverviewComponent implements OnInit, OnDestroy {
   };
 
   get avatarUrl(): string | null {
-    return null;
+    return this.user.avatar || null;
   }
 
   prefs = {
@@ -57,8 +58,10 @@ export class ProfileOverviewComponent implements OnInit, OnDestroy {
   };
 
   addresses: Address[] = [];
+  recentOrders: any[] = [];
   loading = false;
   loadingAddresses = false;
+  loadingOrders = false;
   formSaving = false;
   errorMessage = '';
 
@@ -104,6 +107,7 @@ export class ProfileOverviewComponent implements OnInit, OnDestroy {
 
     this.loadProfileAndPreferences();
     this.loadAddresses();
+    this.loadRecentOrders();
   }
 
   ngOnDestroy(): void {
@@ -128,6 +132,7 @@ export class ProfileOverviewComponent implements OnInit, OnDestroy {
         this.user.id = String(p.id);
         this.user.name = p.fullName || p.username;
         this.user.email = p.email;
+        this.user.avatar = p.avatar?.url ? this.storefrontApi.resolveMediaUrl(p.avatar.url) : null;
         this.user.phone = p.phone || '';
         this.user.documentIdNumber = p.documentIdNumber || '';
         this.user.birthDate = p.birthDate || '';
@@ -296,6 +301,37 @@ export class ProfileOverviewComponent implements OnInit, OnDestroy {
 
   get defaultAddress(): Address | undefined {
     return this.addresses.find((address) => address.isDefault) || this.addresses[0];
+  }
+
+  loadRecentOrders(): void {
+    if (!this.auth.isLoggedIn) return;
+    this.loadingOrders = true;
+    this.storefrontApi.listMyOrders(1, 3).subscribe({
+      next: (res) => {
+        this.recentOrders = res.data || [];
+        this.loadingOrders = false;
+      },
+      error: () => {
+        this.loadingOrders = false;
+      },
+    });
+  }
+
+  statusLabel(status: string): string {
+    const map: Record<string, string> = {
+      pending: 'Pendiente',
+      paid: 'Pagado',
+      processing: 'En proceso',
+      shipped: 'Enviado',
+      delivered: 'Entregado',
+      cancelled: 'Cancelado',
+      refunded: 'Reembolsado',
+    };
+    return map[status] || status;
+  }
+
+  statusClass(status: string): string {
+    return `status--${status}`;
   }
 
   kpiLabel(n: number) {

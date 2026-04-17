@@ -21,9 +21,14 @@
 
   <nav class="main-nav">
     <div class="nav-content container">
-      <a class="logo" routerLink="/" (click)="closeTransientPanels()">
-        <span class="logo-mark" aria-hidden="true">A</span>
-        <span class="logo-word">Aumakki</span>
+      <a class="logo" routerLink="/" (click)="closeTransientPanels()" aria-label="Aumakki - Inicio">
+        <img
+          src="assets/images/logo_marketpets_alargado.png"
+          alt="Aumakki"
+          class="logo-img"
+          height="36"
+          loading="eager"
+        />
       </a>
 
       <button
@@ -48,23 +53,22 @@
       </ul>
 
       <div class="actions">
-        <div class="search-wrapper" [class.open]="showSearch">
-          <input
-            *ngIf="showSearch"
-            type="text"
-            [(ngModel)]="searchQuery"
-            placeholder="¿Qué buscas?"
-            class="input search-input"
-            (keyup.enter)="onSearchSubmit()"
-            autofocus
-          />
-          <button aria-label="Buscar" class="icon-btn search-btn" (click)="toggleSearch()">
+        <form class="search-wrapper search-wrapper--always-open" (submit)="$event.preventDefault(); onSearchSubmit()">
+          <button aria-label="Buscar" class="search-wrapper__icon" type="submit">
             <mat-icon>search</mat-icon>
           </button>
-        </div>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            [ngModelOptions]="{ standalone: true }"
+            placeholder="Buscar productos, marcas..."
+            class="input search-input"
+            (keyup.enter)="onSearchSubmit()"
+          />
+        </form>
 
         <div class="user-menu-container">
-          <button aria-label="Cuenta" class="icon-btn" [disabled]="isLoggingOut" (click)="onUserIconClick()">
+          <button aria-label="Cuenta" class="icon-btn nav-icon-btn" [class.is-active]="userMenuOpen" [disabled]="isLoggingOut" (click)="onUserIconClick()">
             <mat-icon [class.spin]="isLoggingOut">{{ isLoggingOut ? 'hourglass_top' : 'person_outline' }}</mat-icon>
           </button>
 
@@ -79,26 +83,41 @@
             <li class="user-menu__divider" *ngIf="isLoggedIn"></li>
 
             <ng-container *ngIf="isLoggedIn; else guestMenu">
-              <li class="menu-action" (click)="onUserMenuSelect('profile')">
-                <mat-icon>person</mat-icon>
-                <span>Ver perfil</span>
-              </li>
-              <li class="menu-action" (click)="onUserMenuSelect('orders')">
-                <mat-icon>receipt_long</mat-icon>
-                <span>Historial de compras</span>
-              </li>
-              <li class="menu-action" (click)="onUserMenuSelect('pets')">
-                <mat-icon>pets</mat-icon>
-                <span>Mis mascotas</span>
-              </li>
-              <li class="menu-action" (click)="onUserMenuSelect('membership')">
-                <mat-icon>workspace_premium</mat-icon>
-                <span>Membresía</span>
-              </li>
-              <li class="menu-action menu-action--danger" [class.busy]="isLoggingOut" (click)="onUserMenuSelect('logout')">
-                <mat-icon [class.spin]="isLoggingOut">{{ isLoggingOut ? 'hourglass_top' : 'logout' }}</mat-icon>
-                <span>{{ isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión' }}</span>
-              </li>
+              <!-- Menú para usuarios operativos -->
+              <ng-container *ngIf="isOpsUser; else regularUserMenu">
+                <li class="menu-action menu-action--ops" (click)="onUserMenuSelect('ops-portal')">
+                  <mat-icon>dashboard</mat-icon>
+                  <span>Portal operativo</span>
+                </li>
+                <li class="menu-action menu-action--danger" [class.busy]="isLoggingOut" (click)="onUserMenuSelect('logout')">
+                  <mat-icon [class.spin]="isLoggingOut">{{ isLoggingOut ? 'hourglass_top' : 'logout' }}</mat-icon>
+                  <span>{{ isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión' }}</span>
+                </li>
+              </ng-container>
+
+              <!-- Menú para clientes normales -->
+              <ng-template #regularUserMenu>
+                <li class="menu-action" (click)="onUserMenuSelect('profile')">
+                  <mat-icon>person</mat-icon>
+                  <span>Ver perfil</span>
+                </li>
+                <li class="menu-action" (click)="onUserMenuSelect('orders')">
+                  <mat-icon>receipt_long</mat-icon>
+                  <span>Historial de compras</span>
+                </li>
+                <li class="menu-action" (click)="onUserMenuSelect('pets')">
+                  <mat-icon>pets</mat-icon>
+                  <span>Mis mascotas</span>
+                </li>
+                <li class="menu-action" (click)="onUserMenuSelect('membership')">
+                  <mat-icon>workspace_premium</mat-icon>
+                  <span>Membresía</span>
+                </li>
+                <li class="menu-action menu-action--danger" [class.busy]="isLoggingOut" (click)="onUserMenuSelect('logout')">
+                  <mat-icon [class.spin]="isLoggingOut">{{ isLoggingOut ? 'hourglass_top' : 'logout' }}</mat-icon>
+                  <span>{{ isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión' }}</span>
+                </li>
+              </ng-template>
             </ng-container>
 
             <ng-template #guestMenu>
@@ -115,32 +134,57 @@
         </div>
 
         <div class="cart" (click)="$event.stopPropagation()">
-          <button aria-label="Carrito" class="icon-btn cart-btn" (click)="toggleMiniCart()">
+          <button aria-label="Carrito" class="icon-btn nav-icon-btn cart-btn" [class.is-active]="miniCartOpen" (click)="toggleMiniCart()">
             <mat-icon>shopping_cart</mat-icon>
-            <span class="badge">{{ (count$ | async) || 0 }}</span>
+            <span class="badge" *ngIf="((count$ | async) || 0) > 0">{{ (count$ | async) || 0 }}</span>
           </button>
 
           <div class="mini-cart" *ngIf="miniCartOpen" (click)="$event.stopPropagation()" role="dialog" aria-label="Mini carrito">
             <div class="mini-cart__head">
-              <strong>Carrito</strong>
-              <span class="muted">({{ (count$ | async) || 0 }})</span>
+              <div class="mini-cart__headline">
+                <mat-icon>shopping_basket</mat-icon>
+                <strong>Tu carrito</strong>
+                <span class="mini-cart__count">{{ (count$ | async) || 0 }}</span>
+              </div>
+              <button type="button" class="mini-cart__close" aria-label="Cerrar carrito" (click)="closeMiniCart()">
+                <mat-icon>close</mat-icon>
+              </button>
             </div>
 
             <ng-container *ngIf="(items$ | async) as items; else emptyCart">
+              <div class="mini-cart__shipping" *ngIf="items.length">
+                <div class="mini-cart__shipping-copy" *ngIf="(freeRemaining$ | async) as remaining">
+                  <span class="mini-cart__shipping-icon">🚚</span>
+                  <strong *ngIf="remaining <= 0; else shippingPending">Ya desbloqueaste envío gratis</strong>
+                  <ng-template #shippingPending>
+                    <strong>Te faltan {{ remaining | currency:'GTQ':'symbol-narrow':'1.0-0' }} para envío gratis</strong>
+                  </ng-template>
+                </div>
+                <div class="mini-cart__shipping-bar">
+                  <span class="mini-cart__shipping-fill" [style.width.%]="(freeProgress$ | async) || 0"></span>
+                </div>
+              </div>
+
               <ul class="mini-cart__list" *ngIf="items.length; else emptyCart">
                 <li class="mini-cart__item" *ngFor="let it of items">
                   <img class="thumb" [src]="it.image || ('assets/images/products/' + (it.slug || 'placeholder') + '.png')"
                        [alt]="it.name || 'Producto'" loading="lazy" />
                   <div class="info">
                     <div class="title">{{ it.name }}</div>
-                    <div class="meta">
-                      <span class="qty">x{{ it.qty }}</span>
-                      <span class="dot">-</span>
-                      <span class="price">{{ it.price | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
+                    <div class="meta" *ngIf="it.attrs?.length">
+                      <span>{{ it.attrs?.join(' · ') }}</span>
+                    </div>
+                    <div class="mini-cart__qty">
+                      <button type="button" aria-label="Reducir cantidad" (click)="changeCartQty(it, -1)">−</button>
+                      <span>{{ it.qty }}</span>
+                      <button type="button" aria-label="Aumentar cantidad" (click)="changeCartQty(it, 1)">+</button>
                     </div>
                   </div>
+                  <div class="mini-cart__price">
+                    <strong>{{ (it.price * it.qty) | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
+                  </div>
                   <button class="remove" (click)="remove(it); $event.stopPropagation()" aria-label="Eliminar">
-                    &times;
+                    <mat-icon>close</mat-icon>
                   </button>
                 </li>
               </ul>
@@ -154,13 +198,34 @@
             </ng-template>
 
             <div class="mini-cart__footer" *ngIf="(count$ | async) as count">
+              <div class="mini-cart__coupon">
+                <input
+                  type="text"
+                  [(ngModel)]="miniCartCoupon"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="Código promocional"
+                  aria-label="Código promocional"
+                />
+                <button type="button" class="btn ghost" (click)="applyMiniCartCoupon()">Aplicar</button>
+              </div>
+
               <div class="total">
                 <span>Subtotal</span>
                 <strong>{{ (subtotal$ | async) | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
               </div>
+              <div class="total total--muted">
+                <span>Envío</span>
+                <strong>{{ ((shipping$ | async) || 0) > 0 ? (((shipping$ | async) || 0) | currency:'GTQ':'symbol-narrow':'1.0-0') : 'Gratis' }}</strong>
+              </div>
+              <div class="total total--grand">
+                <span>Total</span>
+                <strong>{{ (total$ | async) | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
+              </div>
               <div class="actions">
-                <a routerLink="/cart" class="btn ghost" (click)="closeMiniCart(); closeMobileMenu()">Ver carrito</a>
-                <a *ngIf="count > 0" routerLink="/checkout" class="btn primary" (click)="closeMiniCart(); closeMobileMenu()">Pagar</a>
+                <a *ngIf="count > 0" routerLink="/checkout" class="btn primary" (click)="closeMiniCart(); closeMobileMenu()">Ir a checkout</a>
+              </div>
+              <div class="mini-cart__links">
+                <a routerLink="/cart" (click)="closeMiniCart(); closeMobileMenu()">Ver carrito completo →</a>
               </div>
             </div>
           </div>
@@ -170,152 +235,130 @@
 
     <div class="catalog-nav" *ngIf="isCatalogRoute">
       <div class="container catalog-nav__bar">
-        <button
-          type="button"
-          class="catalog-nav__explore"
-          [class.is-open]="exploreDrawerOpen"
-          (click)="toggleExploreDrawer()"
-        >
-          <mat-icon class="catalog-nav__explore-icon">dashboard_customize</mat-icon>
-          <span class="catalog-nav__explore-copy">
-            <strong>Explorar</strong>
-          </span>
-          <mat-icon class="catalog-nav__explore-caret">
-            {{ exploreDrawerOpen ? 'expand_less' : 'expand_more' }}
-          </mat-icon>
-        </button>
-
-        <div class="catalog-nav__shortcuts">
-          <button
-            type="button"
-            class="catalog-nav__chip"
-            *ngFor="let shortcut of catalogShortcuts"
-            (click)="goToCatalogShortcut(shortcut.key)"
-          >
-            <mat-icon>{{ shortcut.icon }}</mat-icon>
-            <span>{{ shortcut.label }}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="explore-drawer" *ngIf="isCatalogRoute" [class.is-open]="exploreDrawerOpen">
-      <button
-        type="button"
-        class="explore-drawer__scrim"
-        aria-label="Cerrar exploración"
-        (click)="closeExploreDrawer()"
-      ></button>
-
-      <aside class="explore-drawer__panel" role="dialog" aria-label="Explorar tienda">
-        <div class="explore-drawer__head">
-          <div class="explore-drawer__copy">
-            <strong>Explora categorías</strong>
+        <div class="catalog-nav__bar-top">
+          <div class="catalog-nav__families" *ngIf="exploreFamilies.length" #catalogFamiliesRow>
+            <button
+              #catalogFamilyButton
+              type="button"
+              class="catalog-nav__family"
+              *ngFor="let family of exploreFamilies; trackBy: trackByExploreFamily"
+              [attr.data-family-key]="family.key"
+              [class.is-active]="isCatalogFamilyActive(family.key)"
+              [class.is-current]="isCatalogFamilyCurrent(family.key)"
+              (click)="toggleCatalogFamily(family.key)"
+            >
+              <span class="catalog-nav__family-label">{{ family.label }}</span>
+              <mat-icon class="catalog-nav__family-arrow">expand_more</mat-icon>
+            </button>
           </div>
 
-          <button type="button" class="explore-drawer__close" aria-label="Cerrar" (click)="closeExploreDrawer()">
-            <mat-icon>close</mat-icon>
-          </button>
+          <div class="catalog-nav__shortcuts">
+            <button
+              type="button"
+              class="catalog-nav__chip"
+              *ngFor="let shortcut of catalogShortcuts"
+              [class.is-active]="isCatalogShortcutActive(shortcut.key)"
+              (click)="goToCatalogShortcut(shortcut.key)"
+            >
+              <mat-icon>{{ shortcut.icon }}</mat-icon>
+              <span>{{ shortcut.label }}</span>
+            </button>
+          </div>
         </div>
 
-        <div class="explore-list">
-          <div class="explore-tree" *ngIf="exploreAnimals.length; else noExploreFamilies">
-            <section class="explore-column explore-column--families">
-              <div class="explore-column__header">
-                <h4 class="explore-column__title">Familias</h4>
-              </div>
+        <div class="catalog-nav__tree-shell" *ngIf="exploreDrawerOpen && activeExploreAnimal as activeAnimal">
+          <div
+            #catalogTree
+            class="catalog-nav__tree"
+            [style.margin-left.px]="catalogMenuOffset"
+          >
+            <div class="catalog-nav__tree-panel" *ngIf="activeExploreCategories.length; else noExploreCategories">
+              <button
+                type="button"
+                class="catalog-nav__tree-heading"
+                (click)="selectCatalogFamilyRoot(activeAnimal)"
+              >
+                {{ activeAnimal.label }}
+              </button>
 
-              <div class="explore-column__stack">
-                <button
-                  type="button"
-                  class="explore-node"
-                  *ngFor="let animal of exploreAnimals; trackBy: trackByExploreAnimal"
-                  [class.is-active]="isExploreAnimalActive(animal.key)"
-                  (click)="setExploreAnimal(animal.key)"
-                >
-                  <mat-icon>{{ animal.icon }}</mat-icon>
-                  <span>{{ animal.label }}</span>
-                </button>
-              </div>
-
-              <article class="explore-promo" *ngIf="activeExplorePromo as promo">
-                <div class="explore-promo__media" [class.explore-promo__media--empty]="!promo.imageUrl">
-                  <img *ngIf="promo.imageUrl" [src]="promo.imageUrl" [alt]="promo.imageAlt" loading="lazy" />
-
-                  <div class="explore-promo__placeholder" *ngIf="!promo.imageUrl" aria-hidden="true">
-                    <mat-icon>campaign</mat-icon>
-                  </div>
-                </div>
-              </article>
-            </section>
-
-            <section class="explore-column">
-              <h4 class="explore-column__title">Categorías</h4>
-              <ng-container *ngIf="activeExploreCategories.length; else noExploreCategories">
-                <button
-                  type="button"
-                  class="explore-node"
+              <div class="catalog-nav__tree-list">
+                <div
+                  class="catalog-nav__tree-item catalog-nav__tree-item--category"
                   *ngFor="let category of activeExploreCategories; trackBy: trackByExploreCategory"
                   [class.is-active]="isExploreCategoryActive(category.slug)"
-                  (click)="setExploreCategory(category.slug)"
+                  [class.catalog-nav__tree-item--compact]="isCompactViewport && category.subcategories.length"
+                  (mouseenter)="onCatalogMenuEnterCategory(category.slug)"
                 >
-                  <mat-icon>{{ category.icon }}</mat-icon>
-                  <span>{{ category.label }}</span>
-                  <mat-icon class="explore-node__arrow">chevron_right</mat-icon>
-                </button>
-              </ng-container>
-            </section>
-
-            <section class="explore-column">
-              <h4 class="explore-column__title">Subcategorías</h4>
-              <ng-container *ngIf="activeExploreAnimal as activeAnimal; else noActiveAnimal">
-                <ng-container *ngIf="activeExploreCategory as activeCategory; else noActiveCategory">
                   <button
                     type="button"
-                    class="explore-node explore-node--all"
-                    (click)="selectExploreCategory(activeAnimal, activeCategory)"
+                    class="catalog-nav__tree-action catalog-nav__tree-action--primary"
+                    (focus)="onCatalogMenuEnterCategory(category.slug)"
+                    (click)="selectExploreCategory(activeAnimal, category)"
                   >
-                    <span>Todo en {{ activeCategory.label }}</span>
-                    <mat-icon class="explore-node__arrow">chevron_right</mat-icon>
+                    <span>{{ category.label }}</span>
+                    <mat-icon class="catalog-nav__tree-arrow" *ngIf="!isCompactViewport && category.subcategories.length">
+                      chevron_right
+                    </mat-icon>
                   </button>
 
-                  <ng-container *ngIf="activeExploreSubcategories.length; else noExploreSubcategories">
-                    <button
-                      type="button"
-                      class="explore-node explore-node--leaf"
-                      *ngFor="let subcategory of activeExploreSubcategories; trackBy: trackByExploreSubcategory"
-                      (click)="selectExploreSubcategory(activeAnimal, activeCategory, subcategory)"
-                    >
-                      <span>{{ subcategory.label }}</span>
-                      <mat-icon class="explore-node__arrow">chevron_right</mat-icon>
-                    </button>
-                  </ng-container>
-                </ng-container>
-              </ng-container>
-            </section>
+                  <button
+                    type="button"
+                    class="catalog-nav__tree-action catalog-nav__tree-action--preview"
+                    *ngIf="isCompactViewport && category.subcategories.length"
+                    [attr.aria-label]="'Ver subcategorías de ' + category.label"
+                    (click)="onCatalogCategoryPreview(category.slug, $event)"
+                  >
+                    <mat-icon class="catalog-nav__tree-arrow">chevron_right</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="catalog-nav__tree-panel" *ngIf="activeExploreCategory as activeCategory; else noExploreSubcategories">
+              <div class="catalog-nav__tree-list" *ngIf="activeExploreSubcategories.length; else noExploreSubcategories">
+                <button
+                  type="button"
+                  class="catalog-nav__tree-item catalog-nav__tree-item--subcategory"
+                  *ngFor="let subcategory of activeExploreSubcategories; trackBy: trackByExploreSubcategory"
+                  (click)="selectExploreSubcategory(activeAnimal, activeCategory, subcategory)"
+                >
+                  <span>{{ subcategory.label }}</span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          <ng-template #noExploreFamilies>
-            <div class="explore-empty">No hay familias configuradas.</div>
-          </ng-template>
-
           <ng-template #noExploreCategories>
-            <div class="explore-empty">Sin categorías en esta familia.</div>
-          </ng-template>
-
-          <ng-template #noActiveAnimal>
-            <div class="explore-empty">Selecciona una familia.</div>
-          </ng-template>
-
-          <ng-template #noActiveCategory>
-            <div class="explore-empty">Selecciona una categoría.</div>
+            <div class="catalog-nav__tree-panel catalog-nav__tree-panel--empty">
+              <div class="catalog-nav__empty">Sin categorías en esta familia.</div>
+            </div>
           </ng-template>
 
           <ng-template #noExploreSubcategories>
-            <div class="explore-empty">Sin subcategorías en esta categoría.</div>
+            <div class="catalog-nav__tree-panel catalog-nav__tree-panel--empty">
+              <div class="catalog-nav__empty">Sin subcategorías visibles en esta categoría.</div>
+            </div>
           </ng-template>
         </div>
-      </aside>
+      </div>
+
+      <div class="container catalog-nav__context" *ngIf="showCatalogBreadcrumbs">
+        <div class="catalog-nav__path">
+          <ng-container *ngFor="let step of catalogBreadcrumbSteps; let last = last">
+            <button
+              type="button"
+              class="catalog-nav__path-chip"
+              [class.catalog-nav__path-chip--active]="!step.clickable"
+              [class.catalog-nav__path-chip--clickable]="step.clickable"
+              [disabled]="!step.clickable"
+              (click)="onCatalogPathSelect(step.level)"
+            >
+              {{ step.label }}
+            </button>
+            <span class="catalog-nav__path-separator" *ngIf="!last">/</span>
+          </ng-container>
+        </div>
+      </div>
     </div>
 
     <div class="mobile-panel" [class.open]="mobileMenuOpen">
@@ -339,4 +382,5 @@
     <span>{{ sessionToastMessage }}</span>
   </div>
 </header>
+
 

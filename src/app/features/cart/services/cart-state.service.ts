@@ -6,6 +6,7 @@ import { AppHttpError } from '../../../core/models/http.models';
 import {
   StorefrontCart,
   StorefrontCartItem,
+  StorefrontVariantSelection,
   StrapiItemResponse,
 } from '../../../core/models/storefront.models';
 import { StorefrontApiService } from '../../../core/services/storefront-api.service';
@@ -68,6 +69,16 @@ export class CartStateService {
   readonly total$ = this.cart$.pipe(map((cart) => Number(cart.grandTotal || 0)));
 
   readonly freeThreshold = this.freeShippingThreshold;
+  readonly freeThreshold$ = this.cart$.pipe(
+    map((cart) => {
+      const backendValue = Number(cart.shippingPolicy?.freeShippingThreshold);
+      if (Number.isFinite(backendValue) && backendValue >= 0) {
+        return backendValue;
+      }
+
+      return this.freeShippingThreshold;
+    })
+  );
   readonly freeProgress$ = this.cart$.pipe(
     map((cart) => {
       const backendValue = Number(cart.shippingPolicy?.progressPct);
@@ -75,10 +86,11 @@ export class CartStateService {
         return Math.max(0, Math.min(100, backendValue));
       }
 
+      const threshold = this.resolveFreeThreshold(cart);
       const subtotal = Number(cart.subtotal || 0);
       const discount = Number(cart.discountTotal || 0);
       const effective = Math.max(0, subtotal - discount);
-      return Math.min(100, Math.floor((effective / this.freeShippingThreshold) * 100));
+      return threshold > 0 ? Math.min(100, Math.floor((effective / threshold) * 100)) : 100;
     })
   );
   readonly freeRemaining$ = this.cart$.pipe(
@@ -88,12 +100,15 @@ export class CartStateService {
         return Math.max(0, backendValue);
       }
 
+      const threshold = this.resolveFreeThreshold(cart);
       const subtotal = Number(cart.subtotal || 0);
       const discount = Number(cart.discountTotal || 0);
       const effective = Math.max(0, subtotal - discount);
-      return Math.max(0, this.freeShippingThreshold - effective);
+      return Math.max(0, threshold - effective);
     })
   );
+
+  private previousUserId: number | null = null;
 
   constructor(
     private storefrontApi: StorefrontApiService,
@@ -104,7 +119,27 @@ export class CartStateService {
         map((user) => user?.id ?? null),
         distinctUntilChanged()
       )
-      .subscribe(() => this.refresh());
+      .subscribe((userId) => {
+        const wasGuest = this.previousUserId === null;
+        const isNowLoggedIn = userId !== null;
+
+        if (wasGuest && isNowLoggedIn) {
+          // User just logged in — migrate guest cart items if a session exists
+          const sessionKey = localStorage.getItem(GUEST_SESSION_KEY_STORAGE);
+          if (sessionKey) {
+            this.storefrontApi.adoptGuestCart(sessionKey).subscribe({
+              next: (res) => this.updateCart(res.data),
+              error: () => this.refresh(),
+            });
+          } else {
+            this.refresh();
+          }
+        } else {
+          this.refresh();
+        }
+
+        this.previousUserId = userId;
+      });
   }
 
   refresh(): void {
@@ -321,7 +356,11 @@ export class CartStateService {
       slug: product?.slug || `item-${item.id}`,
       name: product?.name || 'Producto',
       image,
+      brand: product?.brand?.name || undefined,
       price: Number(item.unitPrice || product?.price || 0),
+      oldPrice: Number(product?.compareAtPrice || 0) > Number(item.unitPrice || product?.price || 0)
+        ? Number(product?.compareAtPrice || 0)
+        : undefined,
       qty: Number(item.qty || 1),
       stock: Math.max(1, Number(product?.stock || item.qty || 1)),
       attrs: this.resolveVariantAttributes(item.variant),
@@ -340,12 +379,27 @@ export class CartStateService {
     return resolved || 'assets/images/products/placeholder.png';
   }
 
-  private resolveVariantAttributes(variant: Record<string, unknown> | null | undefined): string[] {
+  private resolveVariantAttributes(variant: StorefrontVariantSelection | null | undefined): string[] {
     if (!variant || typeof variant !== 'object') return [];
 
+    const label = String(variant['label'] || variant['presentation'] || variant['size'] || '').trim();
+    if (label) {
+      return [label];
+    }
+
     return Object.entries(variant)
+      .filter(([key]) => !['id', 'sku'].includes(key))
       .map(([key, value]) => `${key}: ${String(value)}`)
-      .filter((label) => label.trim().length > 0);
+      .filter((entry) => entry.trim().length > 0);
+  }
+
+  private resolveFreeThreshold(cart: StorefrontCart): number {
+    const backendValue = Number(cart.shippingPolicy?.freeShippingThreshold);
+    if (Number.isFinite(backendValue) && backendValue >= 0) {
+      return backendValue;
+    }
+
+    return this.freeShippingThreshold;
   }
 }
 

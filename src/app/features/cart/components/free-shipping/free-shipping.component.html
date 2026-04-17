@@ -1,14 +1,19 @@
-﻿<div class="fs" [class.done]="isDone" [style.--p]="ratio">
-  <div class="row">
+<div class="fs" [class.done]="isDone" [style.--p]="ratio">
+  <div class="fs__headline">
     <span class="msg" *ngIf="!isDone">
-      Te faltan <b>Q{{ remaining }}</b> para envio gratis
+      Te faltan <b>Q{{ remaining }}</b> para env&iacute;o gratis
     </span>
     <span class="msg ok" *ngIf="isDone">
-      Tienes <b>envio gratis</b>! 🎉
+      Ya desbloqueaste <b>env&iacute;o gratis</b>
     </span>
   </div>
 
   <div class="bar">
     <div class="fill" [class.complete]="isDone"></div>
+  </div>
+
+  <div class="fs__legend">
+    <span>Q0</span>
+    <span>Q{{ target | number:'1.0-0' }} env&iacute;o gratis</span>
   </div>
 </div>

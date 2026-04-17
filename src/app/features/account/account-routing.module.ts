@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { AccountShellComponent } from './components/account-shell/account-shell.component';
 import { ProfileOverviewComponent } from './pages/profile-overview/profile-overview.component';
 import { OrdersHistoryComponent } from './pages/orders-history/orders-history.component';
+import { OrderDetailComponent } from './pages/order-detail/order-detail.component';
 import { SettingsComponent } from './pages/settings/settings.component';
 import { MembershipComponent } from './pages/membership/membership.component';
 
@@ -13,7 +14,8 @@ const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'profile' },
       { path: 'profile', component: ProfileOverviewComponent, title: 'Mi Perfil' },
-      { path: 'orders', component: OrdersHistoryComponent, title: 'Historial de Compras' },
+      { path: 'orders', component: OrdersHistoryComponent, title: 'Mis Pedidos' },
+      { path: 'orders/:id', component: OrderDetailComponent, title: 'Detalle de Pedido' },
 
       // Pets dentro de Account
       {

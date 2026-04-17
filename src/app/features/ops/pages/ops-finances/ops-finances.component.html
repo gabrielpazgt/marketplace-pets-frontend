@@ -1,0 +1,250 @@
+<div class="ops-page">
+  <div class="ops-page__head">
+    <h1 class="ops-page__title">Finanzas</h1>
+    <div class="head-actions">
+      <!-- View mode toggle -->
+      <div class="mode-tabs">
+        <button class="mode-tab" [class.mode-tab--active]="viewMode === 'monthly'" (click)="setViewMode('monthly')">Mes</button>
+        <button class="mode-tab" [class.mode-tab--active]="viewMode === 'annual'" (click)="setViewMode('annual')">Año</button>
+      </div>
+      <button class="ops-btn ops-btn--ghost" (click)="exportCSV()" *ngIf="viewMode === 'monthly' && finances">⬇ CSV</button>
+      <button class="ops-btn ops-btn--ghost" (click)="exportAnnualCSV()" *ngIf="viewMode === 'annual' && annualData.length">⬇ CSV anual</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       MONTHLY VIEW
+  ═══════════════════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="viewMode === 'monthly'">
+
+    <!-- Month navigator -->
+    <div class="ops-card month-nav">
+      <button class="nav-btn" (click)="prevMonth()">‹</button>
+      <span class="month-label">{{ monthLabel }}</span>
+      <button class="nav-btn" (click)="nextMonth()" [disabled]="isCurrentMonth">›</button>
+      <button class="ops-btn ops-btn--primary apply-btn" (click)="load()" [disabled]="loading">
+        {{ loading ? 'Cargando...' : 'Actualizar' }}
+      </button>
+    </div>
+
+    <div class="loading-state" *ngIf="loading"><div class="spinner"></div><p>Generando resumen financiero...</p></div>
+    <p class="error-msg" *ngIf="error">{{ error }}</p>
+
+    <ng-container *ngIf="!loading && finances">
+      <!-- KPI cards -->
+      <div class="metrics-grid metrics-grid--3">
+        <div class="metric-card metric-card--green">
+          <span class="metric-card__icon">💰</span>
+          <div>
+            <p class="metric-card__value">Q{{ finances.grossRevenue | number:'1.2-2' }}</p>
+            <p class="metric-card__label">Ingresos brutos</p>
+          </div>
+        </div>
+        <div class="metric-card metric-card--blue">
+          <span class="metric-card__icon">✅</span>
+          <div>
+            <p class="metric-card__value">Q{{ finances.netRevenue | number:'1.2-2' }}</p>
+            <p class="metric-card__label">Ingresos netos</p>
+          </div>
+        </div>
+        <div class="metric-card metric-card--red">
+          <span class="metric-card__icon">🏷️</span>
+          <div>
+            <p class="metric-card__value">-Q{{ finances.totalDiscounts | number:'1.2-2' }}</p>
+            <p class="metric-card__label">Descuentos aplicados</p>
+          </div>
+        </div>
+        <div class="metric-card">
+          <span class="metric-card__icon">🚚</span>
+          <div>
+            <p class="metric-card__value">Q{{ finances.shippingRevenue | number:'1.2-2' }}</p>
+            <p class="metric-card__label">Ingresos por envíos</p>
+          </div>
+        </div>
+        <div class="metric-card">
+          <span class="metric-card__icon">📦</span>
+          <div>
+            <p class="metric-card__value">{{ finances.ordersCount }}</p>
+            <p class="metric-card__label">Órdenes pagadas</p>
+          </div>
+        </div>
+        <div class="metric-card metric-card--purple">
+          <span class="metric-card__icon">📊</span>
+          <div>
+            <p class="metric-card__value">Q{{ finances.avgOrderValue | number:'1.2-2' }}</p>
+            <p class="metric-card__label">AOV del mes</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment breakdown + Membership -->
+      <div class="side-by-side">
+        <div class="ops-card">
+          <h2 class="ops-card__title">Por método de pago</h2>
+          <table class="ops-table ops-table--compact" *ngIf="finances.byPaymentKind.length">
+            <thead><tr><th>Método</th><th class="num">Órdenes</th><th class="num">Revenue (Q)</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let pk of finances.byPaymentKind">
+                <td>{{ paymentLabel(pk.kind) }}</td>
+                <td class="num">{{ pk.count }}</td>
+                <td class="num bold">Q{{ pk.revenue | number:'1.2-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="empty-text" *ngIf="!finances.byPaymentKind.length">Sin datos de pago en este período.</p>
+        </div>
+
+        <div class="ops-card">
+          <h2 class="ops-card__title">Membresías</h2>
+          <p class="stat-big">{{ finances.membershipOrdersCount }}</p>
+          <p class="muted-text">órdenes con descuento de membresía este mes</p>
+        </div>
+      </div>
+
+      <!-- Affiliate commissions -->
+      <div class="ops-card">
+        <div class="ops-card__head">
+          <h2 class="ops-card__title">Comisiones de afiliados</h2>
+          <span class="commission-total" *ngIf="finances.commissions.length">
+            Total adeudado: <strong>Q{{ totalCommissions | number:'1.2-2' }}</strong>
+          </span>
+        </div>
+
+        <div class="table-wrap" *ngIf="finances.commissions.length">
+          <table class="ops-table">
+            <thead>
+              <tr>
+                <th>Influencer / Afiliado</th>
+                <th>Cupón</th>
+                <th class="num">Órdenes</th>
+                <th class="num">Comisión (Q)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of finances.commissions">
+                <td class="font-bold">{{ c.influencerName }}</td>
+                <td class="muted mono">{{ c.couponCode }}</td>
+                <td class="num">{{ c.ordersCount }}</td>
+                <td class="num bold commission-amount">Q{{ c.totalCommission | number:'1.2-2' }}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="totals-row">
+                <td colspan="3"><strong>TOTAL adeudado</strong></td>
+                <td class="num"><strong>Q{{ totalCommissions | number:'1.2-2' }}</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="empty-state" *ngIf="!finances.commissions.length">
+          <p>No hay comisiones de afiliados en este período.</p>
+        </div>
+      </div>
+
+    </ng-container>
+  </ng-container>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       ANNUAL VIEW
+  ═══════════════════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="viewMode === 'annual'">
+
+    <!-- Year navigator -->
+    <div class="ops-card month-nav">
+      <button class="nav-btn" (click)="prevYear()">‹</button>
+      <span class="month-label">{{ annualYear }}</span>
+      <button class="nav-btn" (click)="nextYear()" [disabled]="isCurrentYear">›</button>
+      <button class="ops-btn ops-btn--primary apply-btn" (click)="loadAnnual()" [disabled]="annualLoading">
+        {{ annualLoading ? 'Cargando...' : 'Actualizar' }}
+      </button>
+    </div>
+
+    <div class="loading-state" *ngIf="annualLoading"><div class="spinner"></div><p>Cargando resumen anual...</p></div>
+
+    <ng-container *ngIf="!annualLoading && annualData.length">
+
+      <!-- Annual KPIs summary -->
+      <div class="metrics-grid metrics-grid--4">
+        <div class="metric-card metric-card--green">
+          <span class="metric-card__icon">💰</span>
+          <div>
+            <p class="metric-card__value">Q{{ annualTotals.grossRevenue | number:'1.2-2' }}</p>
+            <p class="metric-card__label">Ingresos brutos {{ annualYear }}</p>
+          </div>
+        </div>
+        <div class="metric-card metric-card--blue">
+          <span class="metric-card__icon">✅</span>
+          <div>
+            <p class="metric-card__value">Q{{ annualTotals.netRevenue | number:'1.2-2' }}</p>
+            <p class="metric-card__label">Ingresos netos {{ annualYear }}</p>
+          </div>
+        </div>
+        <div class="metric-card">
+          <span class="metric-card__icon">📦</span>
+          <div>
+            <p class="metric-card__value">{{ annualTotals.ordersCount }}</p>
+            <p class="metric-card__label">Órdenes totales {{ annualYear }}</p>
+          </div>
+        </div>
+        <div class="metric-card metric-card--purple">
+          <span class="metric-card__icon">📊</span>
+          <div>
+            <p class="metric-card__value">Q{{ annualTotals.avgOrderValue | number:'1.2-2' }}</p>
+            <p class="metric-card__label">AOV promedio</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly breakdown table -->
+      <div class="ops-card annual-table-card">
+        <h2 class="ops-card__title">Desglose mensual {{ annualYear }}</h2>
+        <div class="table-wrap">
+          <table class="ops-table annual-table">
+            <thead>
+              <tr>
+                <th>Mes</th>
+                <th class="num">Ing. Brutos</th>
+                <th class="num">Descuentos</th>
+                <th class="num">Envíos</th>
+                <th class="num">Ing. Netos</th>
+                <th class="num">Órdenes</th>
+                <th class="num">AOV</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let f of annualData; let i = index"
+                [class.annual-table__row--current]="isCurrentMonthIndex(i)"
+                [class.annual-table__row--empty]="!f">
+                <td class="month-cell">
+                  <span class="month-dot" [class.month-dot--current]="isCurrentMonthIndex(i)"></span>
+                  {{ MONTHS_SHORT[i] }}
+                </td>
+                <td class="num">{{ f ? ('Q' + (f.grossRevenue | number:'1.2-2')) : '-' }}</td>
+                <td class="num red">{{ f && f.totalDiscounts > 0 ? ('-Q' + (f.totalDiscounts | number:'1.2-2')) : '-' }}</td>
+                <td class="num">{{ f ? ('Q' + (f.shippingRevenue | number:'1.2-2')) : '-' }}</td>
+                <td class="num green bold">{{ f ? ('Q' + (f.netRevenue | number:'1.2-2')) : '-' }}</td>
+                <td class="num">{{ f ? f.ordersCount : '-' }}</td>
+                <td class="num">{{ f && f.ordersCount > 0 ? ('Q' + (f.avgOrderValue | number:'1.2-2')) : '-' }}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="totals-row annual-totals-row">
+                <td><strong>TOTAL</strong></td>
+                <td class="num"><strong>Q{{ annualTotals.grossRevenue | number:'1.2-2' }}</strong></td>
+                <td class="num red"><strong>-Q{{ annualTotals.totalDiscounts | number:'1.2-2' }}</strong></td>
+                <td class="num"><strong>Q{{ annualTotals.shippingRevenue | number:'1.2-2' }}</strong></td>
+                <td class="num green"><strong>Q{{ annualTotals.netRevenue | number:'1.2-2' }}</strong></td>
+                <td class="num"><strong>{{ annualTotals.ordersCount }}</strong></td>
+                <td class="num"><strong>Q{{ annualTotals.avgOrderValue | number:'1.2-2' }}</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+    </ng-container>
+  </ng-container>
+
+</div>

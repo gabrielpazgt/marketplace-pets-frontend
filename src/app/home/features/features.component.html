@@ -1,34 +1,20 @@
-<section class="features container" aria-labelledby="features-title">
-  <h2 id="features-title" class="sr-only">Beneficios Aumakki</h2>
-
-  <div class="grid" role="list">
-    <article
-      class="feat"
-      role="listitem"
-      *ngFor="let f of features"
-      [attr.aria-label]="f.title"
-    >
-      <div class="ico" aria-hidden="true">
-        <!-- Imagen con fallback a ícono FA si falta el PNG -->
-        <ng-container *ngIf="!f._imgError; else faIcon">
-          <img
-            [src]="f.icon"
-            [alt]="f.alt"
-            loading="lazy"
-            (error)="f._imgError = true"
-          />
-        </ng-container>
-        <ng-template #faIcon>
-          <i class="fa-solid" [ngClass]="f.fa || 'fa-circle-question'"></i>
-        </ng-template>
-
-        <span class="glow" aria-hidden="true"></span>
+<section class="hf-badges" aria-label="Beneficios Aumakki">
+  <div class="hs-container">
+    <div class="hf-badges__grid">
+      <div
+        *ngFor="let f of features; let i = index"
+        class="hf-badge"
+        mpFadeIn
+        [mpFadeInDelay]="i * 60"
+      >
+        <div class="hf-badge__icon-wrap" [attr.data-color]="f.color">
+          <mat-icon>{{ f.icon }}</mat-icon>
+        </div>
+        <div class="hf-badge__text">
+          <strong class="hf-badge__title">{{ f.title }}</strong>
+          <span class="hf-badge__sub">{{ f.sub }}</span>
+        </div>
       </div>
-
-      <div class="text">
-        <h3>{{ f.title }}</h3>
-        <p>{{ f.sub }}</p>
-      </div>
-    </article>
+    </div>
   </div>
 </section>

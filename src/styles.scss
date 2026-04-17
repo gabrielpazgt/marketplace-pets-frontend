@@ -46,9 +46,9 @@ a { color: inherit; text-decoration: none; }
   --font-display: "Sora", "Manrope", sans-serif;
 
   /* ---- Marca y acentos ---- */
-  --brand:        #ffa726;
-  --brand-600:    #e98c00;
-  --brand-700:    #c87400;
+  --brand:        #ff6f0f;
+  --brand-600:    #e45f00;
+  --brand-700:    #c94f00;
   --accent:       #42a5f5;
   --success:      #66bb6a;
   --warning:      #f59e0b;
@@ -124,7 +124,7 @@ a { color: inherit; text-decoration: none; }
 
 /* 5) Accesibilidad y comportamiento */
 :focus-visible {
-  outline: 3px solid rgba(255, 167, 38, .35);
+  outline: 3px solid rgba(255, 111, 15, .28);
   outline-offset: 2px;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -132,7 +132,8 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* 6) Utilidades globales */
-.container {
+.container,
+.hs-container {
   width: min(var(--container-w), calc(100% - 2 * var(--container-px)));
   margin-inline: auto;
 }
@@ -191,7 +192,7 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--brand-600);
-  box-shadow: 0 0 0 4px rgba(255, 167, 38, .18);
+  box-shadow: 0 0 0 4px rgba(255, 111, 15, .14);
 }
 .input::placeholder,
 input::placeholder,
@@ -207,7 +208,7 @@ textarea::placeholder { color: #94a3b8; }
   font-weight: 800;
   line-height: 1;
   color: #fff;
-  background: var(--accent);
+  background: var(--brand);
   border-radius: var(--r-pill);
 }
 
@@ -220,50 +221,61 @@ textarea::placeholder { color: #94a3b8; }
   place-items: center;
   gap: 8px;
   padding: .62rem 1rem;
-  border-radius: var(--r-pill);
+  border-radius: 8px;
   border: 1px solid var(--btn-bd);
   background: var(--btn-bg);
   color: var(--btn-fg);
   font-weight: 800;
   cursor: pointer;
-  transition: filter var(--t-fast) var(--timing), transform var(--t-fast) var(--timing), background var(--t-base) var(--timing), border-color var(--t-base) var(--timing), box-shadow var(--t-base) var(--timing);
+  transition: background var(--t-base) var(--timing), border-color var(--t-base) var(--timing), color var(--t-base) var(--timing), box-shadow var(--t-base) var(--timing);
   text-decoration: none;
   user-select: none;
   min-height: 42px;
 }
-.btn:hover { filter: saturate(1.08); transform: translateY(-1px); }
-.btn:active { transform: none; }
+.btn:hover { box-shadow: 0 10px 22px rgba(15, 23, 42, .08); }
 
 .btn.primary {
-  --btn-bg: linear-gradient(110deg, var(--brand), var(--brand-700));
+  --btn-bg: var(--brand);
   --btn-fg: #fff;
   --btn-bd: transparent;
-  box-shadow: 0 10px 24px rgba(233, 140, 0, 0.3);
+  box-shadow: 0 10px 24px rgba(255, 111, 15, 0.24);
   border: 0;
+}
+.btn.primary:hover {
+  --btn-bg: var(--brand-600);
+  box-shadow: 0 12px 24px rgba(255, 111, 15, 0.28);
 }
 .btn.ghost {
   --btn-bg: #fff;
   --btn-fg: var(--ink);
   --btn-bd: var(--line);
 }
+.btn.ghost:hover {
+  --btn-bg: #fff7ed;
+  --btn-fg: var(--brand-700);
+  --btn-bd: rgba(255, 111, 15, .18);
+}
 .btn.accent {
-  --btn-bg: linear-gradient(90deg, var(--accent), #1e88e5);
+  --btn-bg: var(--accent);
   --btn-fg: #fff;
   --btn-bd: transparent;
   border: 0;
 }
+.btn.accent:hover { filter: brightness(.96); }
 .btn.success {
-  --btn-bg: linear-gradient(90deg, var(--success), #2ea44f);
+  --btn-bg: var(--success);
   --btn-fg: #fff;
   --btn-bd: transparent;
   border: 0;
 }
+.btn.success:hover { filter: brightness(.96); }
 .btn.danger {
-  --btn-bg: linear-gradient(90deg, var(--danger), #dc2626);
+  --btn-bg: var(--danger);
   --btn-fg: #fff;
   --btn-bd: transparent;
   border: 0;
 }
+.btn.danger:hover { filter: brightness(.96); }
 
 .section {
   padding-block: 48px;

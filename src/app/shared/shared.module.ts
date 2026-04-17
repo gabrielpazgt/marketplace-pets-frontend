@@ -9,12 +9,14 @@ import { MatFormFieldModule }   from '@angular/material/form-field';
 import { HeaderComponent }      from './header/header.component';
 import { FooterComponent }      from './footer/footer.component';
 import { GlobalLoaderComponent } from './global-loader/global-loader.component';
+import { FadeInScrollDirective } from './directives/fade-in-scroll.directive';
 
 @NgModule({
   declarations: [
     HeaderComponent,
     FooterComponent,
-    GlobalLoaderComponent
+    GlobalLoaderComponent,
+    FadeInScrollDirective,
   ],
   imports: [
     CommonModule,
@@ -27,7 +29,8 @@ import { GlobalLoaderComponent } from './global-loader/global-loader.component';
   exports: [
     HeaderComponent,
     FooterComponent,
-    GlobalLoaderComponent
+    GlobalLoaderComponent,
+    FadeInScrollDirective,
   ]
 })
 export class SharedModule { }

@@ -47,14 +47,14 @@ interface NavQuery {
   pet?: string | null;
   cat?: string | null;
   sub?: string | null;
-  brand?: number | null;
+  brand?: string | null;
   form?: string | null;
   protein?: string | null;
-  specie?: number | null;
-  stage?: number | null;
-  diet?: number | null;
-  health?: number | null;
-  ingredient?: number | null;
+  specie?: string | null;
+  stage?: string | null;
+  diet?: string | null;
+  health?: string | null;
+  ingredient?: string | null;
 }
 
 interface RouteState {
@@ -71,14 +71,14 @@ interface RouteState {
   petId: string | null;
   category: string | null;
   subcategory: string | null;
-  brandId: number | null;
-  form: string | null;
-  proteinSource: string | null;
-  specieId: number | null;
-  lifeStageId: number | null;
-  dietTagId: number | null;
-  healthConditionId: number | null;
-  ingredientId: number | null;
+  brandIds: number[];
+  forms: string[];
+  proteinSources: string[];
+  specieIds: number[];
+  lifeStageIds: number[];
+  dietTagIds: number[];
+  healthConditionIds: number[];
+  ingredientIds: number[];
 }
 
 interface SubcategoryChip {
@@ -152,8 +152,9 @@ export class ShopPageComponent implements OnInit, OnDestroy {
   catalogTaxonomy: StorefrontCatalogTaxonomy | null = null;
 
   sort: SortType = 'popular';
+  viewMode: 'grid' | 'list' = 'grid';
   page = 1;
-  pageSize = 12;
+  pageSize = 18;
   search = '';
   searchDraft = '';
 
@@ -164,14 +165,14 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     petId: null,
     category: null,
     subcategory: null,
-    brandId: null,
-    form: null,
-    proteinSource: null,
-    specieId: null,
-    lifeStageId: null,
-    dietTagId: null,
-    healthConditionId: null,
-    ingredientId: null,
+    brandIds: [],
+    forms: [],
+    proteinSources: [],
+    specieIds: [],
+    lifeStageIds: [],
+    dietTagIds: [],
+    healthConditionIds: [],
+    ingredientIds: [],
   };
 
   readonly baseCategories = BASE_CATALOG_CATEGORIES;
@@ -180,8 +181,10 @@ export class ShopPageComponent implements OnInit, OnDestroy {
   isLoggedIn = false;
   filtersOpen = false;
   discoveryOpen = false;
+  applicableFilterKeys: string[] | null = null;
 
   private activeRequestId = 0;
+  private lastScopeContext = '';
   private readonly destroy$ = new Subject<void>();
 
   constructor(
@@ -218,26 +221,28 @@ export class ShopPageComponent implements OnInit, OnDestroy {
         }
       });
 
-    this.storefrontApi.getCatalogTaxonomy()
+    const catalogTaxonomy$ = this.storefrontApi.getCatalogTaxonomy()
       .pipe(
         takeUntil(this.destroy$),
         map((response) => response.data || null),
-        catchError(() => of(null))
-      )
-      .subscribe((taxonomy) => {
-        this.applyState(() => {
-          this.catalogTaxonomy = taxonomy;
-          this.subcategoryChipList = this.computeSubcategoryChips();
-        });
-      });
+        catchError(() => of(null)),
+        shareReplay(1)
+      );
 
-    combineLatest([this.route.paramMap, this.route.queryParamMap, this.speciesTaxonomy$])
+    combineLatest([this.route.paramMap, this.route.queryParamMap, this.speciesTaxonomy$, catalogTaxonomy$])
       .pipe(
         takeUntil(this.destroy$),
-        map(([pm, qp, species]) => this.mapRouteState(pm.get('slug'), qp, species)),
-        distinctUntilChanged((previous, current) => JSON.stringify(previous) === JSON.stringify(current)),
-        tap((state) => {
+        map(([pm, qp, species, taxonomy]) => ({
+          taxonomy,
+          state: this.mapRouteState(pm.get('slug'), qp, species, taxonomy),
+        })),
+        distinctUntilChanged((previous, current) =>
+          previous.taxonomy === current.taxonomy
+          && JSON.stringify(previous.state) === JSON.stringify(current.state)
+        ),
+        tap(({ state, taxonomy }) => {
           this.applyState(() => {
+            this.catalogTaxonomy = taxonomy;
             this.slug = state.slug;
             this.selectedPetType = state.petType;
             this.collectionTag = state.tag;
@@ -253,17 +258,18 @@ export class ShopPageComponent implements OnInit, OnDestroy {
               petId: state.petId,
               category: state.category,
               subcategory: state.subcategory,
-              brandId: state.brandId,
-              form: state.form,
-              proteinSource: state.proteinSource,
-              specieId: state.specieId,
-              lifeStageId: state.lifeStageId,
-              dietTagId: state.dietTagId,
-              healthConditionId: state.healthConditionId,
-              ingredientId: state.ingredientId,
+              brandIds: state.brandIds,
+              forms: state.forms,
+              proteinSources: state.proteinSources,
+              specieIds: state.specieIds,
+              lifeStageIds: state.lifeStageIds,
+              dietTagIds: state.dietTagIds,
+              healthConditionIds: state.healthConditionIds,
+              ingredientIds: state.ingredientIds,
             };
             this.subcategoryChipList = this.computeSubcategoryChips();
           });
+          this.loadFilterScope();
         }),
         switchMap(() => this.fetchCatalog$())
       )
@@ -275,6 +281,31 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  private loadFilterScope(): void {
+    const animalSlug = this.activeAnimalTaxonomy?.slug || this.selectedPetType || undefined;
+    const categorySlug = this.selectedCategoryTaxonomy?.slug || undefined;
+    const context = `${animalSlug || ''}|${categorySlug || ''}`;
+    if (context === this.lastScopeContext) return;
+    this.lastScopeContext = context;
+
+    if (!animalSlug && !categorySlug) {
+      this.applicableFilterKeys = null;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.storefrontApi.getFilterScopes(animalSlug, categorySlug).subscribe({
+      next: (res) => {
+        this.applicableFilterKeys = res.data?.filterKeys?.length ? res.data.filterKeys : null;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.applicableFilterKeys = null;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
   get hasPetProfiles(): boolean {
     return this.isLoggedIn && this.pets.length > 0;
   }
@@ -283,9 +314,23 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     return Boolean(this.filters.petId);
   }
 
+  get hasFixedSpeciesContext(): boolean {
+    return Boolean(this.selectedPetType);
+  }
+
   get selectedPetProfile(): Pet | null {
     if (!this.filters.petId) return null;
     return this.pets.find((pet) => String(pet.id) === this.filters.petId) || null;
+  }
+
+  get petDerivedFilterIds(): { specieIds: number[]; lifeStageIds: number[]; dietTagIds: number[] } {
+    const pet = this.selectedPetProfile;
+    if (!pet) return { specieIds: [], lifeStageIds: [], dietTagIds: [] };
+    return {
+      specieIds: pet.specieId ? [pet.specieId] : [],
+      lifeStageIds: pet.lifeStageId ? [pet.lifeStageId] : [],
+      dietTagIds: pet.dietTagIds ?? [],
+    };
   }
 
   get currentPetConfig(): CatalogPetConfig | null {
@@ -414,14 +459,14 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       values.max,
       values.inStockOnly === false ? 1 : null,
       values.petId,
-      values.brandId,
-      values.form,
-      values.proteinSource,
-      values.specieId,
-      values.lifeStageId,
-      values.dietTagId,
-      values.healthConditionId,
-      values.ingredientId,
+      (values.brandIds || []).length ? 'brands' : null,
+      (values.forms || []).length ? 'forms' : null,
+      (values.proteinSources || []).length ? 'proteinSources' : null,
+      (values.specieIds || []).length ? 'specieIds' : null,
+      (values.lifeStageIds || []).length ? 'lifeStageIds' : null,
+      (values.dietTagIds || []).length ? 'dietTagIds' : null,
+      (values.healthConditionIds || []).length ? 'healthConditionIds' : null,
+      (values.ingredientIds || []).length ? 'ingredientIds' : null,
     ].filter((value) => value !== null && value !== undefined && value !== '').length;
   }
 
@@ -514,11 +559,30 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       'ingredientId',
     ];
 
+    const getDrawerControls = (definitions: StorefrontCatalogFilterDefinition[] = []) =>
+      definitions
+        .filter((item) => item.availability === 'available' && this.isDrawerFacetControlKey(item.control))
+        .map((item) => item.control as DrawerFacetControlKey);
+
+    const categoryControls = getDrawerControls(this.selectedCategoryTaxonomy?.recommendedFilters || []);
+    const subcategoryDefinitions = this.selectedSubcategoryTaxonomy?.recommendedFilters || [];
+
+    if (subcategoryDefinitions.length) {
+      return Array.from(new Set([...categoryControls, ...getDrawerControls(subcategoryDefinitions)]));
+    }
+
+    if (this.selectedCategoryTaxonomy?.recommendedFilters?.length) {
+      return Array.from(new Set(categoryControls));
+    }
+
     const filtered = this.recommendedFilterDefinitions
       .filter((item) => item.availability === 'available' && this.isDrawerFacetControlKey(item.control))
       .map((item) => item.control as DrawerFacetControlKey);
 
-    return filtered.length ? Array.from(new Set(filtered)) : defaults;
+    const resolved = filtered.length ? Array.from(new Set(filtered)) : defaults;
+    return this.hasFixedSpeciesContext
+      ? resolved.filter((control) => control !== 'specieId')
+      : resolved;
   }
 
   get veterinaryHint(): string {
@@ -538,6 +602,20 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       .filter((item) => item.availability === 'available')
       .map((item) => item.label)
       .slice(0, 6);
+  }
+
+  get technicalFilterDefinitions(): StorefrontCatalogFilterDefinition[] {
+    const unique = new Map<string, StorefrontCatalogFilterDefinition>();
+
+    for (const item of this.recommendedFilterDefinitions) {
+      if (item.availability !== 'available') continue;
+      if (this.isPrimaryVisualFilter(item)) continue;
+      if (!unique.has(item.key)) {
+        unique.set(item.key, item);
+      }
+    }
+
+    return Array.from(unique.values());
   }
 
   get subcategoryChips(): SubcategoryChip[] {
@@ -639,15 +717,15 @@ export class ShopPageComponent implements OnInit, OnDestroy {
   get petTemplateSummary(): string {
     const pet = this.selectedPetProfile;
     if (!pet) {
-      return 'Si eliges una mascota, el catalogo usa su especie, etapa, peso, preferencias y alertas registradas como plantilla de filtrado.';
+      return 'Si eliges una mascota, el catalogo usa su especie como filtro principal y toma etapa, peso, preferencias y alertas como guia de compatibilidad.';
     }
 
     const parts = [
       `${pet.name} esta guiando este catalogo.`,
       pet.species ? `Especie: ${SPECIES_LABEL[pet.species].toLowerCase()}.` : '',
-      pet.lifeStage ? `Etapa: ${LIFESTAGE_LABEL[pet.lifeStage].toLowerCase()}.` : '',
-      Number.isFinite(Number(pet.weightKg)) ? `Peso aprox: ${Number(pet.weightKg)} kg.` : '',
-      pet.diet?.length ? `Preferencias: ${pet.diet.slice(0, 2).map((entry) => DIET_LABEL[entry]).join(', ').toLowerCase()}.` : '',
+      pet.lifeStage ? `Etapa de referencia: ${LIFESTAGE_LABEL[pet.lifeStage].toLowerCase()}.` : '',
+      Number.isFinite(Number(pet.weightKg)) ? `Peso de referencia: ${Number(pet.weightKg)} kg.` : '',
+      pet.diet?.length ? `Preferencias sugeridas: ${pet.diet.slice(0, 2).map((entry) => DIET_LABEL[entry]).join(', ').toLowerCase()}.` : '',
       pet.allergies?.length ? `Tambien se revisan alertas relacionadas con ${pet.allergies.slice(0, 2).join(', ')}.` : '',
     ].filter(Boolean);
 
@@ -706,14 +784,14 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       pet: this.filters.petId || null,
       cat: this.filters.category || null,
       sub: this.filters.subcategory || null,
-      brand: this.filters.brandId ?? null,
-      form: this.filters.form || null,
-      protein: this.filters.proteinSource || null,
-      specie: this.filters.specieId ?? null,
-      stage: this.filters.lifeStageId ?? null,
-      diet: this.filters.dietTagId ?? null,
-      health: this.filters.healthConditionId ?? null,
-      ingredient: this.filters.ingredientId ?? null,
+      brand: this.serializeBrandIdsForQuery(this.filters.brandIds),
+      form: this.serializeTextListForQuery(this.filters.forms),
+      protein: this.serializeTextListForQuery(this.filters.proteinSources),
+      specie: this.serializeIdsForQuery(this.filters.specieIds),
+      stage: this.serializeIdsForQuery(this.filters.lifeStageIds),
+      diet: this.serializeIdsForQuery(this.filters.dietTagIds),
+      health: this.serializeIdsForQuery(this.filters.healthConditionIds),
+      ingredient: this.serializeIdsForQuery(this.filters.ingredientIds),
     });
   }
 
@@ -755,14 +833,14 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       pet: null,
       cat: this.filters.category || null,
       sub: null,
-      brand: this.filters.brandId ?? null,
-      form: this.filters.form || null,
-      protein: this.filters.proteinSource || null,
+      brand: this.serializeBrandIdsForQuery(this.filters.brandIds),
+      form: this.serializeTextListForQuery(this.filters.forms),
+      protein: this.serializeTextListForQuery(this.filters.proteinSources),
       specie: null,
       stage: null,
-      diet: this.filters.dietTagId ?? null,
-      health: this.filters.healthConditionId ?? null,
-      ingredient: this.filters.ingredientId ?? null,
+      diet: this.serializeIdsForQuery(this.filters.dietTagIds),
+      health: this.serializeIdsForQuery(this.filters.healthConditionIds),
+      ingredient: this.serializeIdsForQuery(this.filters.ingredientIds),
     });
   }
 
@@ -783,14 +861,14 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       pet: petId,
       cat: this.filters.category || null,
       sub: this.filters.subcategory || null,
-      brand: this.filters.brandId ?? null,
-      form: this.filters.form || null,
-      protein: this.filters.proteinSource || null,
-      specie: petId ? null : this.filters.specieId ?? null,
-      stage: petId ? null : this.filters.lifeStageId ?? null,
-      diet: this.filters.dietTagId ?? null,
-      health: this.filters.healthConditionId ?? null,
-      ingredient: this.filters.ingredientId ?? null,
+      brand: this.serializeBrandIdsForQuery(this.filters.brandIds),
+      form: this.serializeTextListForQuery(this.filters.forms),
+      protein: this.serializeTextListForQuery(this.filters.proteinSources),
+      specie: petId ? null : this.serializeIdsForQuery(this.filters.specieIds),
+      stage: petId ? null : this.serializeIdsForQuery(this.filters.lifeStageIds),
+      diet: this.serializeIdsForQuery(this.filters.dietTagIds),
+      health: this.serializeIdsForQuery(this.filters.healthConditionIds),
+      ingredient: this.serializeIdsForQuery(this.filters.ingredientIds),
     });
   }
 
@@ -826,7 +904,6 @@ export class ShopPageComponent implements OnInit, OnDestroy {
   }
 
   onApplyFilters(next: FilterState): void {
-    this.filtersOpen = false;
     this.page = 1;
     const min = this.normalizeFilterNumber(next.min);
     const max = this.normalizeFilterNumber(next.max);
@@ -844,19 +921,18 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       pet: petId,
       cat: next.category || null,
       sub: next.subcategory || null,
-      brand: next.brandId ?? null,
-      form: next.form || null,
-      protein: next.proteinSource || null,
-      specie: petId ? null : next.specieId ?? null,
-      stage: petId ? null : next.lifeStageId ?? null,
-      diet: next.dietTagId ?? null,
-      health: next.healthConditionId ?? null,
-      ingredient: next.ingredientId ?? null,
+      brand: this.serializeBrandIdsForQuery(next.brandIds),
+      form: this.serializeTextListForQuery(next.forms),
+      protein: this.serializeTextListForQuery(next.proteinSources),
+      specie: petId ? null : this.serializeIdsForQuery(next.specieIds),
+      stage: petId ? null : this.serializeIdsForQuery(next.lifeStageIds),
+      diet: this.serializeIdsForQuery(next.dietTagIds),
+      health: this.serializeIdsForQuery(next.healthConditionIds),
+      ingredient: this.serializeIdsForQuery(next.ingredientIds),
     });
   }
 
   onClearFilters(): void {
-    this.filtersOpen = false;
     this.page = 1;
 
     this.navigateWith({
@@ -898,15 +974,19 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       pet: this.filters.petId || null,
       cat: this.filters.category || null,
       sub: this.filters.subcategory || null,
-      brand: this.filters.brandId ?? null,
-      form: this.filters.form || null,
-      protein: this.filters.proteinSource || null,
-      specie: this.filters.specieId ?? null,
-      stage: this.filters.lifeStageId ?? null,
-      diet: this.filters.dietTagId ?? null,
-      health: this.filters.healthConditionId ?? null,
-      ingredient: this.filters.ingredientId ?? null,
+      brand: this.serializeBrandIdsForQuery(this.filters.brandIds),
+      form: this.serializeTextListForQuery(this.filters.forms),
+      protein: this.serializeTextListForQuery(this.filters.proteinSources),
+      specie: this.serializeIdsForQuery(this.filters.specieIds),
+      stage: this.serializeIdsForQuery(this.filters.lifeStageIds),
+      diet: this.serializeIdsForQuery(this.filters.dietTagIds),
+      health: this.serializeIdsForQuery(this.filters.healthConditionIds),
+      ingredient: this.serializeIdsForQuery(this.filters.ingredientIds),
     });
+  }
+
+  onViewModeChange(mode: 'grid' | 'list'): void {
+    this.viewMode = mode;
   }
 
   onPageChange(n: number): void {
@@ -924,19 +1004,20 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       pet: this.filters.petId || null,
       cat: this.filters.category || null,
       sub: this.filters.subcategory || null,
-      brand: this.filters.brandId ?? null,
-      form: this.filters.form || null,
-      protein: this.filters.proteinSource || null,
-      specie: this.filters.specieId ?? null,
-      stage: this.filters.lifeStageId ?? null,
-      diet: this.filters.dietTagId ?? null,
-      health: this.filters.healthConditionId ?? null,
-      ingredient: this.filters.ingredientId ?? null,
+      brand: this.serializeBrandIdsForQuery(this.filters.brandIds),
+      form: this.serializeTextListForQuery(this.filters.forms),
+      protein: this.serializeTextListForQuery(this.filters.proteinSources),
+      specie: this.serializeIdsForQuery(this.filters.specieIds),
+      stage: this.serializeIdsForQuery(this.filters.lifeStageIds),
+      diet: this.serializeIdsForQuery(this.filters.dietTagIds),
+      health: this.serializeIdsForQuery(this.filters.healthConditionIds),
+      ingredient: this.serializeIdsForQuery(this.filters.ingredientIds),
     });
   }
 
-  onAddToCart(product: Product): void {
-    this.cart.addItem(product.id, 1);
+  onAddToCart(product: Product, variantId?: string): void {
+    const variant = variantId ? product.variants?.find(v => v.id === variantId) : undefined;
+    this.cart.addItem(product.id, 1, undefined, variant ? { id: variant.id, label: variant.label, presentation: null, size: null, sku: null } : undefined);
   }
 
   trackByProductId(_: number, product: Product): string {
@@ -950,13 +1031,15 @@ export class ShopPageComponent implements OnInit, OnDestroy {
   private mapRouteState(
     slug: string | null,
     queryParams: ParamMap,
-    species: StorefrontTaxonomyItem[]
+    species: StorefrontTaxonomyItem[],
+    taxonomy: StorefrontCatalogTaxonomy | null
   ): RouteState {
-    const routePetType = this.normalizePetType(getCatalogPetBySlug(slug)?.key || null);
+    const routePetType = this.resolveRoutePetType(slug, taxonomy);
     const queryPetType = this.normalizePetType(queryParams.get('petType'));
     const petType = queryPetType || routePetType;
+    const shouldIgnoreSpeciesFilter = Boolean(petType);
     const categoryFromQuery = this.normalizeCategoryParam(queryParams.get('cat'));
-    const routeCategory = this.normalizeCategoryParam(this.normalizeRouteCategory(slug));
+    const routeCategory = this.normalizeCategoryParam(this.normalizeRouteCategory(slug, taxonomy));
     const category = categoryFromQuery || routeCategory;
 
     this.speciesTaxonomy = species;
@@ -967,7 +1050,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       tag: this.normalizeCollectionTag(queryParams.get('tag')),
       sort: (queryParams.get('sort') as SortType) || 'popular',
       page: +(queryParams.get('page') || 1),
-      pageSize: +(queryParams.get('pageSize') || 12),
+      pageSize: +(queryParams.get('pageSize') || 18),
       search: (queryParams.get('search') || '').trim(),
       min: this.parseQueryNumber(queryParams.get('min')),
       max: this.parseQueryNumber(queryParams.get('max')),
@@ -975,14 +1058,14 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       petId: (queryParams.get('pet') || '').trim() || null,
       category,
       subcategory: this.normalizeSubcategoryParam(queryParams.get('sub')),
-      brandId: this.parseQueryNumber(queryParams.get('brand')),
-      form: (queryParams.get('form') || '').trim() || null,
-      proteinSource: (queryParams.get('protein') || '').trim() || null,
-      specieId: this.parseQueryNumber(queryParams.get('specie')),
-      lifeStageId: this.parseQueryNumber(queryParams.get('stage')),
-      dietTagId: this.parseQueryNumber(queryParams.get('diet')),
-      healthConditionId: this.parseQueryNumber(queryParams.get('health')),
-      ingredientId: this.parseQueryNumber(queryParams.get('ingredient')),
+      brandIds: this.parseQueryNumberList(queryParams.get('brand')),
+      forms: this.parseQueryTextList(queryParams.get('form')),
+      proteinSources: this.parseQueryTextList(queryParams.get('protein')),
+      specieIds: shouldIgnoreSpeciesFilter ? [] : this.parseQueryNumberList(queryParams.get('specie')),
+      lifeStageIds: this.parseQueryNumberList(queryParams.get('stage')),
+      dietTagIds: this.parseQueryNumberList(queryParams.get('diet')),
+      healthConditionIds: this.parseQueryNumberList(queryParams.get('health')),
+      ingredientIds: this.parseQueryNumberList(queryParams.get('ingredient')),
     };
   }
 
@@ -1004,19 +1087,124 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     const result$ = this.hasPetProfiles && petId > 0
       ? this.api.searchByPetProfile(petId, query)
       : this.api.search(query);
-    const facets$ = this.hasPetProfiles && petId > 0
+    const facets$ = (this.hasPetProfiles && petId > 0
       ? this.api.getFacets(query, petId)
-      : this.api.getFacets(query);
+      : this.api.getFacets(query)).pipe(shareReplay(1));
     const hasExplicitPriceFilter = Number.isFinite(query.min as number) || Number.isFinite(query.max as number);
+    const hasExplicitBrandFilter = (this.filters.brandIds || []).length > 0;
+    const hasExplicitFormsFilter = (this.filters.forms || []).length > 0;
+    const hasExplicitProteinSourcesFilter = (this.filters.proteinSources || []).length > 0;
+    const hasExplicitSpeciesFilter = (this.filters.specieIds || []).length > 0;
+    const hasExplicitLifeStagesFilter = (this.filters.lifeStageIds || []).length > 0;
+    const hasExplicitDietTagsFilter = (this.filters.dietTagIds || []).length > 0;
+    const hasExplicitHealthConditionsFilter = (this.filters.healthConditionIds || []).length > 0;
+    const hasExplicitIngredientsFilter = (this.filters.ingredientIds || []).length > 0;
+    const hasExplicitFacetSelections =
+      hasExplicitBrandFilter ||
+      hasExplicitFormsFilter ||
+      hasExplicitProteinSourcesFilter ||
+      hasExplicitSpeciesFilter ||
+      hasExplicitLifeStagesFilter ||
+      hasExplicitDietTagsFilter ||
+      hasExplicitHealthConditionsFilter ||
+      hasExplicitIngredientsFilter;
     const priceBoundsQuery: CatalogQuery = {
       ...query,
       min: undefined,
       max: undefined,
     };
+    const catalogScopeQuery: CatalogQuery = {
+      ...query,
+      brandIds: [],
+      forms: [],
+      proteinSources: [],
+      specieIds: [],
+      lifeStageIds: [],
+      dietTagIds: [],
+      healthConditionIds: [],
+      ingredientIds: [],
+    };
+    const brandOptionsQuery: CatalogQuery = {
+      ...query,
+      brandIds: [],
+    };
+    const formOptionsQuery: CatalogQuery = {
+      ...query,
+      forms: [],
+    };
+    const proteinOptionsQuery: CatalogQuery = {
+      ...query,
+      proteinSources: [],
+    };
+    const speciesOptionsQuery: CatalogQuery = {
+      ...query,
+      specieIds: [],
+    };
+    const lifeStageOptionsQuery: CatalogQuery = {
+      ...query,
+      lifeStageIds: [],
+    };
+    const dietOptionsQuery: CatalogQuery = {
+      ...query,
+      dietTagIds: [],
+    };
+    const healthOptionsQuery: CatalogQuery = {
+      ...query,
+      healthConditionIds: [],
+    };
+    const ingredientOptionsQuery: CatalogQuery = {
+      ...query,
+      ingredientIds: [],
+    };
     const priceBounds$ = hasExplicitPriceFilter
       ? (this.hasPetProfiles && petId > 0
           ? this.api.getFacets(priceBoundsQuery, petId)
           : this.api.getFacets(priceBoundsQuery))
+      : of<StorefrontProductFacets | null>(null);
+    const catalogScope$ = hasExplicitFacetSelections
+      ? (this.hasPetProfiles && petId > 0
+          ? this.api.getFacets(catalogScopeQuery, petId)
+          : this.api.getFacets(catalogScopeQuery))
+      : of<StorefrontProductFacets | null>(null);
+    const brandOptions$ = hasExplicitBrandFilter
+      ? (this.hasPetProfiles && petId > 0
+          ? this.api.getFacets(brandOptionsQuery, petId)
+          : this.api.getFacets(brandOptionsQuery))
+      : of<StorefrontProductFacets | null>(null);
+    const formOptions$ = hasExplicitFormsFilter
+      ? (this.hasPetProfiles && petId > 0
+          ? this.api.getFacets(formOptionsQuery, petId)
+          : this.api.getFacets(formOptionsQuery))
+      : of<StorefrontProductFacets | null>(null);
+    const proteinOptions$ = hasExplicitProteinSourcesFilter
+      ? (this.hasPetProfiles && petId > 0
+          ? this.api.getFacets(proteinOptionsQuery, petId)
+          : this.api.getFacets(proteinOptionsQuery))
+      : of<StorefrontProductFacets | null>(null);
+    const speciesOptions$ = hasExplicitSpeciesFilter
+      ? (this.hasPetProfiles && petId > 0
+          ? this.api.getFacets(speciesOptionsQuery, petId)
+          : this.api.getFacets(speciesOptionsQuery))
+      : of<StorefrontProductFacets | null>(null);
+    const lifeStageOptions$ = hasExplicitLifeStagesFilter
+      ? (this.hasPetProfiles && petId > 0
+          ? this.api.getFacets(lifeStageOptionsQuery, petId)
+          : this.api.getFacets(lifeStageOptionsQuery))
+      : of<StorefrontProductFacets | null>(null);
+    const dietOptions$ = hasExplicitDietTagsFilter
+      ? (this.hasPetProfiles && petId > 0
+          ? this.api.getFacets(dietOptionsQuery, petId)
+          : this.api.getFacets(dietOptionsQuery))
+      : of<StorefrontProductFacets | null>(null);
+    const healthOptions$ = hasExplicitHealthConditionsFilter
+      ? (this.hasPetProfiles && petId > 0
+          ? this.api.getFacets(healthOptionsQuery, petId)
+          : this.api.getFacets(healthOptionsQuery))
+      : of<StorefrontProductFacets | null>(null);
+    const ingredientOptions$ = hasExplicitIngredientsFilter
+      ? (this.hasPetProfiles && petId > 0
+          ? this.api.getFacets(ingredientOptionsQuery, petId)
+          : this.api.getFacets(ingredientOptionsQuery))
       : of<StorefrontProductFacets | null>(null);
 
     return result$.pipe(
@@ -1048,15 +1236,64 @@ export class ShopPageComponent implements OnInit, OnDestroy {
         forkJoin({
           facets: facets$,
           priceBoundsFacets: priceBounds$,
+          catalogScopeFacets: catalogScope$,
+          brandOptionsFacets: brandOptions$,
+          formOptionsFacets: formOptions$,
+          proteinOptionsFacets: proteinOptions$,
+          speciesOptionsFacets: speciesOptions$,
+          lifeStageOptionsFacets: lifeStageOptions$,
+          dietOptionsFacets: dietOptions$,
+          healthOptionsFacets: healthOptions$,
+          ingredientOptionsFacets: ingredientOptions$,
         }).pipe(
-          tap(({ facets, priceBoundsFacets }) => {
+          tap(({
+            facets,
+            priceBoundsFacets,
+            catalogScopeFacets,
+            brandOptionsFacets,
+            formOptionsFacets,
+            proteinOptionsFacets,
+            speciesOptionsFacets,
+            lifeStageOptionsFacets,
+            dietOptionsFacets,
+            healthOptionsFacets,
+            ingredientOptionsFacets,
+          }) => {
             if (requestId !== this.activeRequestId) return;
 
             const resolvedFacets = this.withFallbackFacets(facets, result.items, result.total);
+            const contextFacets = catalogScopeFacets || resolvedFacets;
+            const availableBrands = hasExplicitBrandFilter ? (brandOptionsFacets?.brands || []) : resolvedFacets.brands;
+            const availableForms = hasExplicitFormsFilter ? (formOptionsFacets?.forms || []) : resolvedFacets.forms;
+            const availableProteinSources = hasExplicitProteinSourcesFilter
+              ? (proteinOptionsFacets?.proteinSources || [])
+              : resolvedFacets.proteinSources;
+            const availableSpecies = hasExplicitSpeciesFilter ? (speciesOptionsFacets?.species || []) : resolvedFacets.species;
+            const availableLifeStages = hasExplicitLifeStagesFilter
+              ? (lifeStageOptionsFacets?.lifeStages || [])
+              : resolvedFacets.lifeStages;
+            const availableDietTags = hasExplicitDietTagsFilter ? (dietOptionsFacets?.dietTags || []) : resolvedFacets.dietTags;
+            const availableHealthConditions = hasExplicitHealthConditionsFilter
+              ? (healthOptionsFacets?.healthConditions || [])
+              : resolvedFacets.healthConditions;
+            const availableIngredients = hasExplicitIngredientsFilter
+              ? (ingredientOptionsFacets?.ingredients || [])
+              : resolvedFacets.ingredients;
+            const drawerFacets = {
+              ...resolvedFacets,
+              brands: this.mergeTaxonomyFacetOptions(contextFacets.brands, availableBrands),
+              forms: this.mergeFacetValueOptions(contextFacets.forms, availableForms),
+              proteinSources: this.mergeFacetValueOptions(contextFacets.proteinSources, availableProteinSources),
+              species: this.mergeTaxonomyFacetOptions(contextFacets.species, availableSpecies),
+              lifeStages: this.mergeTaxonomyFacetOptions(contextFacets.lifeStages, availableLifeStages),
+              dietTags: this.mergeTaxonomyFacetOptions(contextFacets.dietTags, availableDietTags),
+              healthConditions: this.mergeTaxonomyFacetOptions(contextFacets.healthConditions, availableHealthConditions),
+              ingredients: this.mergeTaxonomyFacetOptions(contextFacets.ingredients, availableIngredients),
+            };
             this.applyState(() => {
               const facetsTotal = Number(resolvedFacets.totalProducts || 0);
               this.total = facetsTotal > 0 ? facetsTotal : result.total;
-              this.facets = resolvedFacets;
+              this.facets = drawerFacets;
               this.navFacets = resolvedFacets;
               this.priceRangeBounds = this.extractPriceRangeBounds(priceBoundsFacets || resolvedFacets);
               this.subcategoryChipList = this.computeSubcategoryChips();
@@ -1113,16 +1350,30 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     const selectedCategory = this.normalizeCategoryParam(this.filters.category || this.normalizeRouteCategory(this.slug));
     const selectedCategoryTaxonomy = this.findCategoryTaxonomyByValue(selectedCategory);
     const selectedSubcategoryTaxonomy = this.findSubcategoryTaxonomyByValue(this.filters.subcategory);
-    const backendSubcategory = selectedSubcategoryTaxonomy?.label
-      || this.normalizeSubcategoryParam(this.filters.subcategory)
-      || undefined;
-    const backendCategory = this.normalizeCategoryParam(selectedCategoryTaxonomy?.legacyCategory || selectedCategory) || undefined;
+
+    // Use new taxonomy when available, but keep legacy filters as fallback
+    // so products that are not migrated yet still appear in the storefront.
+    const hasNewTaxonomy = Boolean(this.activeAnimalTaxonomy);
+    const animalKey = hasNewTaxonomy ? (this.activeAnimalTaxonomy?.key || undefined) : undefined;
+    const categorySlug = hasNewTaxonomy
+      ? (selectedSubcategoryTaxonomy?.slug || selectedCategoryTaxonomy?.slug || undefined)
+      : undefined;
+
+    // Legacy filters — only active when new taxonomy is not available
+    const backendSubcategory =
+      selectedSubcategoryTaxonomy?.label || this.normalizeSubcategoryParam(this.filters.subcategory) || undefined;
+    const backendCategory =
+      this.normalizeCategoryParam(selectedCategoryTaxonomy?.legacyCategory || selectedCategory) || undefined;
     const familySpecieId = this.resolvePetTypeSpecieId(this.selectedPetType);
-    const explicitSpecieId = this.lockBiologyFilters
-      ? undefined
-      : familySpecieId ?? this.filters.specieId ?? undefined;
+    const explicitSpecieIds = this.lockBiologyFilters
+      ? (familySpecieId ? [familySpecieId] : [])
+      : familySpecieId
+        ? Array.from(new Set([familySpecieId, ...(this.filters.specieIds ?? [])]))
+        : (this.filters.specieIds ?? []);
 
     return {
+      animalKey,
+      categorySlug,
       category: backendCategory,
       subcategory: backendSubcategory,
       allowedSubcategories: [],
@@ -1136,14 +1387,14 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       inStock: this.filters.inStockOnly ? true : false,
       strictPet: true,
       excludedTerms,
-      form: this.filters.form ?? undefined,
-      proteinSource: this.filters.proteinSource ?? undefined,
-      brandId: this.filters.brandId ?? undefined,
-      specieId: explicitSpecieId ?? undefined,
-      lifeStageId: this.lockBiologyFilters ? undefined : this.filters.lifeStageId ?? undefined,
-      dietTagIds: this.filters.dietTagId ? [this.filters.dietTagId] : [],
-      healthConditionIds: this.filters.healthConditionId ? [this.filters.healthConditionId] : [],
-      ingredientIds: this.filters.ingredientId ? [this.filters.ingredientId] : [],
+      forms: this.filters.forms ?? [],
+      proteinSources: this.filters.proteinSources ?? [],
+      brandIds: this.filters.brandIds ?? [],
+      specieIds: explicitSpecieIds,
+      lifeStageIds: this.lockBiologyFilters ? [] : (this.filters.lifeStageIds ?? []),
+      dietTagIds: this.filters.dietTagIds ?? [],
+      healthConditionIds: this.filters.healthConditionIds ?? [],
+      ingredientIds: this.filters.ingredientIds ?? [],
     };
   }
 
@@ -1186,9 +1437,12 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  private normalizeRouteCategory(slug: string | null): string | null {
+  private normalizeRouteCategory(
+    slug: string | null,
+    taxonomy: StorefrontCatalogTaxonomy | null = this.catalogTaxonomy
+  ): string | null {
     const value = String(slug || '').trim().toLowerCase();
-    if (!value || value === 'catalog' || getCatalogPetBySlug(value)) return null;
+    if (!value || value === 'catalog' || this.resolveRoutePetType(value, taxonomy)) return null;
 
     if (value === 'snacks') return 'treats';
     if (value === 'higiene') return 'hygiene';
@@ -1249,6 +1503,26 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     return getCatalogPetByKey(normalized)?.key || null;
   }
 
+  private resolveRoutePetType(
+    slug: string | null,
+    taxonomy: StorefrontCatalogTaxonomy | null = this.catalogTaxonomy
+  ): CatalogPetType | null {
+    const normalized = String(slug || '').trim().toLowerCase();
+    if (!normalized) return null;
+
+    const taxonomyAnimal = (taxonomy?.animals || []).find((item) => {
+      const key = String(item.key || '').trim().toLowerCase();
+      const itemSlug = String(item.slug || '').trim().toLowerCase();
+      return key === normalized || itemSlug === normalized;
+    });
+
+    if (taxonomyAnimal?.key) {
+      return this.normalizePetType(taxonomyAnimal.key);
+    }
+
+    return this.normalizePetType(getCatalogPetBySlug(normalized)?.key || null);
+  }
+
   private normalizeCollectionTag(value?: string | null): CatalogCollectionTag | null {
     const normalized = String(value || '').trim().toLowerCase();
     if (normalized === 'new' || normalized === 'clearance') {
@@ -1264,10 +1538,63 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     return Number.isFinite(parsed) ? parsed : null;
   }
 
+  private parseQueryNumberList(value: string | null): number[] {
+    return this.normalizeFilterIds(
+      String(value || '')
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean)
+    );
+  }
+
+  private parseQueryTextList(value: string | null): string[] {
+    return this.normalizeFilterTexts(
+      String(value || '')
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean)
+    );
+  }
+
   private normalizeFilterNumber(value?: number | null): number | null {
     if (value === null || value === undefined) return null;
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private normalizeFilterIds(values?: Array<number | string | null | undefined> | null): number[] {
+    return Array.from(
+      new Set(
+        (values || [])
+          .map((value) => this.parseQueryNumber(String(value)))
+          .filter((value): value is number => value !== null && value > 0)
+      )
+    ).sort((a, b) => a - b);
+  }
+
+  private normalizeFilterTexts(values?: Array<string | null | undefined> | null): string[] {
+    return Array.from(
+      new Set(
+        (values || [])
+          .map((value) => String(value || '').trim())
+          .filter(Boolean)
+      )
+    );
+  }
+
+  private serializeBrandIdsForQuery(values?: Array<number | string | null | undefined> | null): string | null {
+    const ids = this.normalizeFilterIds(values);
+    return ids.length ? ids.join(',') : null;
+  }
+
+  private serializeIdsForQuery(values?: Array<number | string | null | undefined> | null): string | null {
+    const ids = this.normalizeFilterIds(values);
+    return ids.length ? ids.join(',') : null;
+  }
+
+  private serializeTextListForQuery(values?: Array<string | null | undefined> | null): string | null {
+    const normalized = this.normalizeFilterTexts(values);
+    return normalized.length ? normalized.join(',') : null;
   }
 
   private buildParamsSignature(params: Params): string {
@@ -1291,14 +1618,14 @@ export class ShopPageComponent implements OnInit, OnDestroy {
   private hasIndexableCatalogFilters(): boolean {
     return Boolean(
       this.filters.petId ||
-      this.filters.brandId ||
-      this.filters.form ||
-      this.filters.proteinSource ||
-      this.filters.specieId ||
-      this.filters.lifeStageId ||
-      this.filters.dietTagId ||
-      this.filters.healthConditionId ||
-      this.filters.ingredientId ||
+      (this.filters.brandIds || []).length ||
+      (this.filters.forms || []).length ||
+      (this.filters.proteinSources || []).length ||
+      (this.filters.specieIds || []).length ||
+      (this.filters.lifeStageIds || []).length ||
+      (this.filters.dietTagIds || []).length ||
+      (this.filters.healthConditionIds || []).length ||
+      (this.filters.ingredientIds || []).length ||
       Number.isFinite(this.filters.min as number) ||
       Number.isFinite(this.filters.max as number) ||
       !this.filters.inStockOnly
@@ -1308,7 +1635,7 @@ export class ShopPageComponent implements OnInit, OnDestroy {
   private buildCollectionCanonicalUrl(): string {
     const currentPath = this.router.url.split('?')[0] || '/catalog';
     const params = new URLSearchParams();
-    const routePetType = this.normalizePetType(getCatalogPetBySlug(this.slug)?.key || null);
+    const routePetType = this.resolveRoutePetType(this.slug);
     const routeCategory = this.normalizeCategoryParam(this.normalizeRouteCategory(this.slug));
 
     if (this.collectionTag) {
@@ -1355,13 +1682,14 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       this.currentPetConfig?.label || '',
       this.filters.category ? this.resolveCategoryDisplayLabel(this.filters.category) : '',
       this.resolveSubcategoryDisplayLabel(this.filters.subcategory),
-      this.resolveFacetLabel(this.facets.forms, this.filters.form),
-      this.resolveFacetLabel(this.facets.proteinSources, this.filters.proteinSource),
-      this.resolveTaxonomyLabel(this.facets.brands, this.filters.brandId),
-      this.resolveTaxonomyLabel(this.facets.lifeStages, this.filters.lifeStageId),
-      this.resolveTaxonomyLabel(this.facets.dietTags, this.filters.dietTagId),
-      this.resolveTaxonomyLabel(this.facets.healthConditions, this.filters.healthConditionId),
-      this.resolveTaxonomyLabel(this.facets.ingredients, this.filters.ingredientId),
+      ...this.resolveFacetLabels(this.facets.forms, this.filters.forms),
+      ...this.resolveFacetLabels(this.facets.proteinSources, this.filters.proteinSources),
+      ...this.resolveTaxonomyLabels(this.facets.brands, this.filters.brandIds),
+      ...this.resolveTaxonomyLabels(this.facets.species, this.filters.specieIds),
+      ...this.resolveTaxonomyLabels(this.facets.lifeStages, this.filters.lifeStageIds),
+      ...this.resolveTaxonomyLabels(this.facets.dietTags, this.filters.dietTagIds),
+      ...this.resolveTaxonomyLabels(this.facets.healthConditions, this.filters.healthConditionIds),
+      ...this.resolveTaxonomyLabels(this.facets.ingredients, this.filters.ingredientIds),
     ].filter(Boolean);
 
     const description = errorMessage
@@ -1426,6 +1754,19 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     return items.find((item) => item.value.toLowerCase() === normalized)?.label || normalized;
   }
 
+  private resolveFacetLabels(
+    items: Array<{ value: string; label: string }>,
+    values?: Array<string | null | undefined> | null
+  ): string[] {
+    const selected = new Set(this.normalizeFilterTexts(values).map((value) => value.toLowerCase()));
+    if (!selected.size) return [];
+
+    return items
+      .filter((item) => selected.has(String(item.value || '').trim().toLowerCase()))
+      .map((item) => String(item.label || '').trim())
+      .filter(Boolean);
+  }
+
   private resolveTaxonomyLabel(
     items: Array<{ id: number; name?: string }>,
     value?: number | null
@@ -1433,6 +1774,19 @@ export class ShopPageComponent implements OnInit, OnDestroy {
     const numeric = Number(value || 0);
     if (!numeric) return '';
     return items.find((item) => Number(item.id) === numeric)?.name || '';
+  }
+
+  private resolveTaxonomyLabels(
+    items: Array<{ id: number; name?: string }>,
+    values?: Array<number | null | undefined> | null
+  ): string[] {
+    const selected = new Set(this.normalizeFilterIds(values));
+    if (!selected.size) return [];
+
+    return items
+      .filter((item) => selected.has(Number(item.id || 0)))
+      .map((item) => String(item.name || '').trim())
+      .filter(Boolean);
   }
 
   private withFallbackFacets(
@@ -1532,6 +1886,75 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       min: Math.min(floor, ceil),
       max: Math.max(floor, ceil),
     };
+  }
+
+  private mergeFacetValueOptions(
+    universe: Array<{ value: string; label: string; count: number }>,
+    available: Array<{ value: string; label: string; count: number }>
+  ): Array<{ value: string; label: string; count: number }> {
+    const availableMap = new Map(
+      (available || []).map((item) => [String(item.value || '').trim().toLowerCase(), item])
+    );
+    const merged: Array<{ value: string; label: string; count: number }> = [];
+    const seen = new Set<string>();
+
+    for (const item of universe || []) {
+      const key = String(item.value || '').trim().toLowerCase();
+      if (!key || seen.has(key)) continue;
+      const current = availableMap.get(key);
+      merged.push({
+        value: current?.value || item.value,
+        label: current?.label || item.label,
+        count: Number(current?.count || 0),
+      });
+      seen.add(key);
+    }
+
+    for (const item of available || []) {
+      const key = String(item.value || '').trim().toLowerCase();
+      if (!key || seen.has(key)) continue;
+      merged.push({
+        value: item.value,
+        label: item.label,
+        count: Number(item.count || 0),
+      });
+      seen.add(key);
+    }
+
+    return merged;
+  }
+
+  private mergeTaxonomyFacetOptions<T extends { id: number; name: string; count: number }>(
+    universe: T[],
+    available: T[]
+  ): T[] {
+    const availableMap = new Map((available || []).map((item) => [Number(item.id || 0), item]));
+    const merged: T[] = [];
+    const seen = new Set<number>();
+
+    for (const item of universe || []) {
+      const key = Number(item.id || 0);
+      if (!key || seen.has(key)) continue;
+      const current = availableMap.get(key);
+      merged.push({
+        ...item,
+        ...current,
+        count: Number(current?.count || 0),
+      });
+      seen.add(key);
+    }
+
+    for (const item of available || []) {
+      const key = Number(item.id || 0);
+      if (!key || seen.has(key)) continue;
+      merged.push({
+        ...item,
+        count: Number(item.count || 0),
+      });
+      seen.add(key);
+    }
+
+    return merged;
   }
 
   private sortSubcategoryChips(
@@ -1722,6 +2145,13 @@ export class ShopPageComponent implements OnInit, OnDestroy {
       || value === 'dietTagId'
       || value === 'healthConditionId'
       || value === 'ingredientId';
+  }
+
+  private isPrimaryVisualFilter(item: StorefrontCatalogFilterDefinition): boolean {
+    return item.key === 'brand'
+      || item.key === 'price'
+      || item.key === 'stock'
+      || this.isDrawerFacetControlKey(item.control);
   }
 
   private resolvePetTypeSpecieId(petType: CatalogPetType | null): number | undefined {

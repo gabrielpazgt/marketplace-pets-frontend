@@ -1,0 +1,97 @@
+.hb-brands {
+  background: #fafaf9;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: clamp(48px, 6vw, 80px) 0;
+
+  &__head {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  &__label {
+    font-size: var(--fs-xs);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: var(--brand);
+    margin: 0 0 8px;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    font-weight: 900;
+    color: var(--ink);
+    margin: 0 0 10px;
+    letter-spacing: -0.02em;
+  }
+
+  &__sub {
+    font-size: var(--fs-sm);
+    color: var(--muted);
+    max-width: 46ch;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  // Fila de logos
+  &__track {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+}
+
+// ── Brand tile ──
+.hb-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  padding: 14px 24px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  background: #fff;
+  text-decoration: none;
+  transition:
+    border-color var(--t-base) var(--timing),
+    box-shadow var(--t-base) var(--timing),
+    transform var(--t-fast) var(--timing);
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--brand) 35%, var(--line));
+    box-shadow: var(--elev-2);
+    transform: translateY(-2px);
+  }
+
+  &__name {
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    font-weight: 800;
+    color: var(--ink-2);
+    letter-spacing: -0.01em;
+    transition: color var(--t-base) var(--timing);
+    white-space: nowrap;
+  }
+
+  &:hover &__name {
+    color: var(--ink);
+  }
+}
+
+@media (max-width: 480px) {
+  .hb-brands__track {
+    gap: 8px;
+  }
+
+  .hb-brand {
+    min-width: 100px;
+    padding: 12px 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hb-brand { transition: none !important; }
+}

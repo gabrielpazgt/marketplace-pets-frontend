@@ -73,7 +73,17 @@ export class AuthApiService {
   }
 
   getMe(): Observable<User> {
-    return this.http.get<User>(`${this.apiBaseUrl}/api/users/me`);
+    return this.http.get<User>(`${this.apiBaseUrl}/api/users/me?populate=role`);
+  }
+
+  getOAuthUrl(provider: 'google' | 'facebook'): string {
+    return `${this.apiBaseUrl}/api/connect/${provider}`;
+  }
+
+  oauthExchange(provider: string, accessToken: string): Observable<AuthResponse> {
+    return this.http.get<AuthResponse>(
+      `${this.apiBaseUrl}/api/auth/${provider}/callback?access_token=${encodeURIComponent(accessToken)}`
+    );
   }
 
   private resolveUsername(username: string | undefined, email: string): string {

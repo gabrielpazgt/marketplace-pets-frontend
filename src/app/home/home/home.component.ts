@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { SeoService } from '../../core/services/seo.service';
 import { HomeDataService } from '../home.data';
-import { Category, Product } from '../home.models';
+import { Product } from '../home.models';
 
 
 @Component({
@@ -12,7 +12,6 @@ import { Category, Product } from '../home.models';
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-  categories$!: Observable<Category[]>;
   featured$!: Observable<Product[]>;
 
   constructor(
@@ -55,7 +54,6 @@ export class HomeComponent implements OnInit {
       ],
     });
 
-    this.categories$ = this.data.getCategories();
-    this.featured$   = this.data.getFeatured();
+    this.featured$ = this.data.getFeatured();
   }
 }

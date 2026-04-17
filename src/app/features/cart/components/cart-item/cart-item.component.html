@@ -1,53 +1,60 @@
-﻿<article class="row">
-  <div class="cell product">
-    <div class="media">
-      <img [src]="item.image" [alt]="item.name" width="96" height="96" loading="lazy" decoding="async">
-    </div>
+<article class="item">
+  <a class="item__media" [routerLink]="['/catalog/product', item.slug]">
+    <img [src]="item.image" [alt]="item.name" width="112" height="112" loading="lazy" decoding="async">
+  </a>
 
-    <div class="info">
-      <h3 class="title">{{ item.name }}</h3>
+  <div class="item__content">
+    <div class="item__header">
+      <div class="item__copy">
+        <div class="item__brand" *ngIf="item.brand">{{ item.brand }}</div>
+        <h3 class="title">
+          <a [routerLink]="['/catalog/product', item.slug]">{{ item.name }}</a>
+        </h3>
 
-      <div class="attrs" *ngIf="item.attrs?.length">
-        <span *ngFor="let a of item.attrs" class="chip">{{ a }}</span>
+        <div class="attrs" *ngIf="item.attrs?.length">
+          <span *ngFor="let a of item.attrs" class="chip">{{ a }}</span>
+        </div>
+
+        <div class="stock" [class.low]="item.stock <= 3">
+          {{ item.stock <= 3 ? 'Quedan pocas unidades' : 'Disponible' }}
+        </div>
       </div>
 
-      <div class="stock" [class.low]="item.stock <= 3">
-        {{ item.stock <= 3 ? 'Quedan pocas unidades' : 'Disponible' }}
+      <button class="remove" (click)="remove.emit()" [disabled]="busy">
+        <mat-icon aria-hidden="true">{{ busy ? 'hourglass_top' : 'close' }}</mat-icon>
+        <span class="sr-only">{{ busy ? 'Procesando...' : 'Quitar producto' }}</span>
+      </button>
+    </div>
+
+    <div class="item__footer">
+      <div class="price-block">
+        <span class="price-block__label">Precio unitario</span>
+        <div class="price-block__value">
+          <span class="price-block__old" *ngIf="item.oldPrice">{{ item.oldPrice | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
+          <strong>{{ item.price | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
+        </div>
+        <span class="price-block__save" *ngIf="unitSavings > 0">
+          Ahorro {{ unitSavings | currency:'GTQ':'symbol-narrow':'1.0-0' }}
+        </span>
+      </div>
+
+      <div class="qty-editor">
+        <span class="price-block__label">Cantidad</span>
+        <div class="qty-control">
+          <button type="button" (click)="dec()" [disabled]="busy || localQty <= 1">-</button>
+          <input type="number" [value]="localQty" (input)="onQtyInput($event)" [disabled]="busy" min="1" [max]="item.stock" />
+          <button type="button" (click)="inc()" [disabled]="busy || localQty >= item.stock">+</button>
+        </div>
+        <div class="qty-actions" *ngIf="pending">
+          <button type="button" class="btn-xs apply" (click)="confirmQty()" [disabled]="busy">Confirmar</button>
+          <button type="button" class="btn-xs clear" (click)="resetQty()" [disabled]="busy">Cancelar</button>
+        </div>
+      </div>
+
+      <div class="line-total">
+        <span class="price-block__label">Total</span>
+        <strong>{{ lineTotal | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
       </div>
     </div>
-  </div>
-
-  <div class="cell unit">
-    <span class="cell-label">Precio</span>
-    <div class="price-chip" aria-label="Precio unitario">
-      <span class="label">Unidad</span>
-      <span class="now">{{ item.price | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
-    </div>
-  </div>
-
-  <div class="cell qty">
-    <span class="cell-label">Cantidad</span>
-    <div class="qty-editor">
-      <div class="qty-control">
-        <button type="button" (click)="dec()" [disabled]="busy || localQty <= 1">-</button>
-        <input type="number" [value]="localQty" (input)="onQtyInput($event)" [disabled]="busy" min="1" [max]="item.stock" />
-        <button type="button" (click)="inc()" [disabled]="busy || localQty >= item.stock">+</button>
-      </div>
-      <div class="qty-actions" *ngIf="pending">
-        <button type="button" class="btn-xs apply" (click)="confirmQty()" [disabled]="busy">Confirmar</button>
-        <button type="button" class="btn-xs clear" (click)="resetQty()" [disabled]="busy">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="cell line-total">
-    <span class="cell-label">Total</span>
-    <strong>{{ lineTotal | currency:'GTQ':'symbol-narrow':'1.0-0' }}</strong>
-  </div>
-
-  <div class="cell remove">
-    <button class="link danger" (click)="remove.emit()" [disabled]="busy">
-      {{ busy ? 'Procesando...' : 'Eliminar' }}
-    </button>
   </div>
 </article>

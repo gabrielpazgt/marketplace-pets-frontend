@@ -1,0 +1,216 @@
+<div class="ops-page">
+  <div class="ops-page__head">
+    <h1 class="ops-page__title">Reportes</h1>
+  </div>
+
+  <!-- Date range + apply -->
+  <div class="ops-card report-filters">
+    <div class="report-filters__row">
+      <label class="report-filters__field">
+        <span>Desde</span>
+        <input class="ops-input" type="date" [(ngModel)]="from" />
+      </label>
+      <label class="report-filters__field">
+        <span>Hasta</span>
+        <input class="ops-input" type="date" [(ngModel)]="to" />
+      </label>
+      <button class="ops-btn ops-btn--primary" (click)="load()" [disabled]="loading">
+        {{ loading ? 'Cargando...' : 'Aplicar' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="report-tabs">
+    <button class="report-tab" [class.active]="activeTab === 'sales'" (click)="setTab('sales')">📈 Ventas</button>
+    <button class="report-tab" [class.active]="activeTab === 'products'" (click)="setTab('products')">🏆 Top Productos</button>
+    <button class="report-tab" [class.active]="activeTab === 'customers'" (click)="setTab('customers')">👥 Top Clientes</button>
+  </div>
+
+  <p class="error-msg" *ngIf="error">{{ error }}</p>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div><p>Generando reporte...</p>
+  </div>
+
+  <!-- ── TAB: VENTAS ── -->
+  <ng-container *ngIf="!loading && activeTab === 'sales' && salesReport">
+    <!-- Summary cards -->
+    <div class="metrics-grid metrics-grid--4">
+      <div class="metric-card">
+        <span class="metric-card__icon">📦</span>
+        <div>
+          <p class="metric-card__value">{{ salesReport.totals.ordersCount }}</p>
+          <p class="metric-card__label">Pedidos</p>
+        </div>
+      </div>
+      <div class="metric-card metric-card--green">
+        <span class="metric-card__icon">💰</span>
+        <div>
+          <p class="metric-card__value">Q{{ salesReport.totals.grossRevenue | number:'1.2-2' }}</p>
+          <p class="metric-card__label">Ingresos brutos</p>
+        </div>
+      </div>
+      <div class="metric-card metric-card--red">
+        <span class="metric-card__icon">🏷️</span>
+        <div>
+          <p class="metric-card__value">-Q{{ salesReport.totals.totalDiscounts | number:'1.2-2' }}</p>
+          <p class="metric-card__label">Descuentos</p>
+        </div>
+      </div>
+      <div class="metric-card metric-card--blue">
+        <span class="metric-card__icon">✅</span>
+        <div>
+          <p class="metric-card__value">Q{{ salesReport.totals.netRevenue | number:'1.2-2' }}</p>
+          <p class="metric-card__label">Ingresos netos</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily table + export -->
+    <div class="ops-card">
+      <div class="ops-card__head">
+        <h2 class="ops-card__title">Detalle por día</h2>
+        <button class="ops-btn ops-btn--ghost" (click)="exportSalesCSV()">⬇ Exportar CSV</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="ops-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th class="num">Pedidos</th>
+              <th class="num">Bruto</th>
+              <th class="num">Envíos</th>
+              <th class="num">Descuentos</th>
+              <th class="num">Neto</th>
+              <th class="num">AOV</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of salesReport.periods">
+              <td>{{ p.period }}</td>
+              <td class="num">{{ p.ordersCount }}</td>
+              <td class="num">Q{{ p.grossRevenue | number:'1.2-2' }}</td>
+              <td class="num">Q{{ p.shippingRevenue | number:'1.2-2' }}</td>
+              <td class="num red">-Q{{ p.totalDiscounts | number:'1.2-2' }}</td>
+              <td class="num bold">Q{{ p.netRevenue | number:'1.2-2' }}</td>
+              <td class="num muted">Q{{ p.avgOrderValue | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="totals-row">
+              <td><strong>Total</strong></td>
+              <td class="num"><strong>{{ salesReport.totals.ordersCount }}</strong></td>
+              <td class="num"><strong>Q{{ salesReport.totals.grossRevenue | number:'1.2-2' }}</strong></td>
+              <td class="num"><strong>Q{{ salesReport.totals.shippingRevenue | number:'1.2-2' }}</strong></td>
+              <td class="num red"><strong>-Q{{ salesReport.totals.totalDiscounts | number:'1.2-2' }}</strong></td>
+              <td class="num green"><strong>Q{{ salesReport.totals.netRevenue | number:'1.2-2' }}</strong></td>
+              <td class="num muted"><strong>Q{{ salesReport.totals.avgOrderValue | number:'1.2-2' }}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="empty-state" *ngIf="!salesReport.periods.length">
+        <p>No hay pedidos en el período seleccionado.</p>
+      </div>
+    </div>
+
+    <!-- Payment breakdown + Membership -->
+    <div class="side-by-side" *ngIf="salesReport.byPaymentKind.length">
+      <div class="ops-card">
+        <h2 class="ops-card__title">Por método de pago</h2>
+        <table class="ops-table ops-table--compact">
+          <thead><tr><th>Método</th><th class="num">Pedidos</th><th class="num">Revenue</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let pk of salesReport.byPaymentKind">
+              <td>{{ paymentLabel(pk.kind) }}</td>
+              <td class="num">{{ pk.count }}</td>
+              <td class="num">Q{{ pk.revenue | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="ops-card">
+        <h2 class="ops-card__title">Membresías</h2>
+        <p class="stat-big">{{ salesReport.membershipOrdersCount }}</p>
+        <p class="muted-text">pedidos con descuento de membresía en el período</p>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ── TAB: TOP PRODUCTOS ── -->
+  <ng-container *ngIf="!loading && activeTab === 'products'">
+    <div class="ops-card">
+      <div class="ops-card__head">
+        <h2 class="ops-card__title">Productos más vendidos</h2>
+        <button class="ops-btn ops-btn--ghost" (click)="exportProductsCSV()" [disabled]="!topProducts.length">⬇ Exportar CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table class="ops-table" *ngIf="topProducts.length">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Producto</th>
+              <th>SKU</th>
+              <th class="num">Unidades</th>
+              <th class="num">Revenue</th>
+              <th class="num">Órdenes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of topProducts; let i = index">
+              <td class="pos">{{ i + 1 }}</td>
+              <td class="product-name">{{ p.name }}</td>
+              <td class="muted">{{ p.sku || '—' }}</td>
+              <td class="num">{{ p.totalQty }}</td>
+              <td class="num bold">Q{{ p.totalRevenue | number:'1.2-2' }}</td>
+              <td class="num">{{ p.ordersCount }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="empty-state" *ngIf="!topProducts.length">
+        <p>No hay datos de productos en el período seleccionado.</p>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ── TAB: TOP CLIENTES ── -->
+  <ng-container *ngIf="!loading && activeTab === 'customers'">
+    <div class="ops-card">
+      <div class="ops-card__head">
+        <h2 class="ops-card__title">Clientes por valor</h2>
+        <button class="ops-btn ops-btn--ghost" (click)="exportCustomersCSV()" [disabled]="!topCustomers.length">⬇ Exportar CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table class="ops-table" *ngIf="topCustomers.length">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Cliente</th>
+              <th>Email</th>
+              <th class="num">Órdenes</th>
+              <th class="num">Gasto total</th>
+              <th>Última compra</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of topCustomers; let i = index">
+              <td class="pos">{{ i + 1 }}</td>
+              <td>{{ c.customerName || '—' }}</td>
+              <td class="muted">{{ c.email }}</td>
+              <td class="num">{{ c.ordersCount }}</td>
+              <td class="num bold">Q{{ c.totalSpent | number:'1.2-2' }}</td>
+              <td class="muted">{{ c.lastOrderAt | date:'dd/MM/yy' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="empty-state" *ngIf="!topCustomers.length">
+        <p>No hay datos de clientes en el período seleccionado.</p>
+      </div>
+    </div>
+  </ng-container>
+</div>

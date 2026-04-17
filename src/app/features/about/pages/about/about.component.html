@@ -1,63 +1,215 @@
-<section class="about">
-  <header class="hero container">
-    <div class="hero__content">
-      <span class="kicker">ACERCA DE</span>
-      <h1>Construimos un ecommerce de mascotas útil, humano y con impacto real.</h1>
-      <p>
-        Aumakki nace para simplificar la compra de productos para mascotas y, al mismo tiempo,
-        apoyar iniciativas que cuidan animales en situación vulnerable.
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 1 — HERO OSCURO EDITORIAL
+══════════════════════════════════════════════════ -->
+<section class="ab-hero">
+  <div class="ab-hero__decor ab-hero__decor--1" aria-hidden="true"></div>
+  <div class="ab-hero__decor ab-hero__decor--2" aria-hidden="true"></div>
+
+  <div class="ab-container ab-hero__inner">
+    <div class="ab-hero__content">
+      <div class="ab-hero__badge">
+        <mat-icon>pets</mat-icon>
+        <span>Nuestra historia</span>
+      </div>
+
+      <h1 class="ab-hero__title">
+        Creado por papás de mascotas,
+        <span class="ab-hero__title--accent">para papás de mascotas.</span>
+      </h1>
+
+      <p class="ab-hero__sub">
+        Aumakki nació con una misión: darte acceso a productos de calidad para tu mascota,
+        con una experiencia de compra honesta y un impacto positivo en tu comunidad.
       </p>
 
-      <div class="hero__actions">
-        <a class="btn primary" routerLink="/catalog">Explorar tienda</a>
-        <a class="btn ghost" routerLink="/checkout/contact">Comprar ahora</a>
+      <div class="ab-hero__actions">
+        <a class="ab-btn ab-btn--primary" routerLink="/catalog">
+          Explorar tienda
+          <mat-icon>arrow_forward</mat-icon>
+        </a>
+        <a class="ab-btn ab-btn--outline-light" routerLink="/memberships/plans">
+          Ver membresía
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 2 — MISIÓN
+══════════════════════════════════════════════════ -->
+<section class="ab-section ab-mission">
+  <div class="ab-container ab-mission__grid">
+
+    <div class="ab-mission__text" mpFadeIn>
+      <p class="ab-label">NUESTRA MISIÓN</p>
+      <h2 class="ab-section__title">Mejores productos.<br>Mascotas más felices.</h2>
+      <p class="ab-mission__body">
+        Creemos que la salud de tu mascota no debería ser un lujo. Por eso cada
+        producto de nuestro catálogo es elegido pensando en bienestar, calidad y precio justo —
+        porque lo correcto debería ser lo estándar.
+      </p>
+      <p class="ab-mission__body">
+        Desde nuestro proceso de selección cuidadoso hasta el correcto empaque,
+        cada decisión empieza con una sola pregunta: <em>¿es lo mejor para la mascota?</em>
+      </p>
+
+      <div class="ab-mission__tags">
+        <span class="ab-tag">
+          <mat-icon>check_circle</mat-icon>
+          Revisión de calidad
+        </span>
+        <span class="ab-tag">
+          <mat-icon>check_circle</mat-icon>
+          Ingredientes honestos
+        </span>
+        <span class="ab-tag">
+          <mat-icon>check_circle</mat-icon>
+          Envío responsable
+        </span>
+        <span class="ab-tag">
+          <mat-icon>check_circle</mat-icon>
+          Precio justo
+        </span>
       </div>
     </div>
 
-    <aside class="hero__panel card" aria-label="Resumen de impacto">
-      <h2>Compromiso social</h2>
-      <p>
-        Destinamos <strong>{{ impactPercent }}% de nuestras ganancias</strong>
-        a fundaciones que apoyan animales enfermos o en calle.
-      </p>
-      <ul>
-        <li *ngFor="let cause of causes">{{ cause }}</li>
-      </ul>
-    </aside>
-  </header>
+    <div class="ab-mission__visual" mpFadeIn [mpFadeInDelay]="150">
+      <div class="ab-mission__card-main">
+        <mat-icon class="ab-mission__card-icon">favorite</mat-icon>
+        <h3>Compromiso Aumakki</h3>
+        <p>
+          Destinamos <strong>{{ impactPercent }}% de nuestras ganancias</strong> a fundaciones
+          que apoyan animales enfermos y en situación de calle en Guatemala.
+        </p>
+        <ul class="ab-mission__causes">
+          <li *ngFor="let cause of causes">
+            <mat-icon>{{ cause.icon }}</mat-icon>
+            <span>{{ cause.title }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
 
-  <section class="values container" aria-label="Valores">
-    <h2>Nuestros principios</h2>
-    <div class="values__grid">
-      <article class="value card" *ngFor="let value of values">
-        <h3>{{ value.title }}</h3>
-        <p>{{ value.description }}</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 3 — VALORES
+══════════════════════════════════════════════════ -->
+<section class="ab-section ab-values">
+  <div class="ab-container">
+    <div mpFadeIn>
+      <p class="ab-label">LO QUE NOS DEFINE</p>
+      <h2 class="ab-section__title">Nuestros valores</h2>
+    </div>
+
+    <div class="ab-values__grid">
+      <article
+        *ngFor="let value of values; let i = index"
+        class="ab-value-card"
+        [attr.data-color]="value.color"
+        mpFadeIn
+        [mpFadeInDelay]="i * 80"
+      >
+        <div class="ab-value-card__icon-wrap" [attr.data-color]="value.color">
+          <mat-icon>{{ value.icon }}</mat-icon>
+        </div>
+        <h3 class="ab-value-card__title">{{ value.title }}</h3>
+        <p class="ab-value-card__desc">{{ value.description }}</p>
       </article>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section class="timeline container" aria-label="Hoja de ruta">
-    <h2>Hoja de ruta</h2>
-    <div class="timeline__list">
-      <article class="milestone card" *ngFor="let item of milestones">
-        <span class="period">{{ item.period }}</span>
-        <h3>{{ item.title }}</h3>
-        <p>{{ item.description }}</p>
-      </article>
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 4 — HOJA DE RUTA (TIMELINE)
+══════════════════════════════════════════════════ -->
+<section class="ab-section ab-timeline">
+  <div class="ab-container">
+    <div mpFadeIn>
+      <p class="ab-label">HACIA DÓNDE VAMOS</p>
+      <h2 class="ab-section__title">Hoja de ruta</h2>
     </div>
-  </section>
 
-  <section class="cta container card" aria-label="Llamado a la acción">
-    <div>
-      <h2>Gracias por comprar con propósito</h2>
-      <p class="muted">
-        Cada pedido ayuda a sostener una experiencia de compra mejor y aporta a causas
-        que benefician directamente a animales que lo necesitan.
+    <div class="ab-timeline__track">
+      <div class="ab-timeline__line" aria-hidden="true"></div>
+
+      <div
+        *ngFor="let item of milestones; let i = index"
+        class="ab-timeline__item"
+        [class.ab-timeline__item--right]="i % 2 !== 0"
+        mpFadeIn
+        [mpFadeInDelay]="i * 100"
+      >
+        <div class="ab-timeline__node" aria-hidden="true">{{ i + 1 }}</div>
+        <div class="ab-timeline__card">
+          <span class="ab-timeline__period">{{ item.period }}</span>
+          <h3 class="ab-timeline__title">{{ item.title }}</h3>
+          <p class="ab-timeline__desc">{{ item.description }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 5 — COMPROMISO SOCIAL (banner naranja)
+══════════════════════════════════════════════════ -->
+<section class="ab-social">
+  <div class="ab-social__decor ab-social__decor--1" aria-hidden="true"></div>
+  <div class="ab-social__decor ab-social__decor--2" aria-hidden="true"></div>
+
+  <div class="ab-container ab-social__inner">
+    <div mpFadeIn>
+      <p class="ab-label ab-label--light">IMPACTO SOCIAL</p>
+      <h2 class="ab-social__title">Nuestro compromiso con el bienestar animal</h2>
+      <p class="ab-social__sub">
+        Cada compra en Aumakki contribuye directamente a causas que hacen la diferencia.
       </p>
     </div>
-    <div class="cta__actions">
-      <a class="btn primary" routerLink="/catalog">Ir al catálogo</a>
-      <a class="btn ghost" routerLink="/memberships">Ver membresías</a>
+
+    <div class="ab-social__grid">
+      <div
+        *ngFor="let cause of causes; let i = index"
+        class="ab-cause-card"
+        mpFadeIn
+        [mpFadeInDelay]="i * 80"
+      >
+        <div class="ab-cause-card__icon-wrap">
+          <mat-icon>{{ cause.icon }}</mat-icon>
+        </div>
+        <h3 class="ab-cause-card__title">{{ cause.title }}</h3>
+        <p class="ab-cause-card__desc">{{ cause.description }}</p>
+      </div>
     </div>
-  </section>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════
+     SECCIÓN 6 — CTA FINAL OSCURO
+══════════════════════════════════════════════════ -->
+<section class="ab-cta">
+  <div class="ab-cta__decor ab-cta__decor--1" aria-hidden="true"></div>
+  <div class="ab-cta__decor ab-cta__decor--2" aria-hidden="true"></div>
+
+  <div class="ab-container ab-cta__inner" mpFadeIn>
+    <div class="ab-cta__icon-wrap" aria-hidden="true">
+      <mat-icon>favorite</mat-icon>
+    </div>
+    <h2 class="ab-cta__title">Gracias por comprar con propósito</h2>
+    <p class="ab-cta__sub">
+      Cada pedido ayuda a sostener una mejor experiencia de compra y aporta directamente
+      a animales que lo necesitan.
+    </p>
+    <div class="ab-cta__actions">
+      <a class="ab-btn ab-btn--primary" routerLink="/catalog">
+        Ir al catálogo
+        <mat-icon>arrow_forward</mat-icon>
+      </a>
+      <a class="ab-btn ab-btn--outline-dark" routerLink="/memberships/plans">
+        Ver membresía
+      </a>
+    </div>
+  </div>
 </section>

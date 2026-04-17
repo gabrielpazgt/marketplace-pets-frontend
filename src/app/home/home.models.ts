@@ -10,6 +10,7 @@ export interface Product {
   name: string;
   slug: string;
   price: number;
+  oldPrice?: number;
   image: string;
   badge?: 'NEW' | 'SALE' | 'TOP';
 }

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Subject, combineLatest, map, take } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { CartStateService } from '../../services/cart-state.service';
+import { CartItem } from '../../models/cart.model';
 
 @Component({
   standalone: false,
@@ -18,11 +19,14 @@ export class OrderSummaryComponent implements OnInit, OnDestroy {
   busy$ = this.cart.busy$;
   subtotal$ = this.cart.subtotal$;
   discount$ = this.cart.discount$;
-  shippingEstimate$ = combineLatest([this.subtotal$, this.discount$]).pipe(
-    map(([subtotal, discount]) => {
+  savings$ = combineLatest([this.cart.items$, this.discount$]).pipe(
+    map(([items, discount]) => this.resolveMerchandisingSavings(items) + Math.max(0, Number(discount || 0)))
+  );
+  shippingEstimate$ = combineLatest([this.subtotal$, this.discount$, this.cart.freeThreshold$]).pipe(
+    map(([subtotal, discount, threshold]) => {
       const effective = Math.max(0, Number(subtotal || 0) - Number(discount || 0));
       if (effective <= 0) return 0;
-      if (effective >= this.cart.freeThreshold) return 0;
+      if (effective >= Number(threshold || 0)) return 0;
       return 25;
     })
   );
@@ -30,7 +34,6 @@ export class OrderSummaryComponent implements OnInit, OnDestroy {
     map(([subtotal, discount, shipping]) => Math.max(0, Number(subtotal || 0) - Number(discount || 0) + Number(shipping || 0)))
   );
   coupon$ = this.cart.coupon$;
-
   hasItems$ = this.cart.itemCount$.pipe(map((n) => n > 0));
 
   form = this.fb.nonNullable.group({ code: '' });
@@ -61,8 +64,8 @@ export class OrderSummaryComponent implements OnInit, OnDestroy {
         this.statusType = 'success';
         this.statusMessage =
           this.couponAction === 'apply' && couponCode
-            ? 'Cupón aplicado correctamente.'
-            : 'Cupón eliminado.';
+            ? 'Cup\u00F3n aplicado correctamente.'
+            : 'Cup\u00F3n eliminado.';
         this.couponAction = null;
       });
   }
@@ -72,21 +75,21 @@ export class OrderSummaryComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  apply() {
+  apply(): void {
     const code = (this.form.controls.code.value || '').trim();
     this.statusMessage = '';
     this.couponAction = code ? 'apply' : 'clear';
     this.cart.applyCoupon(code || null);
   }
 
-  clearCoupon() {
+  clearCoupon(): void {
     this.statusMessage = '';
     this.couponAction = 'clear';
     this.cart.applyCoupon(null);
     this.form.reset({ code: '' });
   }
 
-  checkout() {
+  checkout(): void {
     this.cart.itemCount$.pipe(take(1)).subscribe((n) => {
       if (n > 0) {
         this.router.navigate(['/checkout']);
@@ -94,5 +97,15 @@ export class OrderSummaryComponent implements OnInit, OnDestroy {
         this.router.navigate(['/cart']);
       }
     });
+  }
+
+  private resolveMerchandisingSavings(items: CartItem[]): number {
+    return (items || []).reduce((total, item) => {
+      const oldPrice = Number(item.oldPrice || 0);
+      const price = Number(item.price || 0);
+      const qty = Math.max(1, Number(item.qty || 1));
+      if (oldPrice <= price) return total;
+      return total + ((oldPrice - price) * qty);
+    }, 0);
   }
 }

@@ -1,0 +1,156 @@
+<div class="ops-page">
+  <button class="back-btn" routerLink="/gx-ops/orders">← Volver a pedidos</button>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div><p>Cargando pedido...</p>
+  </div>
+  <p class="error-msg" *ngIf="error">{{ error }}</p>
+
+  <ng-container *ngIf="order && !loading">
+
+    <!-- Header -->
+    <div class="order-header">
+      <div class="order-header__info">
+        <h1 class="order-header__num">Pedido {{ order.orderNumber }}</h1>
+        <p class="order-header__date muted">{{ order.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+      </div>
+      <span class="status-pill status-pill--lg" [ngClass]="statusClass(order.statusOrder)">
+        {{ statusIcon(order.statusOrder) }} {{ statusLabel(order.statusOrder) }}
+      </span>
+    </div>
+
+    <!-- Two-column layout -->
+    <div class="order-detail-grid">
+
+      <!-- LEFT column: info + items -->
+      <div class="order-left">
+
+        <!-- Customer & address -->
+        <div class="detail-pair">
+          <div class="ops-card">
+            <h3 class="ops-card__title">Cliente</h3>
+            <p class="detail-row"><span>Email</span><strong>{{ order.email }}</strong></p>
+            <p class="detail-row" *ngIf="order.customerName"><span>Nombre</span><strong>{{ order.customerName }}</strong></p>
+          </div>
+
+          <div class="ops-card" *ngIf="order.shippingAddress">
+            <h3 class="ops-card__title">Dirección de entrega</h3>
+            <div class="address-block">
+              <p *ngIf="order.shippingAddress.fullName"><strong>{{ order.shippingAddress.fullName }}</strong></p>
+              <p *ngIf="order.shippingAddress.line1">{{ order.shippingAddress.line1 }}</p>
+              <p *ngIf="order.shippingAddress.line2">{{ order.shippingAddress.line2 }}</p>
+              <p>
+                <ng-container *ngIf="order.shippingAddress.municipality">{{ order.shippingAddress.municipality }}, </ng-container>
+                <ng-container *ngIf="order.shippingAddress.department">{{ order.shippingAddress.department }}</ng-container>
+              </p>
+              <p *ngIf="order.shippingAddress.country">{{ order.shippingAddress.country }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment summary -->
+        <div class="ops-card">
+          <h3 class="ops-card__title">Resumen de pago</h3>
+          <p class="detail-row" *ngIf="order.paymentKind">
+            <span>Método</span>
+            <strong>{{ order.paymentKind === 'card' ? 'Tarjeta' : order.paymentKind === 'bank' ? 'Transferencia' : order.paymentKind }}</strong>
+          </p>
+          <div class="totals-breakdown">
+            <p class="detail-row" *ngIf="order.subtotal != null"><span>Subtotal</span><span>Q{{ order.subtotal | number:'1.2-2' }}</span></p>
+            <p class="detail-row" *ngIf="order.shippingTotal != null"><span>Envío</span><span>Q{{ order.shippingTotal | number:'1.2-2' }}</span></p>
+            <p class="detail-row discount-row" *ngIf="order.discountTotal && order.discountTotal > 0">
+              <span>Descuento</span><span>- Q{{ order.discountTotal | number:'1.2-2' }}</span>
+            </p>
+            <p class="detail-row total-row">
+              <span>Total</span><strong class="grand-total">Q{{ order.grandTotal | number:'1.2-2' }}</strong>
+            </p>
+          </div>
+        </div>
+
+        <!-- Items table -->
+        <div class="ops-card" *ngIf="order.items?.length">
+          <h3 class="ops-card__title">Productos ({{ order.items!.length }})</h3>
+          <table class="items-table ops-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>SKU</th>
+                <th class="num-col">Qty</th>
+                <th class="num-col">Precio unit.</th>
+                <th class="num-col">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of order.items">
+                <td class="item-name">{{ item.nameSnapshot }}</td>
+                <td class="item-sku">{{ item.sku || '—' }}</td>
+                <td class="num-col">{{ item.qty }}</td>
+                <td class="num-col">Q{{ item.unitPrice | number:'1.2-2' }}</td>
+                <td class="num-col"><strong>Q{{ item.lineTotal | number:'1.2-2' }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RIGHT column: tracking timeline + status update -->
+      <div class="order-right">
+
+        <!-- Status update form -->
+        <div class="ops-card status-update-card">
+          <h3 class="ops-card__title">Actualizar estado</h3>
+          <div class="status-form">
+            <select class="status-select" [(ngModel)]="selectedStatus" [disabled]="updatingStatus">
+              <option *ngFor="let opt of STATUS_OPTIONS" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+            <textarea
+              class="note-input"
+              [(ngModel)]="note"
+              placeholder="Nota interna (opcional)..."
+              rows="2"
+              [disabled]="updatingStatus">
+            </textarea>
+            <button
+              class="btn btn--apply"
+              [disabled]="updatingStatus || selectedStatus === order.statusOrder"
+              (click)="updateStatus()">
+              {{ updatingStatus ? 'Actualizando...' : 'Aplicar cambio' }}
+            </button>
+          </div>
+          <p class="success-msg" *ngIf="statusSuccess">✅ {{ statusSuccess }}</p>
+          <p class="error-msg-inline" *ngIf="statusError">{{ statusError }}</p>
+        </div>
+
+        <!-- Timeline -->
+        <div class="ops-card timeline-card">
+          <h3 class="ops-card__title">Historial de cambios</h3>
+
+          <ol class="ops-timeline" *ngIf="timelineSteps.length">
+            <li
+              *ngFor="let log of timelineSteps; let last = last"
+              class="ops-timeline__step"
+              [class.ops-timeline__step--last]="last">
+
+              <div class="ops-timeline__dot">{{ statusIcon(log.status) }}</div>
+
+              <div class="ops-timeline__body">
+                <div class="ops-timeline__label">{{ statusLabel(log.status) }}</div>
+                <div class="ops-timeline__time muted">{{ formatDate(log.createdAt) }}</div>
+                <div class="ops-timeline__note" *ngIf="log.note">{{ log.note }}</div>
+                <div class="ops-timeline__by muted" *ngIf="log.changedBy">
+                  por {{ log.changedBy }}
+                </div>
+              </div>
+            </li>
+          </ol>
+
+          <p class="muted timeline-empty" *ngIf="!timelineSteps.length">
+            Aún no hay cambios registrados para este pedido.
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+  </ng-container>
+</div>

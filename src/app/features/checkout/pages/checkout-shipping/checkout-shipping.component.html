@@ -1,25 +1,78 @@
-﻿<h2 class="title">2) Metodo de Envio</h2>
-<p class="muted">Elige como quieres recibir tu pedido. Los costos se actualizan en tiempo real.</p>
+<!-- Card header -->
+<div class="sm-head">
+  <div class="sm-head__icon"><mat-icon>local_shipping</mat-icon></div>
+  <div>
+    <h2 class="sm-head__title">Dirección de envío</h2>
+    <p class="sm-head__sub">¿A dónde entregamos tu pedido?</p>
+  </div>
+</div>
 
-<ul class="methods" *ngIf="(state.effectiveSubtotal$ | async) as sub">
-  <li *ngFor="let m of state.shippingMethods"
-      class="card method"
-      [class.active]="state.snapshot.shippingMethodId === m.id"
-      (click)="select(m.id)">
-    <div class="left">
-      <span class="dot" [class.on]="state.snapshot.shippingMethodId === m.id"></span>
-      <div class="txt">
-        <strong>{{ m.label }}</strong>
-        <small class="muted">{{ m.description }} · {{ m.eta }}</small>
+<!-- Free shipping progress bar -->
+<ng-container *ngIf="(state.effectiveSubtotal$ | async) as sub">
+  <ng-container *ngIf="state.snapshot.shippingMethodId === 'standard' && (state.freeRemaining$ | async) as rem">
+    <div class="sm-free-bar" *ngIf="rem > 0">
+      <div class="sm-free-bar__track">
+        <div class="sm-free-bar__fill" [style.width.%]="state.freeProgress$ | async"></div>
       </div>
+      <p class="sm-free-bar__label">
+        Agrega <strong>Q{{ rem | number:'1.0-0' }}</strong> más para envío gratis
+      </p>
     </div>
-    <div class="right">
-      <span>{{ getPrice(m.id, sub) | currency:'GTQ':'symbol-narrow' }}</span>
-    </div>
-  </li>
-</ul>
+  </ng-container>
+</ng-container>
 
-<div class="actions">
-  <button class="btn ghost" (click)="back()">Atras</button>
-  <button class="btn primary" (click)="next()">Continuar</button>
+<!-- Shipping method radio cards -->
+<div class="sm-methods" *ngIf="(state.effectiveSubtotal$ | async) as sub">
+  <div
+    *ngFor="let m of state.shippingMethods"
+    class="sm-card"
+    [class.sm-card--active]="state.snapshot.shippingMethodId === m.id"
+    (click)="select(m.id)"
+    role="radio"
+    [attr.aria-checked]="state.snapshot.shippingMethodId === m.id"
+    tabindex="0"
+    (keydown.enter)="select(m.id)"
+  >
+    <div class="sm-card__radio" [class.sm-card__radio--on]="state.snapshot.shippingMethodId === m.id">
+      <div class="sm-card__radio-dot"></div>
+    </div>
+
+    <div class="sm-card__icon-wrap">
+      <mat-icon *ngIf="m.id === 'standard'">local_shipping</mat-icon>
+      <mat-icon *ngIf="m.id === 'express'">schedule</mat-icon>
+      <mat-icon *ngIf="m.id === 'sameday'">flash_on</mat-icon>
+    </div>
+
+    <div class="sm-card__body">
+      <strong class="sm-card__label">{{ m.label }}</strong>
+      <span class="sm-card__desc">{{ m.description }}</span>
+    </div>
+
+    <span class="sm-card__price sm-card__price--free"
+          *ngIf="m.id === 'standard' && getPrice(m.id, sub) === 0">
+      Gratis
+    </span>
+    <span class="sm-card__price"
+          *ngIf="!(m.id === 'standard' && getPrice(m.id, sub) === 0)">
+      Q{{ getPrice(m.id, sub) | number:'1.0-0' }}
+    </span>
+  </div>
+</div>
+
+<!-- Save address checkbox -->
+<label class="sm-check">
+  <input type="checkbox" />
+  <span>Guardar esta dirección para futuros pedidos</span>
+</label>
+
+<!-- Actions -->
+<div class="sm-actions">
+  <button class="sm-btn sm-btn--ghost" type="button" (click)="back()">
+    <mat-icon>arrow_back</mat-icon>
+    Atrás
+  </button>
+  <button class="sm-btn sm-btn--primary" type="button" (click)="next()">
+    Continuar a Pago
+    <mat-icon>chevron_right</mat-icon>
+  </button>
 </div>

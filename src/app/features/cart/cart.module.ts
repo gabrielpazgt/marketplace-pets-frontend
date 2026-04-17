@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 
 import { CartRoutingModule } from './cart-routing.module';
 import { CartPageComponent } from './pages/cart-page/cart-page.component';
@@ -21,6 +22,6 @@ import { CartRecommendationsComponent } from './components/cart-recommendations/
     CartEmptyComponent,
     CartRecommendationsComponent
   ],
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, CartRoutingModule]
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, CartRoutingModule, MatIconModule]
 })
 export class CartModule {}

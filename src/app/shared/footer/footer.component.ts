@@ -1,7 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { take } from 'rxjs/operators';
-import { StorefrontMedia } from '../../core/models/storefront.models';
-import { StorefrontApiService } from '../../core/services/storefront-api.service';
+import { Component, OnDestroy } from '@angular/core';
 
 type NewsletterState = 'idle' | 'success' | 'error';
 
@@ -11,99 +8,66 @@ type NewsletterState = 'idle' | 'success' | 'error';
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss']
 })
-export class FooterComponent implements OnInit, OnDestroy {
+export class FooterComponent implements OnDestroy {
   currentYear = new Date().getFullYear();
-
-  promoText = '';
-  promoCode = '';
-  footerPromoImageUrl = '';
-  footerPromoImageAlt = 'Publicidad destacada';
   newsletterMessage = '';
   newsletterState: NewsletterState = 'idle';
 
   readonly socialLinks = [
-    { src: 'assets/images/logos/instagram.png', alt: 'Instagram', href: '#' },
-    { src: 'assets/images/logos/facebook.png', alt: 'Facebook', href: '#' },
-    { src: 'assets/images/logos/youtube.png', alt: 'YouTube', href: '#' },
-    { src: 'assets/images/logos/tiktok.png', alt: 'TikTok', href: '#' },
+    { iconSrc: 'assets/images/logos/instagram.png', alt: 'Instagram', href: '#' },
+    { iconSrc: 'assets/images/logos/tiktok.svg', alt: 'TikTok', href: '#' },
+    { iconSrc: 'assets/images/logos/facebook.png', alt: 'Facebook', href: '#' },
+    { iconSrc: 'assets/images/logos/youtube.png', alt: 'YouTube', href: '#' },
   ];
 
   readonly trustPills = [
-    {
-      icon: '📦',
-      title: 'Envios 48-72h',
-      subtitle: 'A todo el pais',
-    },
-    {
-      icon: '↩️',
-      title: 'Devoluciones 30d',
-      subtitle: 'Rapidas y sencillas',
-    },
-    {
-      icon: '💵',
-      title: 'Pago 100% seguro',
-      subtitle: 'Proteccion en compras',
-    },
+    { icon: 'verified_user', title: 'Productos aprobados por veterinarios' },
+    { icon: 'local_shipping', title: 'Envío gratis arriba de Q49' },
+    { icon: 'sync', title: 'Devoluciones de 30 días' },
+    { icon: 'workspace_premium', title: 'Calidad garantizada' },
   ];
 
   readonly footerGroups = [
     {
-      title: 'Comprar',
+      title: 'Tienda',
       links: [
+        { label: 'Todos los productos', href: '/catalog' },
         { label: 'Perros', href: '/catalog/perros' },
         { label: 'Gatos', href: '/catalog/gatos' },
-        { label: 'Snacks', href: '/catalog/snacks' },
-        { label: 'Higiene', href: '/catalog/higiene' },
+        { label: 'Aves', href: '/catalog/aves' },
+        { label: 'Reptiles', href: '/catalog/reptiles' },
       ],
     },
     {
-      title: 'Explora',
+      title: 'Cuenta',
       links: [
-        { label: 'Tienda', href: '/catalog' },
-        { label: 'Membresias', href: '/memberships' },
-        { label: 'Sobre nosotros', href: '/about' },
-        { label: 'Terminos y ayuda', href: '/terms' },
+        { label: 'Mi cuenta', href: '/account/profile' },
+        { label: 'Mis mascotas', href: '/account/pets' },
+        { label: 'Mis pedidos', href: '/account/orders' },
+        { label: 'Membresía', href: '/account/membership' },
+      ],
+    },
+    {
+      title: 'Soporte',
+      links: [
+        { label: 'Centro de ayuda', href: '/terms' },
+        { label: 'Contáctanos', href: '/about' },
+        { label: 'Envíos', href: '/terms' },
+        { label: 'Cambios y devoluciones', href: '/terms' },
+      ],
+    },
+    {
+      title: 'Empresa',
+      links: [
+        { label: 'Acerca de Aumakki', href: '/about' },
+        { label: 'Blog', href: '/about' },
+        { label: 'Misión', href: '/about' },
+        { label: 'Afiliados', href: '/about' },
       ],
     },
   ];
 
   private newsletterTimer: ReturnType<typeof setTimeout> | null = null;
-
-  constructor(private storefrontApi: StorefrontApiService) {}
-
-  ngOnInit(): void {
-    this.storefrontApi
-      .listPublicCoupons()
-      .pipe(take(1))
-      .subscribe({
-        next: (response) => {
-          const firstCoupon = (response.data || [])[0];
-          if (!firstCoupon) return;
-
-          this.promoText = firstCoupon.displayMessage;
-          this.promoCode = firstCoupon.code;
-        },
-        error: () => {
-          this.promoText = '';
-          this.promoCode = '';
-        },
-      });
-
-    this.storefrontApi
-      .getFooterNewsletterPromo()
-      .pipe(take(1))
-      .subscribe({
-        next: (response) => {
-          const media = response.data || null;
-          this.footerPromoImageUrl = this.resolvePromoImage(media);
-          this.footerPromoImageAlt = media?.alternativeText || media?.name || 'Publicidad destacada';
-        },
-        error: () => {
-          this.footerPromoImageUrl = '';
-          this.footerPromoImageAlt = 'Publicidad destacada';
-        },
-      });
-  }
 
   ngOnDestroy(): void {
     if (this.newsletterTimer) {
@@ -117,7 +81,7 @@ export class FooterComponent implements OnInit, OnDestroy {
     const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     if (!isValid) {
-      this.setNewsletterMessage('Ingresa un correo valido para suscribirte.', 'error');
+      this.setNewsletterMessage('Ingresa un correo válido para suscribirte.', 'error');
       return;
     }
 
@@ -137,16 +101,5 @@ export class FooterComponent implements OnInit, OnDestroy {
       this.newsletterState = 'idle';
       this.newsletterTimer = null;
     }, 3000);
-  }
-
-  private resolvePromoImage(media?: StorefrontMedia | null): string {
-    const rawUrl =
-      media?.formats?.['medium']?.url ||
-      media?.formats?.['small']?.url ||
-      media?.formats?.['thumbnail']?.url ||
-      media?.url ||
-      '';
-
-    return this.storefrontApi.resolveMediaUrl(rawUrl);
   }
 }

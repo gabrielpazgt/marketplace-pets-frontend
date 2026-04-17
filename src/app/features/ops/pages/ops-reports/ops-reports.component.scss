@@ -1,0 +1,96 @@
+.ops-page { display: grid; gap: 24px; }
+.ops-page__head { display: flex; align-items: center; justify-content: space-between; }
+.ops-page__title { margin: 0; font-size: 1.6rem; font-weight: 900; color: #0f172a; }
+
+.loading-state { display: flex; align-items: center; gap: 12px; color: #64748b; }
+.spinner { width: 24px; height: 24px; border: 2px solid #e5e7eb; border-top-color: var(--brand); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-msg { color: #dc2626; font-weight: 600; }
+
+/* ── Filters ── */
+.report-filters {
+  background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 16px 20px;
+  &__row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  &__field { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; font-weight: 700; color: #475569; }
+}
+.ops-input {
+  border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px;
+  font-size: .875rem; color: #0f172a; outline: none;
+  &:focus { border-color: var(--brand); }
+}
+.ops-btn {
+  padding: 8px 18px; border-radius: 8px; font-size: .85rem; font-weight: 700; cursor: pointer; border: none; transition: background .15s;
+  &--primary { background: var(--brand); color: #fff; &:hover { opacity: .88; } &:disabled { opacity: .5; cursor: default; } }
+  &--ghost { background: transparent; color: var(--brand-700); border: 1.5px solid var(--brand-200); &:hover { background: var(--brand-50); } &:disabled { opacity: .4; cursor: default; } }
+}
+
+/* ── Tabs ── */
+.report-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.report-tab {
+  padding: 8px 18px; border-radius: 999px; font-size: .85rem; font-weight: 700;
+  background: #f1f5f9; color: #475569; border: none; cursor: pointer; transition: background .15s;
+  &.active { background: var(--brand); color: #fff; }
+  &:hover:not(.active) { background: #e2e8f0; }
+}
+
+/* ── Cards ── */
+.metrics-grid {
+  display: grid; gap: 16px;
+  &--4 { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 900px) { .metrics-grid--4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .metrics-grid--4 { grid-template-columns: 1fr; } }
+
+.metric-card {
+  display: flex; align-items: center; gap: 16px;
+  background: #fff; border-radius: 16px; padding: 20px;
+  border: 1px solid #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  &--green .metric-card__value { color: #16a34a; }
+  &--red .metric-card__value { color: #dc2626; }
+  &--blue .metric-card__value { color: #2563eb; }
+  &--orange .metric-card__value { color: #d97706; }
+}
+.metric-card__icon { font-size: 1.8rem; }
+.metric-card__value { margin: 0; font-size: 1.4rem; font-weight: 900; color: #0f172a; line-height: 1.1; }
+.metric-card__label { margin: 0; font-size: .78rem; color: #64748b; font-weight: 600; margin-top: 2px; }
+
+/* ── Card container ── */
+.ops-card {
+  background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 20px;
+  &__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  &__title { margin: 0; font-size: 1rem; font-weight: 800; color: #0f172a; }
+}
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; }
+.ops-table {
+  width: 100%; border-collapse: collapse; font-size: .875rem;
+  th { text-align: left; padding: 8px 12px; color: #64748b; font-weight: 700; font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f8fafc; color: #1e293b; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafc; }
+  .num { text-align: right; }
+  .pos { color: #94a3b8; font-weight: 800; font-size: .8rem; width: 32px; }
+  .product-name { font-weight: 700; }
+  .muted { color: #94a3b8; }
+  .bold { font-weight: 800; }
+  .red { color: #dc2626; }
+  .green { color: #16a34a; }
+
+  &--compact td, &--compact th { padding: 6px 10px; }
+
+  tfoot .totals-row td {
+    background: #f8fafc; font-size: .875rem;
+    border-top: 2px solid #e2e8f0;
+  }
+}
+
+/* ── Side by side ── */
+.side-by-side { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .side-by-side { grid-template-columns: 1fr; } }
+
+.stat-big { margin: 8px 0 0; font-size: 2.4rem; font-weight: 900; color: var(--brand-700); }
+.muted-text { color: #64748b; font-size: .85rem; margin: 4px 0 0; }
+
+/* ── Empty state ── */
+.empty-state { padding: 32px 0; text-align: center; color: #94a3b8; font-size: .9rem; }

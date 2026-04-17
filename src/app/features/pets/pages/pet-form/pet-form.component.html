@@ -1,143 +1,397 @@
-﻿<section class="section">
+<section class="section pet-form-page">
   <div class="container">
-    <header class="head"><h2>{{ id ? 'Editar mascota' : 'Nueva mascota' }}</h2></header>
+    <header class="pet-form-page__head">
+      <p class="pet-form-page__eyebrow">Cuenta / Mis mascotas / {{ id ? 'Editar' : 'Nuevo perfil' }}</p>
+      <h1>{{ pageTitle }}</h1>
+      <p class="pet-form-page__subtitle">{{ pageSubtitle }}</p>
+    </header>
 
-    <div class="layout">
-      <form [formGroup]="form" (ngSubmit)="save()" class="card form">
+    <ol class="pet-steps" aria-label="Pasos del perfil de mascota">
+      <li
+        class="pet-step"
+        *ngFor="let step of steps; let index = index"
+        [class.is-active]="isStepActive(index)"
+        [class.is-complete]="isStepComplete(index)"
+      >
+        <button type="button" class="pet-step__button" (click)="selectStep(index)">
+          <span class="pet-step__index">
+            <mat-icon *ngIf="isStepComplete(index)">check</mat-icon>
+            <ng-container *ngIf="!isStepComplete(index)">{{ index + 1 }}</ng-container>
+          </span>
+          <span class="pet-step__copy">
+            <strong>{{ step.label }}</strong>
+            <small>{{ step.description }}</small>
+          </span>
+        </button>
+      </li>
+    </ol>
 
-        <div class="form-alert danger" *ngIf="submitAttempted && form.invalid">
-          Completa los campos obligatorios marcados con *.
+    <div class="pet-form-layout">
+      <form [formGroup]="form" (ngSubmit)="save()" class="pet-form card" novalidate>
+        <div class="form-alert danger" *ngIf="submitAttempted && form.invalid && currentStepIndex === 0">
+          Completa los campos obligatorios para continuar.
         </div>
 
-        <div class="grid">
-          <label class="field">
-            <span class="label">Nombre *</span>
-            <input class="input" formControlName="name" placeholder="Manchitas" />
-            <small class="error-text" *ngIf="hasError('name','required')">Este campo es obligatorio.</small>
-            <small class="error-text" *ngIf="hasError('name','maxlength')">Maximo 40 caracteres.</small>
-          </label>
-
-          <label class="field">
-            <span class="label">Especie *</span>
-            <select class="input" formControlName="species">
-              <option *ngFor="let s of speciesOptions" [value]="s.v">{{ s.label }}</option>
-            </select>
-            <small class="error-text" *ngIf="hasError('species','required')">Selecciona una especie.</small>
-          </label>
-
-          <label class="field">
-            <span class="label">Raza</span>
-            <input
-              class="input"
-              formControlName="breed"
-              [attr.list]="breedListId"
-              placeholder="Escribe para buscar raza"
-              (input)="onBreedInput($event)"
-              (focus)="onBreedFocus()"
-            />
-            <datalist [id]="breedListId">
-              <option *ngFor="let b of filteredBreedOptions" [value]="b"></option>
-            </datalist>
-          </label>
-
-          <label class="field">
-            <span class="label">Color favorito (preview)</span>
-            <div class="color-field">
-              <input type="color" class="sr-only" #fav [formControl]="form.controls.avatarHex" />
-              <button type="button" class="swatch-btn" (click)="fav.click()">
-                <span class="swatch" [style.--hex]="form.value.avatarHex"></span>
-                <span class="hex">{{ form.value.avatarHex }}</span>
-              </button>
+        <ng-container [ngSwitch]="currentStep.key">
+          <section class="pet-form__step" *ngSwitchCase="'basic'">
+            <div class="pet-form__section-head">
+              <h2>Información básica</h2>
+              <p>Empezamos con lo esencial para armar el perfil de tu mascota.</p>
             </div>
-          </label>
 
-          <label class="field">
-            <span class="label">Tamano *</span>
-            <select class="input" formControlName="size">
-              <option [ngValue]="undefined">-</option>
-              <option *ngFor="let s of sizeOptions" [ngValue]="s.v">{{ s.label }}</option>
-            </select>
-            <small class="error-text" *ngIf="hasError('size','required')">Selecciona un tamano.</small>
-          </label>
+            <div class="photo-uploader">
+              <div class="photo-uploader__preview" [class.has-image]="avatarPreviewUrl">
+                <img *ngIf="avatarPreviewUrl" [src]="avatarPreviewUrl" alt="Vista previa de mascota" />
+                <span *ngIf="!avatarPreviewUrl">Foto</span>
+              </div>
 
-          <label class="field">
-            <span class="label">Edad (anos) *</span>
-            <div class="range-wrap">
-              <input class="range" type="range" min="0" max="30" step="1" formControlName="ageYears" aria-label="Edad (slider)">
-              <output class="age-pill">{{ ageDisplay }}</output>
+              <div class="photo-uploader__copy">
+                <strong>Agrega una foto</strong>
+                <p>Sube una imagen para identificar rápido a tu mascota.</p>
+                <div class="photo-uploader__actions">
+                  <input type="file" class="sr-only" #petPhoto accept="image/*" (change)="onAvatarSelected($event)" />
+                  <button type="button" class="btn ghost" (click)="petPhoto.click()">
+                    {{ avatarPreviewUrl ? 'Cambiar foto' : 'Subir foto' }}
+                  </button>
+                  <button type="button" class="btn ghost" *ngIf="avatarPreviewUrl" (click)="clearAvatar()">Quitar</button>
+                </div>
+              </div>
             </div>
-            <small class="error-text" *ngIf="hasError('ageYears','required')">Indica la edad.</small>
-          </label>
 
-          <label class="field">
-            <span class="label">Sexo *</span>
-            <select class="input" formControlName="sex">
-              <option [ngValue]="undefined">-</option>
-              <option *ngFor="let s of sexOptions" [ngValue]="s.v">{{ s.label }}</option>
-            </select>
-            <small class="error-text" *ngIf="hasError('sex','required')">Selecciona el sexo.</small>
-          </label>
+            <div class="field">
+              <label class="label" for="pet-name">Nombre *</label>
+              <input id="pet-name" class="input" formControlName="name" placeholder="Ej. Manchitas" />
+              <small class="error-text" *ngIf="hasError('name','required')">Este campo es obligatorio.</small>
+              <small class="error-text" *ngIf="hasError('name','maxlength')">Máximo 40 caracteres.</small>
+            </div>
 
-          <label class="field">
-            <span class="label">Etapa de vida</span>
-            <select class="input" formControlName="lifeStage">
-              <option [ngValue]="undefined">-</option>
-              <option *ngFor="let l of lifeStages" [ngValue]="l.v">{{ l.label }}</option>
-            </select>
-          </label>
+            <div class="field">
+              <span class="label">Especie *</span>
+              <div class="choice-grid choice-grid--species">
+                <button
+                  type="button"
+                  class="choice-chip"
+                  *ngFor="let option of speciesOptions"
+                  [class.is-selected]="form.controls.species.value === option.v"
+                  (click)="selectSpecies(option.v)"
+                >
+                  {{ option.label }}
+                </button>
+              </div>
+            </div>
 
-          <label class="field">
-            <span class="label">Esterilizado</span>
-            <select class="input" formControlName="sterilized">
-              <option [ngValue]="false">No</option>
-              <option [ngValue]="true">Si</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span class="label">Nivel de actividad</span>
-            <select class="input" formControlName="activity">
-              <option [ngValue]="undefined">-</option>
-              <option *ngFor="let a of activityLevels" [ngValue]="a.v">{{ a.label }}</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span class="label">Alergias (separadas por coma)</span>
-            <input class="input" formControlName="allergies" placeholder="Pollo, maiz, res..." />
-          </label>
-
-          <label class="field col-2">
-            <span class="label">Preferencias de dieta</span>
-            <div class="diet-grid">
-              <label *ngFor="let d of dietOptions" class="diet-opt">
+            <div class="pet-form__grid">
+              <label class="field" *ngIf="showBreedField">
+                <span class="label">Raza</span>
                 <input
-                  type="checkbox"
-                  [checked]="(form.value.diet || []).includes(d.v)"
-                  (change)="onDietToggle($event, d.v)"
+                  class="input"
+                  formControlName="breed"
+                  [attr.list]="breedListId"
+                  placeholder="Busca o escribe la raza"
+                  (input)="onBreedInput($event)"
+                  (focus)="onBreedFocus()"
                 />
-                <span>{{ d.label }}</span>
+                <datalist [id]="breedListId">
+                  <option *ngFor="let breed of filteredBreedOptions" [value]="breed"></option>
+                </datalist>
+              </label>
+
+              <label class="field">
+                <span class="label">Peso</span>
+                <div class="input-with-suffix">
+                  <input class="input" type="number" formControlName="weightKg" min="0" max="200" step="0.1" placeholder="Ej. 12.5" />
+                  <span class="input-with-suffix__unit">kg</span>
+                </div>
               </label>
             </div>
-          </label>
 
-          <label class="field col-2">
-            <span class="label">Notas</span>
-            <textarea class="input" formControlName="notes" rows="3" placeholder="Le gusta el pollo, sensible a maiz..."></textarea>
-          </label>
-        </div>
+            <div class="pet-form__grid">
+              <label class="field">
+                <span class="label">Color / pelaje</span>
+                <select class="input" formControlName="color">
+                  <option *ngFor="let option of petColorOptions" [value]="option">{{ option }}</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span class="label">Color favorito del perfil</span>
+                <div class="profile-color-grid" aria-label="Color favorito del perfil">
+                  <button
+                    type="button"
+                    class="profile-color"
+                    *ngFor="let option of profileColorOptions"
+                    [class.is-selected]="form.controls.avatarHex.value === option.value"
+                    [style.background]="option.value"
+                    [attr.aria-label]="'Seleccionar color ' + option.label"
+                    (click)="selectProfileColor(option.value)"
+                  ></button>
+                </div>
+              </label>
+            </div>
+
+            <div class="field" *ngIf="showSizeField">
+              <span class="label">Tamaño *</span>
+              <div class="choice-grid choice-grid--three">
+                <button
+                  type="button"
+                  class="choice-chip"
+                  *ngFor="let option of sizeOptions"
+                  [class.is-selected]="form.controls.size.value === option.v"
+                  (click)="selectSize(option.v)"
+                >
+                  {{ option.label }}
+                </button>
+              </div>
+              <small class="error-text" *ngIf="hasError('size','required')">Selecciona un tamaño.</small>
+            </div>
+
+            <div class="field">
+              <span class="label">Género *</span>
+              <div class="choice-grid choice-grid--two">
+                <button
+                  type="button"
+                  class="choice-chip"
+                  *ngFor="let option of sexOptions"
+                  [class.is-selected]="form.controls.sex.value === option.v"
+                  (click)="selectSex(option.v)"
+                >
+                  {{ option.label }}
+                </button>
+              </div>
+              <small class="error-text" *ngIf="hasError('sex','required')">Selecciona el género.</small>
+            </div>
+
+            <div class="pet-form__grid">
+              <label class="field">
+                <span class="label">Mes de nacimiento *</span>
+                <select class="input" formControlName="birthMonth">
+                  <option *ngFor="let month of monthOptions" [value]="month.value">{{ month.label }}</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span class="label">Año de nacimiento *</span>
+                <select class="input" formControlName="birthYear">
+                  <option *ngFor="let year of yearOptions" [value]="year">{{ year }}</option>
+                </select>
+              </label>
+            </div>
+
+            <p class="inline-note">
+              Edad estimada: <strong>{{ computedAgeLabel || 'Por definir' }}</strong>
+            </p>
+
+            <div class="field" *ngIf="showLifeStageField">
+              <span class="label">Etapa de vida</span>
+              <div class="choice-grid choice-grid--three">
+                <button
+                  type="button"
+                  class="choice-chip"
+                  *ngFor="let option of lifeStages"
+                  [class.is-selected]="form.controls.lifeStage.value === option.v"
+                  (click)="selectLifeStage(option.v)"
+                >
+                  {{ option.label }}
+                </button>
+              </div>
+            </div>
+
+            <label class="toggle-row" *ngIf="showBiologyFields">
+              <input type="checkbox" formControlName="sterilized" />
+              <span>Esterilizado / castrado</span>
+            </label>
+          </section>
+
+          <section class="pet-form__step" *ngSwitchCase="'health'">
+            <div class="pet-form__section-head">
+              <h2>Salud y dieta</h2>
+              <p>Esto nos ayuda a afinar recomendaciones y excluir ingredientes sensibles.</p>
+            </div>
+
+            <div class="field">
+              <span class="label">Nivel de actividad</span>
+              <div class="activity-list">
+                <button
+                  type="button"
+                  class="activity-option"
+                  *ngFor="let option of activityLevels"
+                  [class.is-selected]="form.controls.activity.value === option.v"
+                  (click)="form.controls.activity.setValue(option.v)"
+                >
+                  <span class="activity-option__dot" aria-hidden="true"></span>
+                  <span class="activity-option__copy">
+                    <strong>{{ option.label }}</strong>
+                    <small>{{ option.description }}</small>
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="field__head">
+                <span class="label">Preferencias alimentarias</span>
+                <small>Selecciona todas las que apliquen.</small>
+              </div>
+              <div class="choice-grid choice-grid--diet">
+                <button
+                  type="button"
+                  class="choice-chip choice-chip--soft"
+                  *ngFor="let option of dietOptions"
+                  [class.is-selected]="isDietSelected(option.v)"
+                  (click)="toggleDiet(option.v)"
+                >
+                  {{ option.label }}
+                </button>
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="field__head">
+                <span class="label">Alergias conocidas</span>
+                <small>Agrega ingredientes o usa sugerencias rápidas.</small>
+              </div>
+
+              <div class="choice-grid choice-grid--diet">
+                <button
+                  type="button"
+                  class="choice-chip choice-chip--soft"
+                  *ngFor="let allergy of quickAllergies"
+                  [class.is-selected]="hasAllergy(allergy)"
+                  (click)="toggleSuggestedAllergy(allergy)"
+                >
+                  {{ allergy }}
+                </button>
+              </div>
+
+              <div class="allergy-box" [class.allergy-box--focus]="allergyInputFocus">
+                <span class="allergy-chip" *ngFor="let tag of allergyList; let index = index">
+                  {{ tag }}
+                  <button type="button" class="allergy-chip__remove" (click)="removeAllergyTag(index)" [attr.aria-label]="'Quitar ' + tag">x</button>
+                </span>
+                <input
+                  class="allergy-input"
+                  type="text"
+                  [(ngModel)]="allergyInputValue"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="{{ allergyList.length ? '' : 'Escribe una alergia y presiona Enter' }}"
+                  (keydown)="onAllergyKeydown($event)"
+                  (blur)="addAllergyTag(); allergyInputFocus = false"
+                  (focus)="allergyInputFocus = true"
+                />
+              </div>
+            </div>
+
+            <label class="field">
+              <span class="label">Notas adicionales</span>
+              <textarea class="input" formControlName="notes" rows="4" placeholder="Ej. Sensible al pollo o necesita dieta controlada."></textarea>
+            </label>
+          </section>
+
+          <section class="pet-form__step" *ngSwitchCase="'review'">
+            <div class="pet-form__section-head">
+              <h2>Revisar y guardar</h2>
+              <p>Confirma que todo se vea bien antes de crear el perfil.</p>
+            </div>
+
+            <div class="review-section">
+              <div class="review-section__head">
+                <h3>Datos básicos</h3>
+                <button type="button" class="review-section__link" (click)="selectStep(0)">Editar</button>
+              </div>
+
+              <dl class="review-grid">
+                <div>
+                  <dt>Nombre</dt>
+                  <dd>{{ form.controls.name.value || 'Sin nombre' }}</dd>
+                </div>
+                <div>
+                  <dt>Especie</dt>
+                  <dd>{{ speciesOptionLabel(form.controls.species.value) }}</dd>
+                </div>
+                <div *ngIf="form.controls.breed.value">
+                  <dt>Raza</dt>
+                  <dd>{{ form.controls.breed.value }}</dd>
+                </div>
+                <div>
+                  <dt>Color / pelaje</dt>
+                  <dd>{{ form.controls.color.value || 'Por definir' }}</dd>
+                </div>
+                <div>
+                  <dt>Género</dt>
+                  <dd>{{ sexOptionLabel(form.controls.sex.value) }}</dd>
+                </div>
+                <div *ngIf="showSizeField">
+                  <dt>Tamaño</dt>
+                  <dd>{{ sizeOptionLabel(form.controls.size.value) }}</dd>
+                </div>
+                <div>
+                  <dt>Nacimiento</dt>
+                  <dd>{{ birthSummary }}</dd>
+                </div>
+                <div>
+                  <dt>Edad</dt>
+                  <dd>{{ computedAgeLabel || 'Por definir' }}</dd>
+                </div>
+                <div>
+                  <dt>Peso</dt>
+                  <dd>{{ form.controls.weightKg.value ? (form.controls.weightKg.value + ' kg') : 'Por definir' }}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="review-section">
+              <div class="review-section__head">
+                <h3>Salud y dieta</h3>
+                <button type="button" class="review-section__link" (click)="selectStep(1)">Editar</button>
+              </div>
+
+              <dl class="review-grid">
+                <div>
+                  <dt>Actividad</dt>
+                  <dd>{{ activitySummary }}</dd>
+                </div>
+                <div>
+                  <dt>Preferencias</dt>
+                  <dd>{{ dietSummary }}</dd>
+                </div>
+                <div class="review-grid__full">
+                  <dt>Alergias</dt>
+                  <dd>{{ allergiesSummary }}</dd>
+                </div>
+                <div class="review-grid__full" *ngIf="form.controls.notes.value">
+                  <dt>Notas</dt>
+                  <dd>{{ form.controls.notes.value }}</dd>
+                </div>
+              </dl>
+            </div>
+          </section>
+        </ng-container>
 
         <p class="error-text" *ngIf="submitError">{{ submitError }}</p>
 
-        <div class="actions">
-          <button type="button" class="btn ghost" (click)="cancel()">Cancelar</button>
-          <button type="submit" class="btn primary" [disabled]="saving">
-            {{ saving ? 'Guardando...' : 'Guardar' }}
+        <div class="pet-form__actions">
+          <button type="button" class="btn ghost" (click)="currentStepIndex === 0 ? cancel() : goBack()">
+            {{ currentStepIndex === 0 ? 'Cancelar' : 'Atrás' }}
+          </button>
+
+          <button type="button" class="btn primary" *ngIf="!isReviewStep" (click)="goNext()">
+            Continuar
+          </button>
+
+          <button type="submit" class="btn primary" *ngIf="isReviewStep" [disabled]="saving">
+            {{ saving ? 'Guardando...' : (id ? 'Guardar cambios' : 'Guardar mascota') }}
           </button>
         </div>
       </form>
 
-      <mp-pet-preview class="preview" [draft]="draft"></mp-pet-preview>
+      <aside class="pet-form-aside">
+        <mp-pet-preview class="preview" [draft]="previewDraft"></mp-pet-preview>
+
+        <article class="pet-form-tip">
+          <h3>¿Por qué crear un perfil?</h3>
+          <p>Podrás filtrar mejor el catálogo, guardar preferencias y comprar más rápido para cada mascota.</p>
+        </article>
+      </aside>
     </div>
   </div>
 </section>

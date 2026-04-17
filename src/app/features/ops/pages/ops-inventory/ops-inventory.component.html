@@ -1,0 +1,165 @@
+<div class="ops-page">
+  <div class="ops-page__head">
+    <h1 class="ops-page__title">Inventario</h1>
+    <div class="head-actions">
+      <button class="ops-btn ops-btn--ghost" (click)="downloadStockTemplate()" *ngIf="inventory">⬇ Plantilla CSV</button>
+      <button class="ops-btn ops-btn--ghost" (click)="exportCSV()" *ngIf="inventory">⬇ Exportar</button>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading"><div class="spinner"></div><p>Cargando inventario...</p></div>
+  <p class="error-msg" *ngIf="error">{{ error }}</p>
+
+  <ng-container *ngIf="!loading && inventory">
+
+    <!-- Summary cards -->
+    <div class="metrics-grid metrics-grid--4">
+      <div class="metric-card">
+        <span class="metric-card__icon">📦</span>
+        <div>
+          <p class="metric-card__value">{{ inventory.summary.totalProducts }}</p>
+          <p class="metric-card__label">Total productos</p>
+        </div>
+      </div>
+      <div class="metric-card metric-card--red">
+        <span class="metric-card__icon">❌</span>
+        <div>
+          <p class="metric-card__value">{{ inventory.summary.outOfStock }}</p>
+          <p class="metric-card__label">Sin stock</p>
+        </div>
+      </div>
+      <div class="metric-card metric-card--orange">
+        <span class="metric-card__icon">⚠️</span>
+        <div>
+          <p class="metric-card__value">{{ inventory.summary.lowStock }}</p>
+          <p class="metric-card__label">Stock bajo (≤5)</p>
+        </div>
+      </div>
+      <div class="metric-card">
+        <span class="metric-card__icon">🔍</span>
+        <div>
+          <p class="metric-card__value">{{ inventory.summary.noTracking }}</p>
+          <p class="metric-card__label">Sin tracking</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CSV Bulk Update -->
+    <div class="ops-card csv-upload-card">
+      <div class="csv-upload-head">
+        <div>
+          <h3 class="ops-card__title">Actualizar stock por CSV</h3>
+          <p class="csv-upload-hint">
+            Columna 1: <code>SKU del producto o presentación</code> &nbsp;·&nbsp;
+            Columna 2: <code>cantidad exacta</code>.
+            Solo se actualizan los SKUs incluidos; el resto conserva su stock.
+          </p>
+        </div>
+        <label class="ops-btn ops-btn--primary csv-file-btn" [class.loading]="csvUploading">
+          <span *ngIf="!csvUploading">📂 Cargar CSV</span>
+          <span *ngIf="csvUploading">Procesando...</span>
+          <input
+            #csvInput
+            type="file"
+            accept=".csv,text/csv"
+            class="hidden-input"
+            (change)="onCsvFileSelected($event)"
+            [disabled]="csvUploading" />
+        </label>
+      </div>
+
+      <!-- CSV Error -->
+      <div class="csv-feedback csv-feedback--error" *ngIf="csvError">
+        <strong>Error:</strong> {{ csvError }}
+      </div>
+
+      <!-- CSV Result -->
+      <div class="csv-feedback csv-feedback--success" *ngIf="csvResult && !csvError">
+        <strong>✅ {{ csvResult.updated }} producto{{ csvResult.updated !== 1 ? 's' : '' }} actualizado{{ csvResult.updated !== 1 ? 's' : '' }}.</strong>
+        <span *ngIf="csvResult.notFound.length > 0" class="csv-not-found">
+          SKUs no encontrados: {{ csvResult.notFound.join(', ') }}
+        </span>
+        <span *ngIf="csvResult.errors.length > 0" class="csv-errors">
+          Errores: {{ csvResult.errors.join(' · ') }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="ops-card inventory-filters">
+      <input class="ops-input search-input" type="text" placeholder="Buscar por nombre, SKU o marca..." [(ngModel)]="search" />
+      <div class="filter-chips">
+        <button class="chip" [class.active]="stockFilter === 'all'" (click)="stockFilter = 'all'">Todos</button>
+        <button class="chip chip--out" [class.active]="stockFilter === 'out'" (click)="stockFilter = 'out'">Sin stock</button>
+        <button class="chip chip--low" [class.active]="stockFilter === 'low'" (click)="stockFilter = 'low'">Stock bajo</button>
+        <button class="chip chip--ok" [class.active]="stockFilter === 'ok'" (click)="stockFilter = 'ok'">Con stock</button>
+        <button class="chip" [class.active]="stockFilter === 'untracked'" (click)="stockFilter = 'untracked'">Sin tracking</button>
+      </div>
+      <span class="result-count">{{ filteredProducts.length }} resultado{{ filteredProducts.length !== 1 ? 's' : '' }}</span>
+    </div>
+
+    <!-- Table -->
+    <div class="ops-card">
+      <div class="table-wrap">
+        <table class="ops-table" *ngIf="filteredProducts.length">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>SKU</th>
+              <th>Marca</th>
+              <th class="num">Precio</th>
+              <th class="num">Stock</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let p of filteredProducts">
+
+              <!-- Product row (no variants) -->
+              <tr *ngIf="!p.hasVariants" [class]="stockClass(p)">
+                <td class="product-name">{{ p.name }}</td>
+                <td class="muted mono">{{ p.sku || '—' }}</td>
+                <td class="muted">{{ p.brand?.name || '—' }}</td>
+                <td class="num">Q{{ p.price | number:'1.2-2' }}</td>
+                <td class="num">
+                  <span class="stock-badge" [class]="stockClass(p)">{{ stockLabel(p) }}</span>
+                </td>
+              </tr>
+
+              <!-- Product row (with variants) — header only -->
+              <tr *ngIf="p.hasVariants" class="product-row--parent">
+                <td class="product-name">
+                  {{ p.name }}
+                  <span class="variant-tag">{{ p.variants.length }} presentaciones</span>
+                </td>
+                <td class="muted mono">{{ p.sku || '—' }}</td>
+                <td class="muted">{{ p.brand?.name || '—' }}</td>
+                <td class="num muted">—</td>
+                <td class="num">
+                  <span class="stock-badge" [class]="p.lowStockAlert ? 'stock--low' : 'stock--ok'">
+                    {{ totalVariantStock(p) }} total
+                  </span>
+                </td>
+              </tr>
+
+              <!-- Variant child rows -->
+              <tr *ngFor="let v of p.variants" class="variant-row" [class]="variantStockClass(v)">
+                <td class="variant-label">↳ {{ v.label }}</td>
+                <td class="muted mono">{{ v.sku || '—' }}</td>
+                <td></td>
+                <td class="num">Q{{ v.price | number:'1.2-2' }}</td>
+                <td class="num">
+                  <span class="stock-badge" [class]="variantStockClass(v)">{{ v.stock }}</span>
+                </td>
+              </tr>
+
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+      <div class="empty-state" *ngIf="!filteredProducts.length">
+        <p>No hay productos que coincidan con los filtros.</p>
+      </div>
+    </div>
+
+  </ng-container>
+</div>

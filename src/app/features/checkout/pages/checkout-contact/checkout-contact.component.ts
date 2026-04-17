@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AuthService, AuthUser } from '../../../../auth/services/auth.service';
+import { StorefrontApiService } from '../../../../core/services/storefront-api.service';
+import { StorefrontAddress } from '../../../../core/models/storefront.models';
 import { CheckoutStateService } from '../../services/checkout-state.service';
 import { GT_DEPARTMENTS, GT_MUNICIPALITIES } from '../../services/gt-data';
 
@@ -21,14 +23,19 @@ export class CheckoutContactComponent implements OnInit, OnDestroy {
   isLoggedIn = false;
   authUser: AuthUser | null = null;
   checkoutMode: 'guest' | 'account' = 'guest';
+  showAuthModal = true;
   readonly authQueryParams = { returnUrl: '/checkout/contact' };
   private readonly destroy$ = new Subject<void>();
+
+  savedAddresses: StorefrontAddress[] = [];
+  loadingAddresses = false;
 
   form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     phone: [''],
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
+    nit: ['CF'],
     address: this.fb.group({
       country: ['Guatemala', Validators.required],
       department: ['', Validators.required],
@@ -45,7 +52,8 @@ export class CheckoutContactComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private state: CheckoutStateService,
     private router: Router,
-    private auth: AuthService
+    private auth: AuthService,
+    private storefrontApi: StorefrontApiService,
   ) {}
 
   ngOnInit(): void {
@@ -78,7 +86,11 @@ export class CheckoutContactComponent implements OnInit, OnDestroy {
         this.authUser = user;
         this.isLoggedIn = !!user;
         this.checkoutMode = user ? 'account' : 'guest';
-        if (user) this.prefillFromAuth(user);
+        if (user) {
+          this.showAuthModal = false;
+          this.prefillFromAuth(user);
+          this.loadSavedAddresses();
+        }
       });
 
     this.onDepartmentChange();
@@ -91,6 +103,11 @@ export class CheckoutContactComponent implements OnInit, OnDestroy {
 
   setCheckoutMode(mode: 'guest' | 'account') {
     this.checkoutMode = mode;
+  }
+
+  continueAsGuest(): void {
+    this.showAuthModal = false;
+    this.setCheckoutMode('guest');
   }
 
   onDepartmentChange() {
@@ -128,12 +145,43 @@ export class CheckoutContactComponent implements OnInit, OnDestroy {
         phone: val.phone || undefined,
         firstName: val.firstName!,
         lastName: val.lastName!,
+        nit: val.nit || 'CF',
         saveInfo: !!val.saveInfo
       },
       val.address as any
     );
 
     this.router.navigate(['checkout/shipping']);
+  }
+
+  loadSavedAddresses(): void {
+    this.loadingAddresses = true;
+    this.storefrontApi.listMyAddresses().subscribe({
+      next: (res) => {
+        this.savedAddresses = res.data || [];
+        this.loadingAddresses = false;
+        // Auto-apply default address if form is empty
+        const def = this.savedAddresses.find(a => a.isDefault) || this.savedAddresses[0];
+        if (def && !this.state.snapshot.shippingAddress) {
+          this.applyAddress(def);
+        }
+      },
+      error: () => { this.loadingAddresses = false; },
+    });
+  }
+
+  applyAddress(a: StorefrontAddress): void {
+    const dept = a.state || '';
+    this.form.get('address')?.patchValue({
+      country: a.country || 'Guatemala',
+      department: dept,
+      municipality: a.city || '',
+      line1: a.addressLine1 || '',
+      line2: a.addressLine2 || '',
+      references: a.reference || '',
+      postalCode: a.postalCode || '',
+    });
+    this.municipalities = this.muniMap[dept] || [];
   }
 
   private prefillFromAuth(user: AuthUser) {

@@ -1,47 +1,76 @@
 <section class="section">
   <div class="container profile">
-    <div class="card p profile__header">
-      <div class="avatar" aria-hidden="true">
-        <img *ngIf="avatarUrl; else initials" [src]="avatarUrl" alt="Avatar" loading="lazy" />
-        <ng-template #initials>{{ user.name.charAt(0) }}</ng-template>
-      </div>
 
-      <div class="id">
-        <h2>{{ user.name }}</h2>
-        <p class="muted email">{{ user.email }}</p>
-        <div class="badges">
-          <span class="badge plan">{{ user.membership }}</span>
-          <a class="link small" routerLink="/account/membership">Ver detalles</a>
+    <!-- ── Welcome banner ── -->
+    <div class="welcome-banner">
+      <div class="welcome-banner__text">
+        <h2>Bienvenido de vuelta, {{ user.name.split(' ')[0] }}</h2>
+        <p *ngIf="!loading">
+          Tienes {{ user.ordersCount }} {{ kpiLabel(user.ordersCount) }}
+          y {{ user.petsCount }} {{ user.petsCount === 1 ? 'mascota' : 'mascotas' }} registradas.
+        </p>
+      </div>
+      <div class="welcome-banner__badge">
+        <mat-icon>workspace_premium</mat-icon>
+        <span>{{ user.membership }}</span>
+      </div>
+    </div>
+
+    <!-- ── Stats row ── -->
+    <div class="stats-row">
+      <div class="stat-chip">
+        <mat-icon>receipt_long</mat-icon>
+        <strong>{{ user.ordersCount }}</strong>
+        <span class="muted">Pedidos</span>
+      </div>
+      <div class="stat-chip">
+        <mat-icon>pets</mat-icon>
+        <strong>{{ user.petsCount }}</strong>
+        <span class="muted">Mascotas</span>
+      </div>
+      <div class="stat-chip">
+        <mat-icon>workspace_premium</mat-icon>
+        <strong>{{ user.membership }}</strong>
+        <span class="muted">Membresía</span>
+      </div>
+      <div class="stat-chip">
+        <mat-icon>attach_money</mat-icon>
+        <strong>{{ prefs.currency }}</strong>
+        <span class="muted">Moneda</span>
+      </div>
+    </div>
+
+    <!-- ── Pedidos recientes ── -->
+    <div class="card p recent-section" *ngIf="loadingOrders || recentOrders.length">
+      <div class="recent-head">
+        <h3>Pedidos recientes</h3>
+        <a class="link small" routerLink="/account/orders">Ver todos</a>
+      </div>
+      <p class="muted" *ngIf="loadingOrders">Cargando pedidos...</p>
+      <div class="recent-orders" *ngIf="!loadingOrders">
+        <div class="order-row" *ngFor="let o of recentOrders">
+          <div class="order-row__num">
+            <strong>{{ o.orderNumber }}</strong>
+            <span class="muted">{{ o.createdAt | date:'MMM d, yyyy' }}</span>
+          </div>
+          <span class="chip status-chip" [class]="statusClass(o.status)">{{ statusLabel(o.status) }}</span>
+          <span class="order-row__total">Q{{ o.total | number:'1.2-2' }}</span>
         </div>
       </div>
-
-      <div class="kpis">
-        <span class="chip"><strong>{{ user.ordersCount }}</strong> {{ kpiLabel(user.ordersCount) }}</span>
-        <span class="chip"><strong>{{ user.petsCount }}</strong> mascotas</span>
-      </div>
-
-      <div class="actions">
-        <a class="btn primary" routerLink="/account/settings">Editar perfil</a>
-      </div>
     </div>
 
-    <div class="profile__quick card p">
-      <a class="quick" routerLink="/account/pets">Mis Mascotas</a>
-      <a class="quick" routerLink="/account/orders">Historial</a>
-      <a class="quick" routerLink="/account/membership">Membresia</a>
-      <a class="quick" routerLink="/account/settings">Configuracion</a>
-    </div>
-
-    <p class="muted" *ngIf="loading">Cargando informacion de tu cuenta...</p>
+    <p class="muted" *ngIf="loading">Cargando información de tu cuenta...</p>
     <p class="muted" *ngIf="errorMessage">{{ errorMessage }}</p>
 
+    <!-- ── Grid principal ── -->
     <div class="profile__grid">
+
       <div class="card p">
         <h3>Datos personales</h3>
         <div class="rows">
           <div><span class="label">Nombre</span><span class="value">{{ user.name }}</span></div>
-          <div><span class="label">Documento</span><span class="value">{{ user.documentIdNumber || '�' }}</span></div>
-          <div><span class="label">Fecha de nacimiento</span><span class="value">{{ user.birthDate || '�' }}</span></div>
+          <div><span class="label">Documento</span><span class="value">{{ user.documentIdNumber || '—' }}</span></div>
+          <div><span class="label">Fecha de nacimiento</span><span class="value">{{ user.birthDate || '—' }}</span></div>
         </div>
         <a class="btn ghost" routerLink="/account/settings">Editar</a>
       </div>
@@ -50,7 +79,7 @@
         <h3>Contacto</h3>
         <div class="rows">
           <div><span class="label">Email</span><span class="value">{{ user.email }}</span></div>
-          <div><span class="label">Telefono</span><span class="value">{{ user.phone || '�' }}</span></div>
+          <div><span class="label">Teléfono</span><span class="value">{{ user.phone || '—' }}</span></div>
         </div>
         <a class="btn ghost" routerLink="/account/settings">Editar</a>
       </div>
@@ -72,7 +101,7 @@
             <div class="addr-body">
               <div class="line">
                 <strong>{{ a.recipient }}</strong>
-                <span class="muted" *ngIf="a.phone"> � {{ a.phone }}</span>
+                <span class="muted" *ngIf="a.phone"> — {{ a.phone }}</span>
               </div>
               <div class="line">{{ a.line1 }} <ng-container *ngIf="a.line2">, {{ a.line2 }}</ng-container></div>
               <div class="line">{{ a.city }} <ng-container *ngIf="a.state">, {{ a.state }}</ng-container> <ng-container *ngIf="a.zip">, {{ a.zip }}</ng-container></div>
@@ -92,8 +121,8 @@
             <div class="art"></div>
             <div>
               <h4>Sin direcciones</h4>
-              <p class="muted">Agrega al menos una direccion para agilizar tu checkout.</p>
-              <button class="btn accent" (click)="openCreate()">Crear primera direccion</button>
+              <p class="muted">Agrega al menos una dirección para agilizar tu checkout.</p>
+              <button class="btn accent" (click)="openCreate()">Crear primera dirección</button>
             </div>
           </div>
         </ng-template>
@@ -110,48 +139,47 @@
                 <input class="input" formControlName="recipient" placeholder="Juan Perez" />
               </label>
               <label class="field">
-                <span class="label">Telefono</span>
+                <span class="label">Teléfono</span>
                 <input class="input" formControlName="phone" placeholder="+502..." />
               </label>
               <label class="field col-2">
-                <span class="label">Direccion (linea 1) *</span>
-                <input class="input" formControlName="line1" placeholder="Calle, numero" />
+                <span class="label">Dirección (línea 1) *</span>
+                <input class="input" formControlName="line1" placeholder="Calle, número" />
               </label>
               <label class="field col-2">
-                <span class="label">Direccion (linea 2)</span>
+                <span class="label">Dirección (línea 2)</span>
                 <input class="input" formControlName="line2" placeholder="Apartamento, referencia" />
               </label>
               <label class="field">
                 <span class="label">Ciudad *</span>
-                <input class="input" formControlName="city" placeholder="Guatemala City" />
+                <input class="input" formControlName="city" placeholder="Ciudad de Guatemala" />
               </label>
               <label class="field">
                 <span class="label">Departamento/Estado</span>
                 <input class="input" formControlName="state" />
               </label>
               <label class="field">
-                <span class="label">Codigo Postal</span>
+                <span class="label">Código Postal</span>
                 <input class="input" formControlName="zip" />
               </label>
               <label class="field">
-                <span class="label">Pais *</span>
+                <span class="label">País *</span>
                 <input class="input" formControlName="country" />
               </label>
               <label class="field col-2">
                 <span class="label">Indicaciones para el repartidor</span>
-                <textarea class="input" formControlName="instructions" rows="2" placeholder="Puerta cafe, timbre izquierdo..."></textarea>
+                <textarea class="input" formControlName="instructions" rows="2" placeholder="Puerta café, timbre izquierdo..."></textarea>
               </label>
-
               <label class="field col-2 check-default">
                 <input type="checkbox" formControlName="isDefault" />
-                <span>Usar como direccion predeterminada</span>
+                <span>Usar como dirección predeterminada</span>
               </label>
             </div>
 
             <div class="actions">
               <button type="button" class="btn ghost" (click)="cancelForm()">Cancelar</button>
               <button type="submit" class="btn primary" [disabled]="formSaving">
-                {{ formSaving ? 'Guardando...' : (formMode === 'create' ? 'Guardar direccion' : 'Actualizar') }}
+                {{ formSaving ? 'Guardando...' : (formMode === 'create' ? 'Guardar dirección' : 'Actualizar') }}
               </button>
             </div>
           </form>
@@ -172,18 +200,19 @@
 
       <div class="card p">
         <h3>Seguridad</h3>
-        <p class="muted">Recomendado: activa la verificacion en dos pasos.</p>
+        <p class="muted">Recomendado: activa la verificación en dos pasos.</p>
         <div class="actions-row">
-          <a class="btn" routerLink="/account/settings">Cambiar contrasena</a>
+          <a class="btn" routerLink="/account/settings">Cambiar contraseña</a>
           <a class="btn" routerLink="/account/settings">Configurar 2FA</a>
         </div>
       </div>
 
       <div class="card p">
-        <h3>Membresia</h3>
+        <h3>Membresía</h3>
         <p class="muted">Plan actual: <strong>{{ user.membership }}</strong></p>
-        <a class="btn primary" routerLink="/account/membership">Ver Membresia</a>
+        <a class="btn primary" routerLink="/account/membership">Ver Membresía</a>
       </div>
+
     </div>
   </div>
 </section>

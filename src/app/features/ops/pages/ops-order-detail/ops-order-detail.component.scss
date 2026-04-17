@@ -1,0 +1,193 @@
+.ops-page { display: flex; flex-direction: column; gap: 20px; }
+
+.back-btn {
+  width: fit-content; padding: 6px 14px;
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  background: #fff; cursor: pointer;
+  font-weight: 600; color: #64748b; font-size: .85rem;
+  transition: border-color .15s, color .15s;
+  &:hover { border-color: #f59e0b; color: #92400e; }
+}
+
+.loading-state { display: flex; align-items: center; gap: 12px; color: #64748b; }
+.spinner { width: 20px; height: 20px; border: 2px solid #e5e7eb; border-top-color: #f59e0b; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error-msg { color: #dc2626; font-weight: 600; }
+.muted { color: #64748b; }
+
+// ─── Order header ─────────────────────────────────────────────────────────────
+.order-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+
+  &__info { display: flex; flex-direction: column; gap: 2px; }
+  &__num  { margin: 0; font-size: 1.4rem; font-weight: 900; color: #0f172a; }
+  &__date { margin: 0; font-size: .85rem; }
+}
+
+// ─── Two-column layout ────────────────────────────────────────────────────────
+.order-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+  align-items: start;
+
+  @media (max-width: 960px) { grid-template-columns: 1fr; }
+}
+
+.order-left, .order-right { display: flex; flex-direction: column; gap: 16px; }
+
+.detail-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 640px) { grid-template-columns: 1fr; }
+}
+
+// ─── Cards ────────────────────────────────────────────────────────────────────
+.ops-card {
+  background: #fff; border-radius: 14px;
+  border: 1px solid #e2e8f0; padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+
+.ops-card__title {
+  margin: 0 0 12px;
+  font-size: .7rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .08em;
+  color: #94a3b8;
+}
+
+// ─── Detail rows ──────────────────────────────────────────────────────────────
+.detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin: 6px 0; font-size: .875rem; color: #475569;
+  strong { color: #0f172a; }
+}
+
+.address-block { p { margin: 2px 0; font-size: .875rem; color: #334155; } }
+
+.totals-breakdown { margin-top: 8px; }
+.total-row { border-top: 1px solid #f1f5f9; margin-top: 8px; padding-top: 8px; }
+.grand-total { font-size: 1.1rem; color: #16a34a; }
+.discount-row span:last-child { color: #dc2626; }
+
+// ─── Items table ──────────────────────────────────────────────────────────────
+.items-table {
+  width: 100%; border-collapse: collapse; font-size: .875rem;
+  th { text-align: left; padding: 8px 10px; color: #94a3b8; font-weight: 700; font-size: .75rem; border-bottom: 1px solid #f1f5f9; }
+  td { padding: 10px; border-bottom: 1px solid #f8fafc; color: #1e293b; }
+  tr:last-child td { border-bottom: none; }
+  .num-col { text-align: right; }
+  .item-name { font-weight: 600; }
+  .item-sku { font-family: monospace; font-size: .8rem; color: #94a3b8; }
+}
+
+// ─── Status update form ───────────────────────────────────────────────────────
+.status-update-card { border-left: 4px solid #f59e0b; }
+
+.status-form {
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.status-select {
+  padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: 10px;
+  font-size: .9rem; font-weight: 600; color: #0f172a;
+  cursor: pointer; background: #f8fafc;
+  transition: border-color .15s;
+  &:focus { outline: none; border-color: #f59e0b; }
+}
+
+.note-input {
+  padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: 10px;
+  font-size: .875rem; color: #334155; font-family: inherit;
+  resize: vertical; background: #f8fafc;
+  transition: border-color .15s;
+  &:focus { outline: none; border-color: #f59e0b; }
+  &::placeholder { color: #94a3b8; }
+}
+
+.btn--apply {
+  background: linear-gradient(135deg, #f59e0b, #fb8c00);
+  color: #fff; border: none; border-radius: 10px;
+  padding: 9px 16px; font-weight: 700; font-size: .875rem;
+  cursor: pointer; transition: opacity .15s;
+  &:disabled { opacity: .5; cursor: not-allowed; }
+  &:not(:disabled):hover { opacity: .9; }
+}
+
+.success-msg { color: #16a34a; font-size: .82rem; font-weight: 700; margin: 6px 0 0; }
+.error-msg-inline { color: #dc2626; font-size: .82rem; margin: 4px 0 0; }
+
+// ─── Ops Timeline ─────────────────────────────────────────────────────────────
+.timeline-card { border-left: 4px solid #475569; }
+
+.ops-timeline {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 0;
+}
+
+.ops-timeline__step {
+  display: flex; gap: 14px; position: relative;
+  padding-bottom: 1.25rem;
+
+  &--last { padding-bottom: 0; }
+
+  &:not(.ops-timeline__step--last) .ops-timeline__dot::after {
+    content: '';
+    position: absolute;
+    left: 17px; top: 34px; bottom: 0;
+    width: 2px; background: #334155;
+  }
+}
+
+.ops-timeline__dot {
+  position: relative; flex-shrink: 0;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #1e293b;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; z-index: 1;
+  border: 2px solid #334155;
+}
+
+.ops-timeline__body {
+  flex: 1; padding-top: .35rem;
+  display: flex; flex-direction: column; gap: .15rem;
+}
+
+.ops-timeline__label {
+  font-size: .875rem; font-weight: 700; color: #e2e8f0;
+}
+
+.ops-timeline__time { font-size: .78rem; }
+
+.ops-timeline__note {
+  font-size: .8rem; color: #cbd5e1;
+  background: #1e293b; border-left: 3px solid #f59e0b;
+  padding: .3rem .6rem; border-radius: 0 6px 6px 0;
+  margin-top: .2rem;
+}
+
+.ops-timeline__by { font-size: .74rem; font-style: italic; }
+
+.timeline-empty { font-size: .85rem; font-style: italic; padding: .5rem 0; }
+
+// ─── Status pill ──────────────────────────────────────────────────────────────
+.status-pill {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: 4px 12px; border-radius: 999px;
+  font-size: .8rem; font-weight: 700;
+
+  &--lg { font-size: .9rem; padding: 6px 16px; }
+}
+
+.status--pending    { background: #fef3c7; color: #92400e; }
+.status--paid       { background: #d1fae5; color: #065f46; }
+.status--processing { background: #dbeafe; color: #1e40af; }
+.status--confirmed  { background: #d1fae5; color: #065f46; }
+.status--shipped    { background: #e0e7ff; color: #3730a3; }
+.status--delivered  { background: #dcfce7; color: #166534; }
+.status--cancelled  { background: #fee2e2; color: #991b1b; }
+.status--refunded   { background: #f3f4f6; color: #374151; }

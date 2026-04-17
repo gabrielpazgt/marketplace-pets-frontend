@@ -1,26 +1,72 @@
-﻿<section class="checkout">
-  <div class="container">
-    <div class="header">
-      <div class="progress" aria-hidden="true">
-        <div class="track"></div>
-        <div class="bar" [style.width.%]="progressPct()"></div>
+<div class="cs-checkout">
+
+  <!-- ── Header ────────────────────────────────────────── -->
+  <header class="cs-header">
+    <nav class="cs-breadcrumb" aria-label="Navegación">
+      <a class="cs-breadcrumb__link" routerLink="/home">Inicio</a>
+      <mat-icon class="cs-breadcrumb__sep">chevron_right</mat-icon>
+      <a class="cs-breadcrumb__link" routerLink="/cart">Carrito</a>
+      <mat-icon class="cs-breadcrumb__sep">chevron_right</mat-icon>
+      <span class="cs-breadcrumb__current">Checkout</span>
+    </nav>
+
+    <div class="cs-brand">
+      <div class="cs-brand__logo" aria-hidden="true">A</div>
+      <div>
+        <span class="cs-brand__name">Aumakki</span>
+        <span class="cs-brand__secure">
+          <mat-icon>lock</mat-icon>
+          Checkout seguro y encriptado
+        </span>
       </div>
-      <ul class="stepper" aria-label="Progreso del checkout">
-        <li *ngFor="let s of steps" [class.active]="isActive(s.key)">
-          <span class="dot"></span>
-          <span class="lbl">{{ s.label }}</span>
-        </li>
-      </ul>
     </div>
 
-    <div class="grid">
-      <main class="main card">
+    <!-- Stepper -->
+    <nav class="cs-stepper" aria-label="Progreso del checkout">
+      <ng-container *ngFor="let s of steps; let i = index; let last = last">
+        <div
+          class="cs-step"
+          [class.cs-step--active]="isActive(s.key)"
+          [class.cs-step--done]="isDone(s.key)"
+        >
+          <div class="cs-step__circle">
+            <mat-icon *ngIf="isDone(s.key)">check</mat-icon>
+            <mat-icon *ngIf="!isDone(s.key)">{{ s.icon }}</mat-icon>
+          </div>
+          <span class="cs-step__label">{{ s.label }}</span>
+        </div>
+        <div *ngIf="!last" class="cs-step__line" [class.cs-step__line--done]="isDone(s.key)"></div>
+      </ng-container>
+    </nav>
+  </header>
+
+  <!-- ── Content grid ───────────────────────────────────── -->
+  <div class="cs-grid container">
+    <main class="cs-main">
+      <div class="cs-card">
         <router-outlet></router-outlet>
-      </main>
+      </div>
 
-      <aside class="aside">
-        <mp-order-summary></mp-order-summary>
-      </aside>
-    </div>
+      <!-- Trust strip -->
+      <div class="cs-trust" aria-hidden="true">
+        <span class="cs-trust__item">
+          <mat-icon>verified_user</mat-icon>
+          Compra 100% segura
+        </span>
+        <span class="cs-trust__item">
+          <mat-icon>local_shipping</mat-icon>
+          Envío rastreable
+        </span>
+        <span class="cs-trust__item">
+          <mat-icon>pets</mat-icon>
+          Aprobado por veterinarios
+        </span>
+      </div>
+    </main>
+
+    <aside class="cs-aside">
+      <mp-order-summary></mp-order-summary>
+    </aside>
   </div>
-</section>
+
+</div>

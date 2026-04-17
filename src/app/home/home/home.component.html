@@ -1,6 +1,10 @@
 <section class="home" aria-label="Inicio Aumakki">
   <app-hero class="home__block home__block--hero"></app-hero>
+  <app-features class="home__block"></app-features>
   <app-categories class="home__block"></app-categories>
+  <app-steps class="home__block"></app-steps>
   <app-deals class="home__block" [products]="featured$ | async"></app-deals>
-  <app-features class="home__block home__block--last"></app-features>
+  <app-brands class="home__block"></app-brands>
+  <app-membership-banner class="home__block"></app-membership-banner>
+  <app-newsletter class="home__block home__block--last"></app-newsletter>
 </section>

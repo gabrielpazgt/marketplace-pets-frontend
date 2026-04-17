@@ -1,120 +1,351 @@
-.membership {
-  .wrap { padding: var(--sp-4); }
-  .head { margin-bottom: var(--sp-4); }
-  h2 { margin: 0 0 4px; }
+// ── Page ──────────────────────────────────────────────────────────────────────
 
-  .plans-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+.am-page {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ── Hero card ─────────────────────────────────────────────────────────────────
+
+.am-hero {
+  border-radius: var(--r-lg);
+  padding: 24px 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &--premium {
+    background: linear-gradient(120deg, var(--brand) 0%, var(--brand-700, #e55a00) 100%);
   }
 
-  .panel {
-    padding: var(--sp-4);
-    background: var(--color-surface);
-    display: grid;
-    gap: var(--sp-3);
+  &--free {
+    background: linear-gradient(120deg, #64748b 0%, #475569 100%);
   }
 
-  .panel.current {
-    border-color: color-mix(in srgb, var(--success) 46%, var(--line));
-    box-shadow: 0 12px 28px rgba(34, 197, 94, 0.08);
-  }
-
-  .panel__head {
+  &__top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    flex-wrap: wrap;
+    gap: 12px;
   }
 
-  .chip.plan {
-    display: inline-grid;
-    place-items: center;
-    padding: 6px 12px;
-    border-radius: var(--r-pill);
-    border: 1px solid var(--line);
-    font-weight: 800;
-    background: linear-gradient(90deg, #dbe2ec, #c4cfdd);
-    color: #0f172a;
-  }
-
-  .price { font-size: var(--fs-xl); font-weight: 800; }
-
-  .ticks {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 8px;
-
-    .tick {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: inline-grid;
-      place-items: center;
-      margin-right: 8px;
-      background: var(--success);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 900;
-    }
-
-    li { display: flex; align-items: flex-start; }
-  }
-
-  .cta {
+  &__brand {
     display: flex;
+    align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      color: rgba(255,255,255,.9);
+    }
   }
 
-  .impact {
-    margin-top: var(--sp-4);
-    padding: var(--sp-4);
-    border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--line));
-    background: color-mix(in srgb, var(--accent) 7%, #fff);
+  &__name {
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    font-weight: 900;
+    color: #fff;
   }
 
-  .impact h3 {
-    margin: 0 0 8px;
+  &__badge {
+    padding: 5px 14px;
+    border-radius: var(--r-pill);
+    background: rgba(255,255,255,.2);
+    border: 1px solid rgba(255,255,255,.35);
+    font-size: var(--fs-xs);
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+
+    &--free {
+      background: rgba(255,255,255,.15);
+      border-color: rgba(255,255,255,.25);
+    }
   }
 
-  .impact p {
+  &__sub {
+    font-size: var(--fs-sm);
+    color: rgba(255,255,255,.85);
     margin: 0;
-    color: var(--ink-2);
+  }
+}
+
+// ── Upsell CTA (inside free hero) ────────────────────────────────────────────
+
+.am-upsell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: var(--r-lg);
+  text-decoration: none;
+  transition: background var(--t-fast);
+  margin-top: 4px;
+
+  &:hover { background: rgba(255,255,255,.22); }
+
+  &__left { display: flex; flex-direction: column; gap: 2px; }
+
+  &__price {
+    margin: 0;
+    font-size: var(--fs-xl);
+    font-weight: 900;
+    color: #fff;
+    span { font-size: var(--fs-sm); font-weight: 600; opacity: 0.8; }
   }
 
-  .faq { margin-top: var(--sp-4); }
+  &__label {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: rgba(255,255,255,.85);
+    font-weight: 600;
+  }
 
-  .faq details {
-    border: 1px solid var(--line);
+  &__arrow {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.2);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    mat-icon { font-size: 20px; width: 20px; height: 20px; color: #fff; }
+  }
+}
+
+// ── Cards ─────────────────────────────────────────────────────────────────────
+
+.am-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 20px;
+
+  &__title {
+    font-size: var(--fs-md);
+    font-weight: 900;
+    color: var(--ink);
+    margin: 0 0 16px;
+  }
+}
+
+// ── Benefits list ─────────────────────────────────────────────────────────────
+
+.am-benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.am-benefit {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+
+  &:last-child { border-bottom: none; }
+
+  &__icon-wrap {
+    width: 40px;
+    height: 40px;
     border-radius: var(--r-md);
-    background: #fff;
-    padding: 12px 14px;
-    box-shadow: var(--elev-1);
-    margin-bottom: 10px;
+    background: color-mix(in srgb, var(--brand) 10%, #fff);
+    border: 1px solid color-mix(in srgb, var(--brand) 20%, transparent);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    transition: background var(--t-fast);
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: var(--brand);
+    }
   }
 
-  .faq summary {
-    cursor: pointer;
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0 0 2px;
+    font-size: var(--fs-sm);
     font-weight: 800;
-    list-style: none;
-
-    &::-webkit-details-marker { display: none; }
-  }
-
-  .faq p {
-    margin: 10px 0 0;
     color: var(--ink);
   }
 
-  @media (max-width: 640px) {
-    .wrap { padding: 14px; }
-    .plans-grid { grid-template-columns: 1fr; }
-    .panel { padding: 14px; }
-    .panel .btn { width: 100%; }
+  &__desc {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--muted);
   }
+
+  &__check {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #10b981;
+    flex-shrink: 0;
+  }
+
+  &__lock {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+    opacity: 0.5;
+    flex-shrink: 0;
+  }
+
+  // Locked state (free plan)
+  &--locked {
+    .am-benefit__icon-wrap {
+      background: #f1f1ef;
+      border-color: var(--line);
+      mat-icon { color: var(--muted); opacity: 0.5; }
+    }
+    .am-benefit__title { color: var(--muted); }
+    .am-benefit__desc  { opacity: 0.6; }
+  }
+}
+
+// ── Manage section ────────────────────────────────────────────────────────────
+
+.am-manage__desc {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  margin: 0 0 14px;
+  line-height: 1.6;
+}
+
+// ── Messages ──────────────────────────────────────────────────────────────────
+
+.am-msg {
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  margin: 0 0 12px;
+
+  &--ok  { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+  &--err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+}
+
+// ── Buttons ───────────────────────────────────────────────────────────────────
+
+.am-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: background var(--t-base), border-color var(--t-base), transform var(--t-fast);
+
+  &:hover:not(:disabled) { transform: translateY(-1px); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &--ghost {
+    background: #f1f1ef;
+    color: var(--ink-2);
+    &:hover:not(:disabled) { background: #e8e8e5; }
+  }
+}
+
+// ── Social impact ─────────────────────────────────────────────────────────────
+
+.am-impact {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  background: color-mix(in srgb, var(--brand) 5%, #fff);
+  border: 1px solid color-mix(in srgb, var(--brand) 20%, transparent);
+  border-radius: var(--r-lg);
+
+  &__icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--r-md);
+    background: color-mix(in srgb, var(--brand) 12%, #fff);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--brand); }
+  }
+
+  &__title {
+    margin: 0 0 4px;
+    font-size: var(--fs-sm);
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  &__desc {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: var(--muted);
+    line-height: 1.6;
+  }
+}
+
+// ── FAQ ───────────────────────────────────────────────────────────────────────
+
+.am-faq {
+  &__item {
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: #f8f8f7;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+
+    &:last-child { margin-bottom: 0; }
+
+    &[open] { background: #fff; }
+  }
+
+  &__q {
+    cursor: pointer;
+    font-size: var(--fs-sm);
+    font-weight: 800;
+    color: var(--ink);
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+
+    &::-webkit-details-marker { display: none; }
+    &::after { content: '+'; font-size: 1.1rem; color: var(--muted); flex-shrink: 0; }
+    details[open] &::after { content: '−'; }
+  }
+
+  &__a {
+    margin: 10px 0 0;
+    font-size: var(--fs-sm);
+    color: var(--muted);
+    line-height: 1.6;
+  }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+
+@media (max-width: 640px) {
+  .am-page { padding: 16px; }
+  .am-btn { width: 100%; justify-content: center; }
 }

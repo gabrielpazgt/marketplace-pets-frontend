@@ -12,9 +12,11 @@
       <a
         class="prod"
         role="listitem"
-        *ngFor="let p of view"
+        *ngFor="let p of view; let i = index"
         [routerLink]="['/catalog/product', p.slug]"
         [title]="p.name"
+        mpFadeIn
+        [mpFadeInDelay]="i * 40"
       >
         <span
           class="badge"
@@ -32,23 +34,15 @@
         <div class="info">
           <div class="name line-clamp">{{ p.name }}</div>
 
-          <div class="prices">
-            <div class="price-chip price--regular" aria-label="Precio actual">
-              <span class="label">Precio normal</span>
-              <div class="vals">
-                <span class="now">
-                  {{ p.price | currency:'GTQ':'symbol-narrow':'1.0-0' }}
-                </span>
-              </div>
+          <div class="pricing">
+            <div class="price-main">
+              <span class="price-now">{{ p.price | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
+              <span *ngIf="p.oldPrice" class="price-old">{{ p.oldPrice | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
             </div>
-
-            <div class="price-chip price--member" aria-label="Precio con membresia">
-              <span class="label">Con membresia ({{ membershipDiscountPct }}%)</span>
-              <div class="vals">
-                <span class="now">
-                  {{ memberPrice(p.price) | currency:'GTQ':'symbol-narrow':'1.0-0' }}
-                </span>
-              </div>
+            <div class="price-member">
+              <span class="member-star" aria-hidden="true">★</span>
+              <span class="member-label">Con membresía</span>
+              <span class="member-val">{{ memberPrice(p.price) | currency:'GTQ':'symbol-narrow':'1.0-0' }}</span>
             </div>
           </div>
         </div>

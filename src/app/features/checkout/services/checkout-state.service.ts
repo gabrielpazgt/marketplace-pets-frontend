@@ -31,8 +31,9 @@ interface PersistedCheckoutState {
 @Injectable({ providedIn: 'root' })
 export class CheckoutStateService {
   readonly shippingMethods: ShippingMethod[] = [
-    { id: 'standard', label: 'Estandar', description: '3-5 dias habiles', price: 25, eta: '3-5 dias' },
-    { id: 'express', label: 'Express', description: '1-2 dias habiles', price: 45, eta: '1-2 dias' },
+    { id: 'standard', label: 'Envío Estándar', description: '3-5 días hábiles', price: 25, eta: '3-5 días' },
+    { id: 'express', label: 'Envío Express', description: '1-2 días hábiles', price: 45, eta: '1-2 días' },
+    { id: 'sameday', label: 'Entrega Mismo Día', description: 'Solo Ciudad de Guatemala', price: 120, eta: 'hoy' },
   ];
 
   private storeKey = 'mp_checkout_v1';
@@ -213,7 +214,8 @@ export class CheckoutStateService {
   }
 
   private normalizeSnapshot(snapshot: CheckoutSnapshot): CheckoutSnapshot {
-    const shippingMethodId = snapshot.shippingMethodId === 'express' ? 'express' : 'standard';
+    const validIds: Array<ShippingMethod['id']> = ['standard', 'express', 'sameday'];
+    const shippingMethodId = validIds.includes(snapshot.shippingMethodId) ? snapshot.shippingMethodId : 'standard';
     const paymentKind =
       snapshot.paymentKind === 'card' || snapshot.paymentKind === 'bank' ? snapshot.paymentKind : undefined;
 

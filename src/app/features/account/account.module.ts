@@ -5,6 +5,7 @@ import { AccountRoutingModule } from './account-routing.module';
 import { AccountShellComponent } from './components/account-shell/account-shell.component';
 import { ProfileOverviewComponent } from './pages/profile-overview/profile-overview.component';
 import { OrdersHistoryComponent } from './pages/orders-history/orders-history.component';
+import { OrderDetailComponent } from './pages/order-detail/order-detail.component';
 import { SettingsComponent } from './pages/settings/settings.component';
 import { MembershipComponent } from './pages/membership/membership.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -21,6 +22,7 @@ import { MatIconModule } from '@angular/material/icon';
     AccountShellComponent,
     ProfileOverviewComponent,
     OrdersHistoryComponent,
+    OrderDetailComponent,
     SettingsComponent,
     MembershipComponent
   ],

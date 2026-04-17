@@ -1,6 +1,7 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { resolveApiBaseUrl } from '../config/api-base-url';
 import {
   StorefrontAddCartItemPayload,
@@ -24,6 +25,7 @@ import {
   StorefrontPetTaxonomy,
   StorefrontProduct,
   StorefrontProductsQuery,
+  StorefrontSettings,
   StorefrontUpdateCartItemPayload,
   StorefrontUserPreferences,
   StorefrontUserPreferencesPayload,
@@ -31,6 +33,15 @@ import {
   StorefrontUserProfilePayload,
   StrapiItemResponse,
   StrapiListResponse,
+  OpsMetrics,
+  OpsOrder,
+  OpsMetricsEnhanced,
+  OpsSalesReport,
+  OpsTopProduct,
+  OpsTopCustomer,
+  OpsInventory,
+  OpsFinances,
+  StorefrontFilterScope,
 } from '../models/storefront.models';
 
 @Injectable({ providedIn: 'root' })
@@ -91,6 +102,12 @@ export class StorefrontApiService {
     );
   }
 
+  getStorefrontSettings(): Observable<StrapiItemResponse<StorefrontSettings>> {
+    return this.http.get<StrapiItemResponse<StorefrontSettings>>(
+      `${this.apiBaseUrl}/api/storefront/settings`
+    );
+  }
+
   getFooterNewsletterPromo(): Observable<StrapiItemResponse<StorefrontMedia | null>> {
     return this.http.get<StrapiItemResponse<StorefrontMedia | null>>(
       `${this.apiBaseUrl}/api/storefront/footer-newsletter-promo`
@@ -109,10 +126,30 @@ export class StorefrontApiService {
     );
   }
 
+  getFilterScopes(animal?: string, category?: string): Observable<{ data: StorefrontFilterScope }> {
+    let params = new HttpParams();
+    if (animal) params = params.set('animal', animal);
+    if (category) params = params.set('category', category);
+    return this.http.get<{ data: StorefrontFilterScope }>(
+      `${this.apiBaseUrl}/api/storefront/taxonomy/filter-scopes`,
+      { params }
+    );
+  }
+
   getGuestCart(sessionKey?: string): Observable<StrapiItemResponse<StorefrontCart>> {
     return this.http.get<StrapiItemResponse<StorefrontCart>>(
       `${this.apiBaseUrl}/api/storefront/guest/cart`,
       { headers: this.guestHeaders(sessionKey) }
+    );
+  }
+
+  listGuestCartRecommendations(sessionKey: string, limit = 4): Observable<StrapiListResponse<StorefrontProduct>> {
+    return this.http.get<StrapiListResponse<StorefrontProduct>>(
+      `${this.apiBaseUrl}/api/storefront/guest/cart/recommendations`,
+      {
+        headers: this.guestHeaders(sessionKey),
+        params: this.toHttpParams({ limit }),
+      }
     );
   }
 
@@ -168,6 +205,20 @@ export class StorefrontApiService {
 
   getMyCart(): Observable<StrapiItemResponse<StorefrontCart>> {
     return this.http.get<StrapiItemResponse<StorefrontCart>>(`${this.apiBaseUrl}/api/storefront/me/cart`);
+  }
+
+  listMyCartRecommendations(limit = 4): Observable<StrapiListResponse<StorefrontProduct>> {
+    return this.http.get<StrapiListResponse<StorefrontProduct>>(
+      `${this.apiBaseUrl}/api/storefront/me/cart/recommendations`,
+      { params: this.toHttpParams({ limit }) }
+    );
+  }
+
+  adoptGuestCart(sessionKey: string): Observable<StrapiItemResponse<StorefrontCart>> {
+    return this.http.post<StrapiItemResponse<StorefrontCart>>(
+      `${this.apiBaseUrl}/api/storefront/me/cart/adopt-guest`,
+      { sessionKey }
+    );
   }
 
   addMyCartItem(payload: StorefrontAddCartItemPayload): Observable<StrapiItemResponse<StorefrontCart>> {
@@ -295,6 +346,39 @@ export class StorefrontApiService {
     );
   }
 
+  uploadMyPetAvatar(id: number | string, file: File): Observable<StrapiItemResponse<StorefrontPet>> {
+    const formData = new FormData();
+    formData.append('files', file, file.name);
+
+    return this.http.post<any>(`${this.apiBaseUrl}/api/upload`, formData).pipe(
+      switchMap((uploaded: any) => {
+        const uploadedFiles = Array.isArray(uploaded)
+          ? uploaded
+          : Array.isArray(uploaded?.data)
+            ? uploaded.data
+            : uploaded?.data
+              ? [uploaded.data]
+              : uploaded
+                ? [uploaded]
+                : [];
+
+        const fileId = uploadedFiles.find((entry: any) => Number(entry?.id) > 0)?.id;
+        if (!fileId) throw new Error('Upload failed: no file returned');
+
+        return this.http.post<StrapiItemResponse<StorefrontPet>>(
+          `${this.apiBaseUrl}/api/storefront/me/pets/${id}/avatar`,
+          { avatarId: fileId }
+        );
+      })
+    );
+  }
+
+  deleteMyPetAvatar(id: number | string): Observable<StrapiItemResponse<StorefrontPet>> {
+    return this.http.delete<StrapiItemResponse<StorefrontPet>>(
+      `${this.apiBaseUrl}/api/storefront/me/pets/${id}/avatar`
+    );
+  }
+
   deleteMyPet(id: number | string): Observable<StrapiItemResponse<StorefrontDeletedResult>> {
     return this.http.delete<StrapiItemResponse<StorefrontDeletedResult>>(
       `${this.apiBaseUrl}/api/storefront/me/pets/${id}`
@@ -317,6 +401,77 @@ export class StorefrontApiService {
   getMyOrder(orderId: number | string): Observable<StrapiItemResponse<StorefrontOrder>> {
     return this.http.get<StrapiItemResponse<StorefrontOrder>>(
       `${this.apiBaseUrl}/api/storefront/me/orders/${orderId}`
+    );
+  }
+
+  // ── Portal Operativo ──────────────────────────────────────────────────
+  getOpsMetrics(): Observable<{ data: OpsMetrics }> {
+    return this.http.get<{ data: OpsMetrics }>(`${this.apiBaseUrl}/api/storefront/ops/metrics`);
+  }
+
+  listOpsOrders(page = 1, pageSize = 20, status?: string): Observable<StrapiListResponse<OpsOrder>> {
+    const params: Record<string, string | number> = { page, pageSize };
+    if (status) params['status'] = status;
+    return this.http.get<StrapiListResponse<OpsOrder>>(
+      `${this.apiBaseUrl}/api/storefront/ops/orders`,
+      { params: this.toHttpParams(params) }
+    );
+  }
+
+  getOpsOrder(orderId: number | string): Observable<{ data: OpsOrder }> {
+    return this.http.get<{ data: OpsOrder }>(`${this.apiBaseUrl}/api/storefront/ops/orders/${orderId}`);
+  }
+
+  updateOpsOrderStatus(orderId: number | string, status: string, note?: string): Observable<{ data: OpsOrder }> {
+    return this.http.patch<{ data: OpsOrder }>(
+      `${this.apiBaseUrl}/api/storefront/ops/orders/${orderId}/status`,
+      { status, note: note || undefined }
+    );
+  }
+
+  getOpsMetricsEnhanced(period: 'today' | 'week' | 'month' = 'month'): Observable<{ data: OpsMetricsEnhanced }> {
+    return this.http.get<{ data: OpsMetricsEnhanced }>(
+      `${this.apiBaseUrl}/api/storefront/ops/metrics/enhanced`,
+      { params: this.toHttpParams({ period }) }
+    );
+  }
+
+  getOpsSalesReport(from: string, to: string): Observable<{ data: OpsSalesReport }> {
+    return this.http.get<{ data: OpsSalesReport }>(
+      `${this.apiBaseUrl}/api/storefront/ops/reports/sales`,
+      { params: this.toHttpParams({ from, to }) }
+    );
+  }
+
+  getOpsTopProducts(from: string, to: string, limit = 20): Observable<{ data: OpsTopProduct[] }> {
+    return this.http.get<{ data: OpsTopProduct[] }>(
+      `${this.apiBaseUrl}/api/storefront/ops/reports/products`,
+      { params: this.toHttpParams({ from, to, limit }) }
+    );
+  }
+
+  getOpsTopCustomers(from: string, to: string, limit = 20): Observable<{ data: OpsTopCustomer[] }> {
+    return this.http.get<{ data: OpsTopCustomer[] }>(
+      `${this.apiBaseUrl}/api/storefront/ops/reports/customers`,
+      { params: this.toHttpParams({ from, to, limit }) }
+    );
+  }
+
+  getOpsInventory(): Observable<{ data: OpsInventory }> {
+    return this.http.get<{ data: OpsInventory }>(`${this.apiBaseUrl}/api/storefront/ops/inventory`);
+  }
+
+  bulkUpdateInventory(updates: Array<{ sku: string; stock: number }>): Observable<{ data: { updated: number; notFound: string[]; errors: string[] } }> {
+    return this.http.post<{ data: { updated: number; notFound: string[]; errors: string[] } }>(
+      `${this.apiBaseUrl}/api/storefront/ops/inventory/bulk-update`,
+      { updates }
+    );
+  }
+
+  getOpsFinances(year: number, month: number): Observable<{ data: OpsFinances }> {
+    return this.http.get<{ data: OpsFinances }>(
+      `${this.apiBaseUrl}/api/storefront/ops/finances`,
+      { params: this.toHttpParams({ year, month }) }
     );
   }
 

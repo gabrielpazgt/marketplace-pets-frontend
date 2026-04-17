@@ -13,6 +13,7 @@ export interface ContactInfo {
   phone?: string;
   firstName: string;
   lastName: string;
+  nit?: string;
   saveInfo?: boolean;
 }
 
@@ -27,7 +28,7 @@ export interface CardInfo {
 }
 
 export interface ShippingMethod {
-  id: 'standard' | 'express';
+  id: 'standard' | 'express' | 'sameday';
   label: string;
   description: string;
   price: number;

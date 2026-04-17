@@ -1,0 +1,18 @@
+<div class="callback-page">
+  <div class="callback-card">
+
+    <ng-container *ngIf="!error">
+      <div class="spinner" aria-label="Cargando"></div>
+      <p class="callback-title">Conectando tu cuenta{{ providerName ? ' con ' + providerName : '' }}...</p>
+      <p class="callback-sub">Un momento, estamos verificando tu sesión.</p>
+    </ng-container>
+
+    <ng-container *ngIf="error">
+      <div class="error-icon" aria-hidden="true">✕</div>
+      <p class="callback-title">No pudimos conectar</p>
+      <p class="callback-sub error-msg">{{ error }}</p>
+      <a class="btn primary" routerLink="/auth/login">Volver al inicio de sesión</a>
+    </ng-container>
+
+  </div>
+</div>

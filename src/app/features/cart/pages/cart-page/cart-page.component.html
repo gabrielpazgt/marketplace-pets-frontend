@@ -1,25 +1,35 @@
-﻿<section class="cart">
-  <div class="container">
-    <h1 class="title">
-      Carrito
-      <span class="count">({{ (itemCount$ | async) ?? 0 }})</span>
-    </h1>
+<section class="cart">
+  <div class="container cart-shell">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a routerLink="/catalog">Tienda</a>
+      <span>&gt;</span>
+      <span>Carrito</span>
+    </nav>
 
-    <a class="continue" routerLink="/catalog" aria-label="Seguir comprando">
-      <span aria-hidden="true">←</span> Seguir comprando
-    </a>
+    <div class="cart-head">
+      <div>
+        <h1 class="title">
+          Carrito
+          <span class="count">({{ (itemCount$ | async) ?? 0 }})</span>
+        </h1>
+      </div>
+
+      <a class="continue" routerLink="/catalog" aria-label="Seguir comprando">
+        Seguir comprando
+      </a>
+    </div>
   </div>
 
-  <div class="container" *ngIf="(items$ | async) as items">
+  <div class="container cart-shell" *ngIf="(items$ | async) as items">
     <app-free-shipping
       *ngIf="items.length"
       class="full-banner"
-      [target]="threshold"
+      [target]="(threshold$ | async) ?? 500"
       [subtotal]="(subtotal$ | async) ?? 0">
     </app-free-shipping>
   </div>
 
-  <div class="container layout">
+  <div class="container cart-shell layout">
     <div class="cart-update-overlay" *ngIf="(busy$ | async) ?? false">
       <span class="cart-update-overlay__ring" aria-hidden="true"></span>
       <span>Actualizando carrito...</span>
@@ -28,25 +38,28 @@
     <ng-container *ngIf="(items$ | async) as items; else loading">
       <ng-container *ngIf="items.length; else empty">
         <div class="left">
-          <div class="surface surface--table">
-            <header class="table-head" aria-hidden="true">
-              <div>Producto</div>
-              <div>Precio</div>
-              <div>Cantidad</div>
-              <div>Total</div>
-              <div></div>
-            </header>
-
-            <div class="list">
-              <app-cart-item
-                *ngFor="let it of items"
-                [item]="it"
-                [busy]="(busy$ | async) ?? false"
-                (qtyChange)="setQty(it.id, $event)"
-                (remove)="remove(it.id)">
-              </app-cart-item>
-            </div>
+          <div class="list">
+            <app-cart-item
+              *ngFor="let it of items"
+              [item]="it"
+              [busy]="(busy$ | async) ?? false"
+              (qtyChange)="setQty(it.id, $event)"
+              (remove)="remove(it.id)">
+            </app-cart-item>
           </div>
+
+          <section class="member-callout">
+            <div class="member-callout__icon">
+              <mat-icon aria-hidden="true">bolt</mat-icon>
+            </div>
+            <div class="member-callout__copy">
+              <h2>Ahorra con membres&iacute;a</h2>
+              <p>Obt&eacute;n beneficios extra en esta compra y en las siguientes.</p>
+            </div>
+            <div class="member-callout__actions">
+              <a class="member-callout__button" routerLink="/membership">Ver membres&iacute;a</a>
+            </div>
+          </section>
         </div>
 
         <div class="right">
@@ -60,11 +73,23 @@
     </ng-template>
 
     <ng-template #loading>
-      <div class="skeleton container">Cargando...</div>
+      <div class="skeleton-layout">
+        <div class="skel-left">
+          <div class="skel-row" *ngFor="let _ of [1,2,3]">
+            <div class="skel skel-thumb"></div>
+            <div class="skel-info">
+              <div class="skel skel-line" style="width:60%"></div>
+              <div class="skel skel-line skel-line--sm" style="width:40%"></div>
+            </div>
+            <div class="skel skel-price"></div>
+          </div>
+        </div>
+        <div class="skel skel-summary"></div>
+      </div>
     </ng-template>
   </div>
 
-  <section class="cart-recos" aria-label="Recomendaciones para tu carrito">
+  <section class="container cart-shell cart-recos" aria-label="Recomendaciones para tu carrito">
     <app-cart-recommendations></app-cart-recommendations>
   </section>
 </section>

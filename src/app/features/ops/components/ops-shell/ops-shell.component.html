@@ -1,0 +1,53 @@
+<div class="ops-layout">
+  <nav class="ops-sidebar">
+    <div class="ops-sidebar__brand">
+      <span class="ops-sidebar__logo">🐾</span>
+      <div>
+        <p class="ops-sidebar__title">Portal Operativo</p>
+        <p class="ops-sidebar__sub">Aumakki</p>
+      </div>
+    </div>
+
+    <ul class="ops-nav">
+      <li class="ops-nav__section">Operaciones</li>
+      <li>
+        <a class="ops-nav__item" routerLink="/gx-ops/dashboard" routerLinkActive="ops-nav__item--active">
+          <span class="ops-nav__icon">🏠</span> Dashboard
+        </a>
+      </li>
+      <li>
+        <a class="ops-nav__item" routerLink="/gx-ops/orders" routerLinkActive="ops-nav__item--active">
+          <span class="ops-nav__icon">📋</span> Pedidos
+        </a>
+      </li>
+
+      <li class="ops-nav__section">Análisis</li>
+      <li>
+        <a class="ops-nav__item" routerLink="/gx-ops/reports" routerLinkActive="ops-nav__item--active">
+          <span class="ops-nav__icon">📈</span> Reportes
+        </a>
+      </li>
+      <li>
+        <a class="ops-nav__item" routerLink="/gx-ops/finances" routerLinkActive="ops-nav__item--active">
+          <span class="ops-nav__icon">💰</span> Finanzas
+        </a>
+      </li>
+
+      <li class="ops-nav__section">Inventario</li>
+      <li>
+        <a class="ops-nav__item" routerLink="/gx-ops/inventory" routerLinkActive="ops-nav__item--active">
+          <span class="ops-nav__icon">📦</span> Inventario
+        </a>
+      </li>
+    </ul>
+
+    <div class="ops-sidebar__footer">
+      <p class="ops-sidebar__user">{{ operatorName }}</p>
+      <a class="ops-sidebar__link" routerLink="/home">← Volver a la tienda</a>
+    </div>
+  </nav>
+
+  <main class="ops-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

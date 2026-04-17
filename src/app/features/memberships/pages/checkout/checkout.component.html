@@ -1,16 +1,249 @@
-<section class="section">
-  <div class="container">
-    <div class="card wrap center">
-      <h1>Gestion de membresias</h1>
-      <p class="muted">
-        De momento puedes elegir tu plan desde la seccion de membresias.
-        Proximamente integraremos el checkout para activacion Premium.
+<!-- ══════════════════════════════════════════════════
+     AUTH GATE — usuario no autenticado
+══════════════════════════════════════════════════ -->
+<ng-container *ngIf="step === 'gate'">
+  <div class="mc-gate">
+    <div class="mc-gate__inner">
+
+      <div class="mc-gate__icon" aria-hidden="true">
+        <mat-icon>workspace_premium</mat-icon>
+      </div>
+
+      <h1 class="mc-gate__title">Necesitás una cuenta para ser miembro</h1>
+      <p class="mc-gate__sub">
+        Crea tu cuenta o inicia sesión para activar la membresía Premium y
+        empezar a ahorrar en cada compra.
       </p>
 
-      <div class="actions">
-        <a class="btn primary" routerLink="/memberships/plans">Ver planes</a>
-        <a class="btn ghost" routerLink="/catalog">Ir a la tienda</a>
+      <!-- Preview de beneficios en gate -->
+      <div class="mc-gate__perks">
+        <div class="mc-gate__perk" *ngFor="let p of plan.perks">
+          <mat-icon class="mc-gate__perk-icon">{{ p.icon }}</mat-icon>
+          <span>{{ p.label }}</span>
+        </div>
       </div>
+
+      <div class="mc-gate__price">
+        <strong class="mc-gate__price-value">Q{{ plan.price }}</strong>
+        <span class="mc-gate__price-label">/mes · sin contratos</span>
+      </div>
+
+      <div class="mc-gate__actions">
+        <a class="mc-btn mc-btn--primary" routerLink="/auth/register" [queryParams]="{ redirect: '/memberships/checkout' }">
+          <mat-icon>person_add</mat-icon>
+          Crear cuenta gratis
+        </a>
+        <a class="mc-btn mc-btn--outline" routerLink="/auth/login" [queryParams]="{ redirect: '/memberships/checkout' }">
+          Iniciar sesión
+        </a>
+      </div>
+
     </div>
   </div>
-</section>
+</ng-container>
+
+
+<!-- ══════════════════════════════════════════════════
+     CHECKOUT AUTENTICADO (pasos 1 y 2)
+══════════════════════════════════════════════════ -->
+<ng-container *ngIf="step === 'plan' || step === 'payment'">
+
+  <!-- Breadcrumb -->
+  <nav class="mc-breadcrumb" aria-label="Navegación de checkout">
+    <a class="mc-breadcrumb__link" routerLink="/memberships/plans">
+      <mat-icon>arrow_back</mat-icon>
+      Planes
+    </a>
+    <span class="mc-breadcrumb__sep" aria-hidden="true">/</span>
+    <span class="mc-breadcrumb__current">Checkout</span>
+  </nav>
+
+  <!-- Progress -->
+  <div class="mc-progress" aria-label="Paso {{ step === 'plan' ? '1' : '2' }} de 2">
+    <div class="mc-progress__step" [class.mc-progress__step--active]="step === 'plan'" [class.mc-progress__step--done]="step === 'payment'">
+      <span class="mc-progress__num">{{ step === 'payment' ? '' : '1' }}<mat-icon *ngIf="step === 'payment'">check</mat-icon></span>
+      <span class="mc-progress__label">Tu plan</span>
+    </div>
+    <div class="mc-progress__line" [class.mc-progress__line--done]="step === 'payment'"></div>
+    <div class="mc-progress__step" [class.mc-progress__step--active]="step === 'payment'">
+      <span class="mc-progress__num">2</span>
+      <span class="mc-progress__label">Pago</span>
+    </div>
+  </div>
+
+  <div class="mc-layout">
+
+    <!-- ── COLUMNA PRINCIPAL ── -->
+    <main class="mc-main">
+
+      <!-- PASO 1 — Confirmar plan -->
+      <section class="mc-card" *ngIf="step === 'plan'">
+        <h2 class="mc-card__title">Tu membresía</h2>
+
+        <!-- Plan highlight -->
+        <div class="mc-plan-highlight">
+          <div class="mc-plan-highlight__badge">
+            <mat-icon>workspace_premium</mat-icon>
+            MÁS POPULAR
+          </div>
+          <div class="mc-plan-highlight__body">
+            <div class="mc-plan-highlight__name">{{ plan.name }}</div>
+            <div class="mc-plan-highlight__billing">{{ plan.billing }}</div>
+          </div>
+          <div class="mc-plan-highlight__price">
+            <strong>Q{{ plan.price }}</strong>
+            <span>/mes</span>
+          </div>
+        </div>
+
+        <!-- Perks -->
+        <ul class="mc-perks">
+          <li class="mc-perk" *ngFor="let p of plan.perks">
+            <span class="mc-perk__icon" aria-hidden="true">
+              <mat-icon>{{ p.icon }}</mat-icon>
+            </span>
+            <span class="mc-perk__label">{{ p.label }}</span>
+          </li>
+        </ul>
+
+        <!-- Cuenta -->
+        <div class="mc-account-info" *ngIf="user">
+          <mat-icon class="mc-account-info__icon">account_circle</mat-icon>
+          <div>
+            <p class="mc-account-info__name">{{ user.username }}</p>
+            <p class="mc-account-info__email">{{ user.email }}</p>
+          </div>
+        </div>
+
+        <button class="mc-btn mc-btn--primary mc-btn--full" type="button" (click)="goToPayment()">
+          Continuar al pago
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </section>
+
+      <!-- PASO 2 — Formulario de pago -->
+      <section class="mc-card" *ngIf="step === 'payment'">
+        <button class="mc-back" type="button" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Volver
+        </button>
+        <h2 class="mc-card__title">Información de pago</h2>
+
+        <form [formGroup]="payForm" (ngSubmit)="submitPayment()" novalidate>
+
+          <!-- Nombre en tarjeta -->
+          <div class="mc-field" [class.mc-field--error]="isInvalid('cardName')">
+            <label class="mc-field__label" for="cardName">Nombre en la tarjeta</label>
+            <input
+              id="cardName"
+              class="mc-field__input"
+              type="text"
+              placeholder="Como aparece en la tarjeta"
+              formControlName="cardName"
+              autocomplete="cc-name"
+            />
+            <span class="mc-field__error" *ngIf="isInvalid('cardName')">
+              Ingresá el nombre tal como aparece en tu tarjeta.
+            </span>
+          </div>
+
+          <!-- Número de tarjeta -->
+          <div class="mc-field" [class.mc-field--error]="isInvalid('cardNumber')">
+            <label class="mc-field__label" for="cardNumber">Número de tarjeta</label>
+            <div class="mc-field__input-wrap">
+              <input
+                id="cardNumber"
+                class="mc-field__input"
+                type="text"
+                placeholder="1234 5678 9012 3456"
+                formControlName="cardNumber"
+                autocomplete="cc-number"
+                inputmode="numeric"
+                (input)="formatCardNumber($event)"
+              />
+              <span class="mc-field__icon" aria-hidden="true">
+                <mat-icon>credit_card</mat-icon>
+              </span>
+            </div>
+            <span class="mc-field__error" *ngIf="isInvalid('cardNumber')">
+              Ingresá los 16 dígitos de tu tarjeta.
+            </span>
+          </div>
+
+          <!-- Vencimiento + CVV -->
+          <div class="mc-field-row">
+            <div class="mc-field" [class.mc-field--error]="isInvalid('expiry')">
+              <label class="mc-field__label" for="expiry">Vencimiento</label>
+              <input
+                id="expiry"
+                class="mc-field__input"
+                type="text"
+                placeholder="MM/AA"
+                formControlName="expiry"
+                autocomplete="cc-exp"
+                inputmode="numeric"
+                (input)="formatExpiry($event)"
+              />
+              <span class="mc-field__error" *ngIf="isInvalid('expiry')">
+                Formato MM/AA
+              </span>
+            </div>
+
+            <div class="mc-field" [class.mc-field--error]="isInvalid('cvv')">
+              <label class="mc-field__label" for="cvv">CVV</label>
+              <input
+                id="cvv"
+                class="mc-field__input"
+                type="text"
+                placeholder="123"
+                formControlName="cvv"
+                autocomplete="cc-csc"
+                inputmode="numeric"
+                (input)="formatCvv($event)"
+              />
+              <span class="mc-field__error" *ngIf="isInvalid('cvv')">
+                CVV inválido
+              </span>
+            </div>
+          </div>
+
+          <!-- Aviso de cobro -->
+          <div class="mc-notice">
+            <mat-icon>info</mat-icon>
+            <p>
+              Se cobrará <strong>Q{{ plan.price }}/mes</strong> de forma automática.
+              Podés cancelar en cualquier momento desde tu cuenta sin penalización.
+            </p>
+          </div>
+
+          <!-- Error general -->
+          <div class="mc-error-banner" *ngIf="submitError">
+            <mat-icon>error_outline</mat-icon>
+            {{ submitError }}
+          </div>
+
+          <button
+            class="mc-btn mc-btn--primary mc-btn--full"
+            type="submit"
+            [disabled]="payForm.invalid || submitting"
+          >
+            <ng-container *ngIf="!submitting">
+              <mat-icon>lock</mat-icon>
+              Activar membresía — Q{{ plan.price }}/mes
+            </ng-container>
+            <ng-container *ngIf="submitting">
+              Procesando...
+            </ng-container>
+          </button>
+        </form>
+
+        <p class="mc-secure-note">
+          <mat-icon>verified_user</mat-icon>
+          Pago seguro con encriptación SSL
+        </p>
+      </section>
+
+    </main>
+
+  </div>
+</ng-container>

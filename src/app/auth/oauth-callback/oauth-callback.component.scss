@@ -1,0 +1,63 @@
+.callback-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #f8fafc;
+  padding: 24px;
+}
+
+.callback-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 48px 40px;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, .1);
+  text-align: center;
+  max-width: 380px;
+  width: 100%;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid #e5e7eb;
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: spin .75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 1.2rem;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+}
+
+.callback-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.callback-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.error-msg {
+  color: #dc2626;
+}

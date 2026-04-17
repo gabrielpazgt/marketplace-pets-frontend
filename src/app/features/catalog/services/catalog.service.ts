@@ -3,6 +3,7 @@ import { Observable, of } from 'rxjs';
 import { catchError, map, switchMap, timeout } from 'rxjs/operators';
 import { AppHttpError } from '../../../core/models/http.models';
 import {
+  StorefrontMedia,
   StorefrontProduct,
   StorefrontProductFacets,
   StorefrontProductsQuery,
@@ -13,6 +14,8 @@ import { Product } from '../models/product.model';
 export type CatalogCollectionTag = 'new' | 'clearance';
 
 export interface CatalogQuery {
+  animalKey?: string;
+  categorySlug?: string;
   category?: string | null;
   subcategory?: string | null;
   allowedSubcategories?: string[];
@@ -26,11 +29,11 @@ export interface CatalogQuery {
   inStock?: boolean;
   strictPet?: boolean;
   excludedTerms?: string[];
-  form?: string | null;
-  proteinSource?: string | null;
-  brandId?: number | null;
-  specieId?: number | null;
-  lifeStageId?: number | null;
+  forms?: string[];
+  proteinSources?: string[];
+  brandIds?: number[];
+  specieIds?: number[];
+  lifeStageIds?: number[];
   dietTagIds?: number[];
   healthConditionIds?: number[];
   ingredientIds?: number[];
@@ -287,6 +290,11 @@ export class CatalogService {
     compact = false
   ): StorefrontProductsQuery {
     const normalizedCategory = this.normalizeCategory(query.category);
+    const forms = this.normalizeTextList(query.forms);
+    const proteinSources = this.normalizeTextList(query.proteinSources);
+    const brandIds = (query.brandIds || []).filter((value) => Number(value) > 0);
+    const specieIds = (query.specieIds || []).filter((value) => Number(value) > 0);
+    const lifeStageIds = (query.lifeStageIds || []).filter((value) => Number(value) > 0);
 
     const storefrontQuery: StorefrontProductsQuery = {
       page: Math.max(1, query.page ?? 1),
@@ -297,13 +305,20 @@ export class CatalogService {
       inStock: query.inStock ?? true,
       minPrice: query.min,
       maxPrice: query.max,
+      animalKey: query.animalKey || undefined,
+      categorySlug: query.categorySlug || undefined,
       category: normalizedCategory,
       subcategory: (query.subcategory || '').trim() || undefined,
-      form: (query.form || '').trim() || undefined,
-      proteinSource: (query.proteinSource || '').trim() || undefined,
-      brandId: Number(query.brandId || 0) > 0 ? Number(query.brandId) : undefined,
-      specieId: Number(query.specieId || 0) > 0 ? Number(query.specieId) : undefined,
-      lifeStageId: Number(query.lifeStageId || 0) > 0 ? Number(query.lifeStageId) : undefined,
+      form: forms.length === 1 ? forms[0] : undefined,
+      forms: forms.length ? forms : undefined,
+      proteinSource: proteinSources.length === 1 ? proteinSources[0] : undefined,
+      proteinSources: proteinSources.length ? proteinSources : undefined,
+      brandId: brandIds.length === 1 ? Number(brandIds[0]) : undefined,
+      brandIds: brandIds.length ? brandIds : undefined,
+      specieId: specieIds.length === 1 ? Number(specieIds[0]) : undefined,
+      specieIds: specieIds.length ? specieIds : undefined,
+      lifeStageId: lifeStageIds.length === 1 ? Number(lifeStageIds[0]) : undefined,
+      lifeStageIds: lifeStageIds.length ? lifeStageIds : undefined,
       dietTagIds: (query.dietTagIds || []).filter((value) => Number(value) > 0),
       healthConditionIds: (query.healthConditionIds || []).filter((value) => Number(value) > 0),
       ingredientIds: (query.ingredientIds || []).filter((value) => Number(value) > 0),
@@ -397,6 +412,13 @@ export class CatalogService {
       subcategory: item.subcategory || undefined,
       tags: this.resolveTags(item),
       stock: Number(item.stock || 0),
+      variants: (item.variants || []).map(v => ({
+        id: v.id,
+        label: v.label || '',
+        price: Number(v.price || 0),
+        compareAtPrice: Number(v.compareAtPrice || 0) > Number(v.price || 0) ? Number(v.compareAtPrice) : undefined,
+        stock: typeof v.stock === 'number' ? v.stock : null,
+      })),
     };
   }
 
@@ -413,8 +435,12 @@ export class CatalogService {
   }
 
   private resolveBadge(item: StorefrontProduct): Product['badge'] {
-    const stock = Number(item.stock || 0);
+    // compareAtPrice discount always has priority
     if (this.getDiscountPercentage(item) > 0) return 'SALE';
+    // Manual badge set in Strapi admin
+    if (item.badge === 'NEW' || item.badge === 'TOP' || item.badge === 'SALE') return item.badge;
+    // Auto TOP from low stock
+    const stock = Number(item.stock || 0);
     if (stock <= 0) return null;
     if (stock <= 5) return 'TOP';
     return null;
@@ -440,6 +466,16 @@ export class CatalogService {
       new Set(
         (values || [])
           .map((value) => this.normalizeSubcategoryValue(value))
+          .filter(Boolean)
+      )
+    );
+  }
+
+  private normalizeTextList(values?: Array<string | null | undefined> | null): string[] {
+    return Array.from(
+      new Set(
+        (values || [])
+          .map((value) => String(value || '').trim())
           .filter(Boolean)
       )
     );
@@ -604,9 +640,9 @@ export class CatalogService {
   }
 
   private collectTaxonomyFacet(
-    values: Array<{ id: number; name?: string; slug?: string | null } | null | undefined>
+    values: Array<{ id: number; name?: string; slug?: string | null; logo?: StorefrontMedia | null } | null | undefined>
   ): Array<{ id: number; name: string; slug?: string | null; count: number }> {
-    const counts = new Map<number, { id: number; name: string; slug?: string | null; count: number }>();
+    const counts = new Map<number, { id: number; name: string; slug?: string | null; logo?: StorefrontMedia | null; count: number }>();
 
     for (const item of values || []) {
       const id = Number(item?.id || 0);
@@ -621,6 +657,7 @@ export class CatalogService {
           id,
           name,
           slug: item?.slug || null,
+          logo: item?.logo || null,
           count: 1,
         });
       }

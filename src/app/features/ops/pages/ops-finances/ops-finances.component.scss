@@ -1,0 +1,169 @@
+.ops-page { display: grid; gap: 24px; }
+.ops-page__head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+/* ── Head actions (mode toggle + export) ── */
+.head-actions { display: flex; align-items: center; gap: 10px; }
+
+/* ── Mode tabs ── */
+.mode-tabs {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.mode-tab {
+  padding: 6px 18px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-size: .8rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+
+  &--active {
+    background: #fff;
+    color: #0f172a;
+    box-shadow: 0 1px 4px rgba(0,0,0,.1);
+  }
+}
+.ops-page__title { margin: 0; font-size: 1.6rem; font-weight: 900; color: #0f172a; }
+
+.loading-state { display: flex; align-items: center; gap: 12px; color: #64748b; }
+.spinner { width: 24px; height: 24px; border: 2px solid #e5e7eb; border-top-color: var(--brand); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-msg { color: #dc2626; font-weight: 600; }
+
+/* ── Month navigator ── */
+.month-nav {
+  display: flex; align-items: center; gap: 16px;
+  background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 16px 20px;
+}
+.nav-btn {
+  width: 36px; height: 36px; border-radius: 8px; border: 1.5px solid #e2e8f0;
+  background: #f8fafc; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  &:hover { background: #e2e8f0; }
+  &:disabled { opacity: .4; cursor: default; }
+}
+.month-label { font-size: 1.1rem; font-weight: 800; color: #0f172a; min-width: 180px; text-align: center; }
+.apply-btn { margin-left: auto; }
+
+/* ── Buttons ── */
+.ops-btn {
+  padding: 8px 18px; border-radius: 8px; font-size: .85rem; font-weight: 700; cursor: pointer; border: none; transition: background .15s;
+  &--primary { background: var(--brand); color: #fff; &:hover { opacity: .88; } &:disabled { opacity: .5; cursor: default; } }
+  &--ghost { background: transparent; color: var(--brand-700); border: 1.5px solid var(--brand-200); &:hover { background: var(--brand-50); } }
+}
+
+/* ── KPI Cards ── */
+.metrics-grid {
+  display: grid; gap: 16px;
+  &--3 { grid-template-columns: repeat(3, 1fr); }
+  &--4 { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 1100px) { .metrics-grid--4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px)  { .metrics-grid--3 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px)  {
+  .metrics-grid--3, .metrics-grid--4 { grid-template-columns: 1fr; }
+}
+
+.metric-card {
+  display: flex; align-items: center; gap: 16px;
+  background: #fff; border-radius: 16px; padding: 20px;
+  border: 1px solid #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  &--green .metric-card__value { color: #16a34a; }
+  &--blue .metric-card__value { color: #2563eb; }
+  &--red .metric-card__value { color: #dc2626; }
+  &--purple .metric-card__value { color: #7c3aed; }
+}
+.metric-card__icon { font-size: 1.8rem; }
+.metric-card__value { margin: 0; font-size: 1.4rem; font-weight: 900; color: #0f172a; line-height: 1.1; }
+.metric-card__label { margin: 0; font-size: .78rem; color: #64748b; font-weight: 600; margin-top: 2px; }
+
+/* ── Side by side ── */
+.side-by-side { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .side-by-side { grid-template-columns: 1fr; } }
+
+/* ── Card ── */
+.ops-card {
+  background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 20px;
+  &__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  &__title { margin: 0 0 16px; font-size: 1rem; font-weight: 800; color: #0f172a; }
+}
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; }
+.ops-table {
+  width: 100%; border-collapse: collapse; font-size: .875rem;
+  th { text-align: left; padding: 8px 12px; color: #64748b; font-weight: 700; font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f8fafc; color: #1e293b; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafc; }
+  .num { text-align: right; }
+  .bold { font-weight: 800; }
+  .muted { color: #94a3b8; }
+  .mono { font-family: monospace; font-size: .82rem; }
+  .font-bold { font-weight: 700; }
+
+  &--compact td, &--compact th { padding: 7px 10px; }
+
+  tfoot .totals-row td {
+    background: #f8fafc;
+    border-top: 2px solid #e2e8f0;
+    font-size: .9rem;
+  }
+}
+
+.commission-amount { color: #d97706; }
+.commission-total { font-size: .85rem; color: #64748b; strong { color: #d97706; font-size: 1rem; } }
+
+/* ── Annual table ── */
+.annual-table-card .ops-card__title { margin-bottom: 12px; }
+
+.annual-table {
+  min-width: 600px;
+
+  .month-cell {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-weight: 600;
+  }
+
+  .month-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #e2e8f0; flex-shrink: 0;
+
+    &--current { background: #f59e0b; box-shadow: 0 0 0 3px #fef3c7; }
+  }
+
+  &__row--current td {
+    background: #fffbeb;
+    font-weight: 700;
+  }
+
+  &__row--empty td { color: #94a3b8; }
+
+  .red  { color: #dc2626; }
+  .green { color: #16a34a; }
+}
+
+.annual-totals-row td {
+  background: #0f172a !important;
+  color: #e2e8f0 !important;
+  border-top: 2px solid #1e293b !important;
+  font-size: .9rem;
+
+  strong { color: #fff; }
+  &.green strong { color: #4ade80; }
+  &.red strong { color: #f87171; }
+}
+
+/* ── Misc ── */
+.stat-big { margin: 8px 0 0; font-size: 2.4rem; font-weight: 900; color: var(--brand-700); }
+.muted-text { color: #64748b; font-size: .85rem; margin: 4px 0 0; }
+.empty-state { padding: 32px 0; text-align: center; color: #94a3b8; font-size: .9rem; }
+.empty-text { color: #94a3b8; font-size: .85rem; margin: 12px 0 0; }

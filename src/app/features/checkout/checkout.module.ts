@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 
 import { CheckoutRoutingModule } from './checkout-routing.module';
 
@@ -29,6 +30,7 @@ import { CheckoutSuccessComponent } from './pages/checkout-success/checkout-succ
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
+    MatIconModule,
     CheckoutRoutingModule
   ]
 })

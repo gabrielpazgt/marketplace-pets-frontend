@@ -1,103 +1,198 @@
-<h2 class="title">1) Contacto y envío</h2>
-<p class="muted">Ingresa tus datos de contacto y dirección para continuar.</p>
+<!-- Auth modal — guests -->
+<div class="co-modal-overlay" *ngIf="showAuthModal && !isLoggedIn" role="dialog" aria-modal="true">
+  <div class="co-modal">
+    <div class="co-modal__icon"><mat-icon>storefront</mat-icon></div>
+    <h2 class="co-modal__title">¿Cómo querés comprar?</h2>
+    <p class="co-modal__sub">Continuá como invitado o iniciá sesión para usar tus datos guardados y ver el historial de pedidos.</p>
 
-<section class="account-choice card" aria-label="Opciones de compra">
-  <div class="choice-head">
-    <h3>¿Cómo quieres comprar?</h3>
-    <p class="muted" *ngIf="!isLoggedIn">Puedes continuar como invitado o iniciar sesión para usar tus datos guardados.</p>
-    <p class="muted" *ngIf="isLoggedIn && authUser">Estás comprando con tu cuenta: <strong>{{ authUser.email }}</strong></p>
+    <div class="co-modal__actions">
+      <button class="co-btn co-btn--primary" type="button" (click)="continueAsGuest()">
+        <mat-icon>shopping_bag</mat-icon>
+        Comprar sin cuenta
+      </button>
+      <a class="co-btn co-btn--outline" routerLink="/auth/login" [queryParams]="authQueryParams">
+        <mat-icon>login</mat-icon>
+        Iniciar sesión
+      </a>
+    </div>
+
+    <p class="co-modal__foot">
+      ¿Aún no tenés cuenta?
+      <a routerLink="/auth/register" [queryParams]="authQueryParams">Crear cuenta</a>
+    </p>
   </div>
+</div>
 
-  <div class="choice-actions" *ngIf="!isLoggedIn">
-    <button class="btn" type="button" [class.primary]="checkoutMode === 'guest'" [class.ghost]="checkoutMode !== 'guest'" (click)="setCheckoutMode('guest')">
-      Comprar sin cuenta
+<!-- Step card header -->
+<div class="co-head">
+  <div class="co-head__icon"><mat-icon>person</mat-icon></div>
+  <div>
+    <h2 class="co-head__title">Información de contacto</h2>
+    <p class="co-head__sub">Te enviaremos la confirmación aquí.</p>
+  </div>
+</div>
+
+<!-- Saved addresses (logged in) -->
+<section class="co-saved" *ngIf="isLoggedIn && (savedAddresses.length > 0 || loadingAddresses)">
+  <h3 class="co-saved__title">Tus direcciones guardadas</h3>
+  <div class="co-saved__loading" *ngIf="loadingAddresses">
+    Cargando direcciones...
+  </div>
+  <div class="co-saved__list" *ngIf="!loadingAddresses">
+    <button
+      *ngFor="let a of savedAddresses"
+      type="button"
+      class="co-addr-card"
+      [class.co-addr-card--default]="a.isDefault"
+      (click)="applyAddress(a)"
+    >
+      <mat-icon class="co-addr-card__icon">location_on</mat-icon>
+      <div>
+        <span class="co-addr-card__badge" *ngIf="a.isDefault">Principal</span>
+        <p class="co-addr-card__name">{{ a.fullName }}</p>
+        <p class="co-addr-card__line">{{ a.addressLine1 }}</p>
+        <p class="co-addr-card__line">{{ a.city }}, Guatemala</p>
+      </div>
     </button>
-    <a class="btn ghost" routerLink="/auth/login" [queryParams]="authQueryParams">Iniciar sesión</a>
   </div>
-
-  <p class="choice-foot" *ngIf="!isLoggedIn">
-    ¿Aún no tienes cuenta?
-    <a routerLink="/auth/register" [queryParams]="authQueryParams">Crear cuenta</a>
-  </p>
 </section>
 
-<form [formGroup]="form" (ngSubmit)="submit()" class="form-grid" novalidate>
-  <div class="field">
-    <label>Email *</label>
-    <input class="input" formControlName="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" />
-    <small *ngIf="form.get('email')?.invalid && form.get('email')?.touched" class="err">Ingresa un email válido</small>
+<!-- Main form -->
+<form [formGroup]="form" (ngSubmit)="submit()" class="co-form" novalidate>
+
+  <!-- Email -->
+  <div class="co-field" [class.co-field--error]="form.get('email')?.invalid && form.get('email')?.touched">
+    <label class="co-field__label" for="co-email">Correo electrónico <span aria-hidden="true">*</span></label>
+    <div class="co-field__wrap">
+      <mat-icon class="co-field__icon">mail</mat-icon>
+      <input id="co-email" class="co-field__input co-field__input--icon" formControlName="email"
+             type="email" placeholder="tu@correo.com" autocomplete="email" />
+    </div>
+    <small class="co-field__err" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+      Ingresá un correo válido.
+    </small>
   </div>
 
-  <div class="field">
-    <label>Teléfono (opcional)</label>
-    <input class="input" formControlName="phone" inputmode="numeric" placeholder="+502 5555-5555" autocomplete="tel" (input)="onPhoneInput($event)" />
-  </div>
-
-  <div class="field">
-    <label>Nombres *</label>
-    <input class="input" formControlName="firstName" placeholder="Gabriel" autocomplete="given-name" />
-    <small *ngIf="form.get('firstName')?.invalid && form.get('firstName')?.touched" class="err">Campo requerido</small>
-  </div>
-
-  <div class="field">
-    <label>Apellidos *</label>
-    <input class="input" formControlName="lastName" placeholder="Paz" autocomplete="family-name" />
-    <small *ngIf="form.get('lastName')?.invalid && form.get('lastName')?.touched" class="err">Campo requerido</small>
-  </div>
-
-  <div formGroupName="address" class="address">
-    <div class="field">
-      <label>País *</label>
-      <input class="input" formControlName="country" readonly />
+  <!-- Nombre + Apellido -->
+  <div class="co-row">
+    <div class="co-field" [class.co-field--error]="form.get('firstName')?.invalid && form.get('firstName')?.touched">
+      <label class="co-field__label" for="co-fname">Nombre <span aria-hidden="true">*</span></label>
+      <input id="co-fname" class="co-field__input" formControlName="firstName"
+             placeholder="Gabriel" autocomplete="given-name" />
+      <small class="co-field__err" *ngIf="form.get('firstName')?.invalid && form.get('firstName')?.touched">Requerido.</small>
     </div>
-
-    <div class="field">
-      <label>Departamento *</label>
-      <select class="input" formControlName="department" (change)="onDepartmentChange()">
-        <option value="">Selecciona...</option>
-        <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
-      </select>
-      <small *ngIf="form.get('address.department')?.invalid && form.get('address.department')?.touched" class="err">Campo requerido</small>
-    </div>
-
-    <div class="field">
-      <label>Municipio *</label>
-      <select class="input" formControlName="municipality">
-        <option value="">Selecciona...</option>
-        <option *ngFor="let m of municipalities" [value]="m">{{ m }}</option>
-      </select>
-      <small *ngIf="form.get('address.municipality')?.invalid && form.get('address.municipality')?.touched" class="err">Campo requerido</small>
-    </div>
-
-    <div class="field col-span-2">
-      <label>Dirección *</label>
-      <input class="input" formControlName="line1" placeholder="Calle, número, colonia..." autocomplete="street-address" />
-      <small *ngIf="form.get('address.line1')?.invalid && form.get('address.line1')?.touched" class="err">Campo requerido</small>
-    </div>
-
-    <div class="field">
-      <label>Complemento</label>
-      <input class="input" formControlName="line2" placeholder="Apartamento, interior, etc." />
-    </div>
-
-    <div class="field">
-      <label>Referencia de entrega</label>
-      <input class="input" formControlName="references" placeholder="Color de casa, pasaje, local cercano..." />
-    </div>
-
-    <div class="field">
-      <label>Código postal</label>
-      <input class="input" formControlName="postalCode" inputmode="numeric" placeholder="00000" />
+    <div class="co-field" [class.co-field--error]="form.get('lastName')?.invalid && form.get('lastName')?.touched">
+      <label class="co-field__label" for="co-lname">Apellido <span aria-hidden="true">*</span></label>
+      <input id="co-lname" class="co-field__input" formControlName="lastName"
+             placeholder="Paz" autocomplete="family-name" />
+      <small class="co-field__err" *ngIf="form.get('lastName')?.invalid && form.get('lastName')?.touched">Requerido.</small>
     </div>
   </div>
 
-  <label class="check">
+  <!-- Teléfono -->
+  <div class="co-field">
+    <label class="co-field__label" for="co-phone">
+      Teléfono
+      <span class="co-field__opt">(para notificaciones de envío)</span>
+    </label>
+    <div class="co-field__wrap">
+      <mat-icon class="co-field__icon">phone</mat-icon>
+      <input id="co-phone" class="co-field__input co-field__input--icon" formControlName="phone"
+             inputmode="numeric" placeholder="+502 5555 0000" autocomplete="tel"
+             (input)="onPhoneInput($event)" />
+    </div>
+  </div>
+
+  <!-- NIT -->
+  <div class="co-field">
+    <label class="co-field__label" for="co-nit">
+      NIT
+      <span class="co-field__opt">(para factura)</span>
+    </label>
+    <input id="co-nit" class="co-field__input" formControlName="nit"
+           placeholder="CF o tu NIT" autocomplete="off" />
+  </div>
+
+  <!-- Dirección section header -->
+  <div class="co-section-head">
+    <div class="co-section-head__icon"><mat-icon>location_on</mat-icon></div>
+    <div>
+      <h3 class="co-section-head__title">Dirección de envío</h3>
+      <p class="co-section-head__sub">¿A dónde entregamos tu pedido?</p>
+    </div>
+  </div>
+
+  <div formGroupName="address" class="co-form__address">
+
+    <!-- Dirección -->
+    <div class="co-field co-field--full" [class.co-field--error]="form.get('address.line1')?.invalid && form.get('address.line1')?.touched">
+      <label class="co-field__label" for="co-line1">Dirección <span aria-hidden="true">*</span></label>
+      <div class="co-field__wrap">
+        <mat-icon class="co-field__icon">home</mat-icon>
+        <input id="co-line1" class="co-field__input co-field__input--icon" formControlName="line1"
+               placeholder="6ta Avenida 12-34" autocomplete="street-address" />
+      </div>
+      <small class="co-field__err" *ngIf="form.get('address.line1')?.invalid && form.get('address.line1')?.touched">Campo requerido.</small>
+    </div>
+
+    <!-- Referencia -->
+    <div class="co-field co-field--full">
+      <label class="co-field__label" for="co-ref">
+        Referencia
+        <span class="co-field__opt">(opcional)</span>
+      </label>
+      <input id="co-ref" class="co-field__input" formControlName="references"
+             placeholder="Edificio azul, apto 4B, casa con portón negro..." />
+    </div>
+
+    <!-- Departamento + Municipio -->
+    <div class="co-row">
+      <div class="co-field" [class.co-field--error]="form.get('address.department')?.invalid && form.get('address.department')?.touched">
+        <label class="co-field__label" for="co-dept">Departamento <span aria-hidden="true">*</span></label>
+        <div class="co-field__wrap co-field__wrap--select">
+          <select id="co-dept" class="co-field__input co-field__input--select"
+                  formControlName="department" (change)="onDepartmentChange()">
+            <option value="">Elegir...</option>
+            <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
+          </select>
+          <mat-icon class="co-field__icon co-field__icon--right">expand_more</mat-icon>
+        </div>
+        <small class="co-field__err" *ngIf="form.get('address.department')?.invalid && form.get('address.department')?.touched">Requerido.</small>
+      </div>
+
+      <div class="co-field" [class.co-field--error]="form.get('address.municipality')?.invalid && form.get('address.municipality')?.touched">
+        <label class="co-field__label" for="co-muni">Ciudad / Municipio <span aria-hidden="true">*</span></label>
+        <div class="co-field__wrap co-field__wrap--select">
+          <select id="co-muni" class="co-field__input co-field__input--select"
+                  formControlName="municipality">
+            <option value="">Elegir...</option>
+            <option *ngFor="let m of municipalities" [value]="m">{{ m }}</option>
+          </select>
+          <mat-icon class="co-field__icon co-field__icon--right">expand_more</mat-icon>
+        </div>
+        <small class="co-field__err" *ngIf="form.get('address.municipality')?.invalid && form.get('address.municipality')?.touched">Requerido.</small>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Save info checkbox -->
+  <label class="co-check" *ngIf="isLoggedIn">
     <input type="checkbox" formControlName="saveInfo" />
-    <span>Guardar esta información para la próxima compra</span>
+    <span class="co-check__box"></span>
+    <span>Guardar esta dirección para futuros pedidos</span>
   </label>
 
-  <div class="actions">
-    <a routerLink="/cart" class="btn ghost">Volver al carrito</a>
-    <button class="btn primary" type="submit">Continuar</button>
+  <!-- Actions -->
+  <div class="co-actions">
+    <a routerLink="/cart" class="co-btn co-btn--ghost">
+      <mat-icon>arrow_back</mat-icon>
+      Carrito
+    </a>
+    <button class="co-btn co-btn--primary" type="submit" [disabled]="form.invalid">
+      Continuar a Envío
+      <mat-icon>chevron_right</mat-icon>
+    </button>
   </div>
+
 </form>

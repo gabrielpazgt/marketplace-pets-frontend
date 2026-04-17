@@ -15,6 +15,15 @@ export class MembershipComponent implements OnInit, OnDestroy {
   saving = false;
   message = '';
 
+  readonly benefits = [
+    { icon: 'percent',        title: '5% de descuento',       desc: 'Se aplica automáticamente en cada pedido' },
+    { icon: 'local_shipping', title: 'Envío gratis',           desc: 'En todos los pedidos estándar, sin mínimo' },
+    { icon: 'notifications',  title: 'Alertas anticipadas',    desc: 'Lanzamientos y ofertas antes que nadie' },
+    { icon: 'support_agent',  title: 'Soporte prioritario',    desc: 'Atención directa por WhatsApp' },
+    { icon: 'cake',           title: 'Regalo de cumpleaños',   desc: 'Sorpresa especial para tu mascota' },
+    { icon: 'pets',           title: 'Perfil de mascota',      desc: 'Recomendaciones personalizadas' },
+  ];
+
   private readonly subscriptions = new Subscription();
 
   constructor(
@@ -47,6 +56,14 @@ export class MembershipComponent implements OnInit, OnDestroy {
 
   isCurrentPlan(planId: PlanId): boolean {
     return this.currentPlan === planId;
+  }
+
+  get isPremium(): boolean {
+    return this.currentPlan === 'premium';
+  }
+
+  get premiumPlan(): Plan | undefined {
+    return this.plans.find(p => p.id === 'premium');
   }
 
   selectPlan(planId: PlanId): void {

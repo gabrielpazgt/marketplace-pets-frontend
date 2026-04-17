@@ -1,12 +1,49 @@
-<section class="section">
-  <div class="container">
-    <div class="card wrap center">
-      <h1>Plan activado</h1>
-      <p class="muted">Tu cuenta ya cuenta con un plan de membresía activo.</p>
-      <div class="actions">
-        <a class="btn primary" routerLink="/account/membership">Ver mi membresía</a>
-        <a class="btn ghost" routerLink="/home">Volver al inicio</a>
+<div class="ms-success">
+
+  <!-- Icon + heading -->
+  <div class="ms-success__hero" aria-live="polite">
+    <div class="ms-success__crown" aria-hidden="true">
+      <mat-icon>workspace_premium</mat-icon>
+    </div>
+
+    <div class="ms-success__badge">
+      <mat-icon>check_circle</mat-icon>
+      Membresía activada
+    </div>
+
+    <h1 class="ms-success__title">¡Ya sos miembro Premium!</h1>
+
+    <p class="ms-success__sub" *ngIf="user">
+      Tu cuenta <strong>{{ user.email }}</strong> ya tiene acceso a todos los beneficios.
+    </p>
+    <p class="ms-success__sub" *ngIf="!user">
+      Tu membresía Premium está activa y lista para usar.
+    </p>
+  </div>
+
+  <!-- Benefits grid -->
+  <div class="ms-benefits">
+    <h2 class="ms-benefits__title">Tus beneficios activos</h2>
+    <div class="ms-benefits__grid">
+      <div class="ms-benefit" *ngFor="let b of benefits">
+        <div class="ms-benefit__icon" aria-hidden="true">
+          <mat-icon>{{ b.icon }}</mat-icon>
+        </div>
+        <span class="ms-benefit__label">{{ b.label }}</span>
       </div>
     </div>
   </div>
-</section>
+
+  <!-- CTAs -->
+  <div class="ms-success__actions">
+    <a class="ms-btn ms-btn--primary" routerLink="/catalog">
+      <mat-icon>storefront</mat-icon>
+      Ir a la tienda
+    </a>
+    <a class="ms-btn ms-btn--outline" routerLink="/account/membership">
+      <mat-icon>manage_accounts</mat-icon>
+      Ver mi membresía
+    </a>
+  </div>
+
+</div>

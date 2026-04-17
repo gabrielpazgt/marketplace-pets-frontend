@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { MembershipsService } from '../../../memberships/services/memberships.service';
-import { Product } from '../../models/product.model';
+import { Product, ProductVariantRef } from '../../models/product.model';
 
 @Component({
   standalone: false,
@@ -12,12 +12,38 @@ import { Product } from '../../models/product.model';
 export class ProductCardComponent {
   @Input() product!: Product;
   @Input() loading = false;
-  @Output() addToCart = new EventEmitter<void>();
+  @Output() addToCart = new EventEmitter<string | undefined>();
+
+  selectedVariantId = '';
 
   constructor(private memberships: MembershipsService) {}
 
+  get selectedVariant(): ProductVariantRef | null {
+    if (!this.product?.variants?.length) return null;
+    return this.product.variants.find(v => v.id === this.selectedVariantId) ?? this.product.variants[0];
+  }
+
+  get activePrice(): number {
+    return this.selectedVariant?.price ?? this.product?.price ?? 0;
+  }
+
+  get activeOldPrice(): number | undefined {
+    const variantCap = this.selectedVariant?.compareAtPrice;
+    return variantCap ?? this.product?.oldPrice;
+  }
+
+  get activeStock(): number {
+    if (this.selectedVariant) {
+      return typeof this.selectedVariant.stock === 'number' ? this.selectedVariant.stock : (this.product?.stock ?? 0);
+    }
+    return this.product?.stock ?? 0;
+  }
+
   get discount(): number | null {
-    return this.product.oldPrice ? Math.round(100 - (this.product.price * 100) / this.product.oldPrice) : null;
+    const price = this.activePrice;
+    const old = this.activeOldPrice;
+    if (!old || price <= 0 || old <= price) return null;
+    return Math.round(((old - price) / old) * 100);
   }
 
   get membershipDiscountPct(): number {
@@ -25,6 +51,10 @@ export class ProductCardComponent {
   }
 
   get membershipPrice(): number {
-    return this.memberships.priceWithMembership(this.product.price, 'premium');
+    return this.memberships.priceWithMembership(this.activePrice, 'premium');
+  }
+
+  selectVariant(variantId: string): void {
+    this.selectedVariantId = variantId;
   }
 }

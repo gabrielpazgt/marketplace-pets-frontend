@@ -1,21 +1,61 @@
-﻿<section class="success card">
-  <div class="mark" aria-hidden="true">OK</div>
-
-  <h2>Pedido realizado</h2>
-  <p class="lead">Gracias por tu compra. Tu pedido ya fue registrado y sera procesado pronto.</p>
-
-  <div class="order" *ngIf="order">
-    <span>Numero de pedido</span>
-    <div class="order-code-wrap">
-      <strong class="order-code">{{ order }}</strong>
-      <button type="button" class="copy-btn" (click)="copyOrder()">
-        {{ copied ? 'Copiado' : 'Copiar' }}
-      </button>
-    </div>
+<!-- Success icon -->
+<div class="sx-icon-wrap">
+  <div class="sx-icon">
+    <mat-icon>check_circle</mat-icon>
   </div>
+</div>
 
-  <div class="actions">
-    <a routerLink="/catalog" class="btn ghost">Seguir comprando</a>
-    <a routerLink="/account/orders" class="btn primary">Ver historial</a>
+<!-- Badge -->
+<div class="sx-badge">Pedido confirmado</div>
+
+<!-- Title -->
+<h1 class="sx-title">¡Tu pedido está en camino!</h1>
+<p class="sx-sub">
+  Tu pedido ya fue registrado y será procesado pronto.
+</p>
+
+<!-- Order number -->
+<div class="sx-order" *ngIf="order">
+  <span class="sx-order__label">Número de pedido</span>
+  <div class="sx-order__code-wrap">
+    <strong class="sx-order__code">{{ order }}</strong>
+    <button type="button" class="sx-order__copy" (click)="copyOrder()">
+      <mat-icon>{{ copied ? 'check' : 'content_copy' }}</mat-icon>
+      {{ copied ? 'Copiado' : 'Copiar' }}
+    </button>
   </div>
-</section>
+</div>
+
+<!-- Estimated delivery -->
+<div class="sx-eta">
+  <mat-icon>schedule</mat-icon>
+  <span>Entrega estimada en <strong>3-5 días hábiles</strong></span>
+</div>
+
+<!-- Actions -->
+<div class="sx-actions">
+  <a routerLink="/catalog" class="sx-btn sx-btn--outline">
+    <mat-icon>storefront</mat-icon>
+    Seguir comprando
+  </a>
+  <a routerLink="/account/orders" class="sx-btn sx-btn--primary">
+    <mat-icon>inventory_2</mat-icon>
+    Ver mis pedidos
+  </a>
+</div>
+
+<!-- Trust strip -->
+<div class="sx-trust">
+  <span class="sx-trust-item">
+    <mat-icon>verified_user</mat-icon>
+    Compra segura
+  </span>
+  <span class="sx-trust-item">
+    <mat-icon>local_shipping</mat-icon>
+    Envío rastreable
+  </span>
+  <span class="sx-trust-item">
+    <mat-icon>pets</mat-icon>
+    Aprobado por vets
+  </span>
+</div>

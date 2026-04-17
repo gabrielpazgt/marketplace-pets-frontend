@@ -1,155 +1,172 @@
-﻿<h2 class="title">3) Pago</h2>
-<p class="muted">Selecciona tu metodo de pago y completa los datos requeridos.</p>
+<!-- Card header -->
+<div class="py-head">
+  <div class="py-head__icon"><mat-icon>credit_card</mat-icon></div>
+  <div>
+    <h2 class="py-head__title">Información de pago</h2>
+    <p class="py-head__sub">
+      <mat-icon class="py-head__lock">lock</mat-icon>
+      Tu información está encriptada y segura.
+    </p>
+  </div>
+</div>
 
-<form [formGroup]="form" (ngSubmit)="payNow()" class="payment-form" novalidate>
-  <div class="pay-kind" role="radiogroup" aria-label="Metodo de pago">
-    <label class="pill" [class.on]="kind === 'card'">
-      <input
-        type="radio"
-        name="kind"
-        value="card"
-        formControlName="kind"
-        [checked]="kind === 'card'"
-        (change)="onKindChange()" />
-      <span class="icon" aria-hidden="true">💳</span>
+<form [formGroup]="form" (ngSubmit)="payNow()" class="py-form" novalidate>
+
+  <!-- Payment method tabs -->
+  <div class="py-tabs" role="radiogroup" aria-label="Método de pago">
+    <label class="py-tab" [class.py-tab--on]="kind === 'card'">
+      <input type="radio" name="kind" value="card" formControlName="kind" (change)="onKindChange()" />
+      <mat-icon>credit_card</mat-icon>
       Tarjeta
     </label>
-
-    <label class="pill" [class.on]="kind === 'bank'">
-      <input
-        type="radio"
-        name="kind"
-        value="bank"
-        formControlName="kind"
-        (change)="onKindChange()" />
-      <span class="icon" aria-hidden="true">🏦</span>
-      Transferencia
+    <label class="py-tab py-tab--disabled">
+      <input type="radio" name="kind" value="bank" formControlName="kind" (change)="onKindChange()" />
+      <mat-icon>account_balance</mat-icon>
+      Depósito / Transferencia
     </label>
-
   </div>
 
-  <section *ngIf="kind === 'card'" class="box card-form" formGroupName="card">
-    <header class="box-header">
-      <h3>Tarjeta</h3>
-      <span class="brand-pill" [ngClass]="brandClass">{{ brandLabel }}</span>
-    </header>
+  <!-- Card form -->
+  <div class="py-card-form" *ngIf="kind === 'card'" formGroupName="card">
 
-    <div class="grid">
-      <div class="field col-span-2">
-        <label>Nombre en la tarjeta *</label>
+    <!-- Number -->
+    <div class="py-field py-field--full">
+      <label class="py-field__label" for="py-number">Número de tarjeta</label>
+      <div class="py-field__wrap">
+        <mat-icon class="py-field__icon">credit_card</mat-icon>
         <input
-          class="input"
-          formControlName="holder"
-          placeholder="Como aparece en la tarjeta"
-          autocomplete="cc-name"
-          (input)="onHolderInput($event)" />
-        <small
-          *ngIf="form.get('card.holder')?.errors?.['required'] && form.get('card.holder')?.touched"
-          class="err">
-          Campo requerido.
-        </small>
-        <small
-          *ngIf="form.get('card.holder')?.errors?.['invalidHolder'] && form.get('card.holder')?.touched"
-          class="err">
-          Usa solo letras y espacios (minimo 4 caracteres).
-        </small>
-      </div>
-
-      <div class="field col-span-2">
-        <label>Numero de tarjeta *</label>
-        <input
-          class="input"
+          id="py-number"
+          class="py-field__input py-field__input--icon"
           [attr.maxlength]="cardBrand === 'amex' ? 17 : 23"
           [placeholder]="cardPlaceholder"
           formControlName="number"
           inputmode="numeric"
           autocomplete="cc-number"
           (input)="onCardInput($event)" />
-        <small *ngIf="form.get('card.number')?.invalid && form.get('card.number')?.touched" class="err">
-          Numero invalido. Debe ser {{ expectedDigitsLabel }}.
-        </small>
+        <!-- Brand badges -->
+        <div class="py-card-badges">
+          <span class="py-card-badge py-card-badge--visa" [class.py-card-badge--active]="cardBrand === 'visa'">VISA</span>
+          <span class="py-card-badge py-card-badge--mc" [class.py-card-badge--active]="cardBrand === 'mastercard'">MC</span>
+        </div>
       </div>
+      <small class="py-field__err" *ngIf="form.get('card.number')?.invalid && form.get('card.number')?.touched">
+        Número inválido. Debe ser {{ expectedDigitsLabel }}.
+      </small>
+    </div>
 
-      <div class="field">
-        <label>Vencimiento (MM/AA) *</label>
+    <!-- Expiry + CVV -->
+    <div class="py-row">
+      <div class="py-field">
+        <label class="py-field__label" for="py-exp">Fecha de vencimiento</label>
         <input
-          class="input"
+          id="py-exp"
+          class="py-field__input"
           maxlength="5"
-          placeholder="08/27"
+          placeholder="MM / AA"
           formControlName="exp"
           inputmode="numeric"
           autocomplete="cc-exp"
           (input)="onExpInput($event)" />
-        <small *ngIf="form.get('card.exp')?.invalid && form.get('card.exp')?.touched" class="err">
-          Fecha invalida.
+        <small class="py-field__err" *ngIf="form.get('card.exp')?.invalid && form.get('card.exp')?.touched">
+          Fecha inválida.
         </small>
       </div>
 
-      <div class="field">
-        <label>CVC *</label>
+      <div class="py-field">
+        <label class="py-field__label" for="py-cvc">CVC</label>
         <input
-          class="input"
+          id="py-cvc"
+          class="py-field__input"
           [attr.maxlength]="cardBrand === 'amex' ? 4 : 3"
           [placeholder]="cvcPlaceholder"
           formControlName="cvc"
           inputmode="numeric"
           autocomplete="cc-csc"
           (input)="onCvcInput($event)" />
-        <small *ngIf="form.get('card.cvc')?.invalid && form.get('card.cvc')?.touched" class="err">
-          {{ cardBrand === 'amex' ? 'Debe contener 4 digitos.' : 'Debe contener 3 digitos.' }}
+        <small class="py-field__err" *ngIf="form.get('card.cvc')?.invalid && form.get('card.cvc')?.touched">
+          {{ cardBrand === 'amex' ? '4 dígitos.' : '3 dígitos.' }}
         </small>
       </div>
     </div>
-  </section>
 
-  <section *ngIf="kind === 'bank'" class="box info-box">
-    <h3>Transferencia bancaria</h3>
-    <ul>
-      <li>Banco: Banco de Ejemplo</li>
-      <li>Cuenta: 1234567-8</li>
-      <li>Titular: Aumakki, S.A.</li>
-      <li>Concepto: Numero de pedido generado al confirmar.</li>
+    <!-- Holder -->
+    <div class="py-field py-field--full">
+      <label class="py-field__label" for="py-holder">Nombre en la tarjeta</label>
+      <input
+        id="py-holder"
+        class="py-field__input"
+        formControlName="holder"
+        placeholder="Gabriel Paz"
+        autocomplete="cc-name"
+        (input)="onHolderInput($event)" />
+      <small class="py-field__err" *ngIf="form.get('card.holder')?.errors?.['required'] && form.get('card.holder')?.touched">Campo requerido.</small>
+      <small class="py-field__err" *ngIf="form.get('card.holder')?.errors?.['invalidHolder'] && form.get('card.holder')?.touched">Usa solo letras y espacios (mínimo 4 caracteres).</small>
+    </div>
+
+    <!-- Security badges -->
+    <div class="py-secure">
+      <span class="py-secure-badge">
+        <mat-icon>lock</mat-icon>
+        SSL 256-bit
+      </span>
+      <span class="py-secure-badge">
+        <mat-icon>verified_user</mat-icon>
+        Pago protegido
+      </span>
+    </div>
+  </div>
+
+  <!-- Bank transfer info -->
+  <div class="py-bank" *ngIf="kind === 'bank'">
+    <div class="py-bank__head">
+      <mat-icon>account_balance</mat-icon>
+      <h3>Transferencia bancaria</h3>
+    </div>
+    <ul class="py-bank__details">
+      <li><span>Banco</span><strong>Banco de Ejemplo</strong></li>
+      <li><span>Cuenta</span><strong>1234567-8</strong></li>
+      <li><span>Titular</span><strong>Aumakki, S.A.</strong></li>
+      <li><span>Concepto</span><strong>Número de pedido (generado al confirmar)</strong></li>
     </ul>
-    <p class="muted">Tu pedido se procesa al confirmar el pago en sistema.</p>
-  </section>
+    <p class="py-bank__note">Tu pedido se procesa al confirmar el pago en sistema.</p>
+  </div>
 
-  <label class="check">
+  <!-- Billing address toggle -->
+  <label class="py-check">
     <input type="checkbox" formControlName="billingSame" (change)="onBillingSameChange()" />
-    <span>La direccion de facturacion es igual a la de envio</span>
+    <span>La dirección de facturación es igual a la de envío</span>
   </label>
 
-  <section *ngIf="!form.get('billingSame')?.value" class="box" formGroupName="billing">
-    <h3>Direccion de facturacion</h3>
-    <div class="grid">
-      <div class="field col-span-2">
-        <label>Direccion *</label>
-        <input class="input" placeholder="Calle, numero, colonia" formControlName="line1" />
+  <!-- Billing address form -->
+  <div class="py-billing" *ngIf="!form.get('billingSame')?.value" formGroupName="billing">
+    <h3 class="py-billing__title">Dirección de facturación</h3>
+    <div class="py-billing__grid">
+      <div class="py-field py-field--full">
+        <label class="py-field__label">Dirección *</label>
+        <input class="py-field__input" placeholder="Calle, número, colonia" formControlName="line1" />
       </div>
-      <div class="field">
-        <label>Departamento *</label>
-        <input class="input" formControlName="department" />
+      <div class="py-field">
+        <label class="py-field__label">Departamento *</label>
+        <input class="py-field__input" formControlName="department" />
       </div>
-      <div class="field">
-        <label>Municipio *</label>
-        <input class="input" formControlName="municipality" />
-      </div>
-      <div class="field">
-        <label>Complemento</label>
-        <input class="input" formControlName="line2" />
-      </div>
-      <div class="field">
-        <label>Referencias</label>
-        <input class="input" formControlName="references" />
-      </div>
-      <div class="field">
-        <label>Codigo postal</label>
-        <input class="input" formControlName="postalCode" inputmode="numeric" />
+      <div class="py-field">
+        <label class="py-field__label">Municipio *</label>
+        <input class="py-field__input" formControlName="municipality" />
       </div>
     </div>
-  </section>
-
-  <div class="actions">
-    <button class="btn ghost" type="button" (click)="back()">Atras</button>
-    <button class="btn primary" type="submit">Pagar ahora</button>
   </div>
+
+  <!-- Actions -->
+  <div class="py-actions">
+    <button class="py-btn py-btn--ghost" type="button" (click)="back()" [disabled]="processing">
+      <mat-icon>arrow_back</mat-icon>
+      Atrás
+    </button>
+    <button class="py-btn py-btn--primary" type="submit" [disabled]="processing">
+      <mat-icon *ngIf="!processing">checklist</mat-icon>
+      <span class="py-spinner" *ngIf="processing"></span>
+      {{ processing ? 'Procesando...' : 'Revisar Pedido' }}
+    </button>
+  </div>
+
 </form>

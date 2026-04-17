@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '../../../../auth/services/auth.service';
+import { StorefrontApiService } from '../../../../core/services/storefront-api.service';
 import { PetsStateService } from '../../services/pet-state.service';
 import { PetFormComponent } from './pet-form.component';
 
@@ -42,6 +43,12 @@ describe('PetFormComponent', () => {
           useValue: {
             userId: null,
             isLoggedIn: false,
+          },
+        },
+        {
+          provide: StorefrontApiService,
+          useValue: {
+            getPetTaxonomy: () => of({ data: { catalogAnimals: [] } }),
           },
         },
       ],

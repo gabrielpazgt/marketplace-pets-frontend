@@ -1,109 +1,241 @@
-﻿.checkout {
-  padding-block: 24px 40px;
-  background:
-    radial-gradient(70% 46% at 10% 0%, rgba(255, 167, 38, .08), rgba(255, 167, 38, 0) 70%),
-    radial-gradient(74% 46% at 90% 0%, rgba(66, 165, 245, .11), rgba(66, 165, 245, 0) 72%),
-    linear-gradient(180deg, #f8fafc 0%, #f7fbff 48%, #f5f8fd 100%);
+// ─────────────────────────────────────────────────────────────────────────────
+// Checkout Shell
+// ─────────────────────────────────────────────────────────────────────────────
+
+.cs-checkout {
+  min-height: 100vh;
+  background: #fafaf9;
+  padding-bottom: 48px;
 }
 
-.header {
-  margin-bottom: 16px;
+// ── Header ────────────────────────────────────────────────────────────────────
+
+.cs-header {
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  padding: 16px 0 0;
+  margin-bottom: 32px;
 }
 
-.progress {
-  height: 6px;
-  background: var(--surface-100);
-  border-radius: var(--r-pill);
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-
-.progress .bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--brand), var(--brand-700));
-  transition: width var(--t-base) var(--timing);
-}
-
-.stepper {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  color: var(--muted);
-  font-size: var(--fs-sm);
-}
-
-.stepper li {
+// Breadcrumb
+.cs-breadcrumb {
   display: flex;
   align-items: center;
-  gap: 8px;
-  white-space: nowrap;
+  gap: 4px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+  font-size: var(--fs-xs);
+  margin-bottom: 16px;
+
+  &__link {
+    color: var(--muted);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color var(--t-base);
+    &:hover { color: var(--brand); }
+  }
+
+  &__sep {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: var(--line);
+  }
+
+  &__current {
+    color: var(--ink-2);
+    font-weight: 700;
+  }
 }
 
-.stepper .dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--line);
+// Brand strip
+.cs-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+
+  &__logo {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--r-md);
+    background: var(--brand);
+    color: #fff;
+    font-weight: 900;
+    font-size: 1.1rem;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  &__name {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 1.15rem;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  &__secure {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--fs-xs);
+    color: #10b981;
+    font-weight: 600;
+    margin-top: 3px;
+    mat-icon { font-size: 13px; width: 13px; height: 13px; }
+  }
 }
 
-.stepper li.active .dot {
-  background: var(--brand);
+// Stepper
+.cs-stepper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 16px;
+  max-width: 560px;
+  margin: 0 auto;
 }
 
-.stepper li.active .lbl {
-  color: var(--ink);
-  font-weight: 700;
+.cs-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+
+  &__circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    background: #fff;
+    display: grid;
+    place-items: center;
+    transition: all 0.25s ease;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--muted);
+      transition: color 0.25s ease;
+    }
+  }
+
+  &__label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    transition: color 0.25s ease;
+  }
+
+  &__line {
+    flex: 1;
+    height: 2px;
+    background: var(--line);
+    margin: 0 4px;
+    align-self: flex-start;
+    margin-top: 19px;
+    transition: background 0.25s ease;
+    min-width: 24px;
+
+    &--done { background: var(--brand); }
+  }
+
+  // Active
+  &--active &__circle {
+    background: var(--brand);
+    border-color: var(--brand);
+    box-shadow: 0 4px 14px rgba(255,111,15,.35);
+    mat-icon { color: #fff; }
+  }
+  &--active &__label { color: var(--ink); font-weight: 800; }
+
+  // Done
+  &--done &__circle {
+    background: var(--brand);
+    border-color: var(--brand);
+    mat-icon { color: #fff; }
+  }
+  &--done &__label { color: var(--ink-2); }
 }
 
-.grid {
+// ── Content grid ──────────────────────────────────────────────────────────────
+
+.cs-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 36%);
-  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 24px;
+  align-items: start;
+  padding-top: 0;
 }
 
-.main {
-  padding: 20px;
-  min-width: 0;
+.cs-main { min-width: 0; }
+
+.cs-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl, 20px);
+  padding: clamp(20px, 3vw, 32px);
+  box-shadow: 0 2px 16px rgba(15,23,42,.04);
 }
 
-.aside {
+// ── Trust strip ───────────────────────────────────────────────────────────────
+
+.cs-trust {
+  display: flex;
+  justify-content: center;
+  gap: clamp(12px, 3vw, 32px);
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding: 12px 0;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: var(--fs-xs);
+    color: var(--muted);
+    font-weight: 600;
+
+    mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  }
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+
+.cs-aside {
   position: sticky;
-  top: calc(var(--layout-header-offset) + 8px);
+  top: calc(var(--layout-header-offset, 72px) + 12px);
   align-self: start;
   min-width: 0;
 }
 
+// ── Responsive ────────────────────────────────────────────────────────────────
+
 @media (max-width: 980px) {
-  .grid {
+  .cs-grid {
     grid-template-columns: 1fr;
   }
 
-  .aside {
+  .cs-aside {
     position: static;
-    top: auto;
     order: -1;
   }
 
-  .stepper {
-    grid-template-columns: 1fr 1fr;
-    row-gap: 10px;
+  .cs-step__label {
+    display: none;
   }
 }
 
 @media (max-width: 640px) {
-  .checkout {
-    padding-block: 14px 24px;
-  }
-
-  .main {
-    padding: 14px;
-  }
-
-  .stepper {
-    grid-template-columns: 1fr;
-  }
+  .cs-header { padding: 12px 0 0; }
+  .cs-brand { margin-bottom: 14px; }
 }

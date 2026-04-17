@@ -1,36 +1,162 @@
-﻿<h2 class="title">4) Revision</h2>
-<p class="muted">Confirma que todos tus datos sean correctos antes de finalizar.</p>
-
-<div class="review-grid">
-  <section class="box">
-    <h3>Contacto</h3>
-    <p class="name"><strong>{{ state.snapshot.contact?.firstName }} {{ state.snapshot.contact?.lastName }}</strong></p>
-    <p>{{ state.snapshot.contact?.email || '-' }}</p>
-    <p>{{ state.snapshot.contact?.phone || 'Sin telefono' }}</p>
-  </section>
-
-  <section class="box">
-    <h3>Envio</h3>
-    <p>{{ formattedShippingAddress() }}</p>
-    <p class="muted">Metodo: {{ shippingMethodLabel() || '-' }}</p>
-    <p class="muted" *ngIf="state.snapshot.shippingAddress?.references">
-      Referencia: {{ state.snapshot.shippingAddress?.references }}
-    </p>
-  </section>
-
-  <section class="box box--payment">
-    <h3><span class="pay-ico" aria-hidden="true">{{ paymentIcon() }}</span> Pago</h3>
-    <p>{{ paymentLabel() }}</p>
-    <p class="muted" *ngIf="state.snapshot.billingSameAsShipping">Facturacion igual a direccion de envio.</p>
-    <p class="muted" *ngIf="!state.snapshot.billingSameAsShipping">Facturacion con direccion separada.</p>
-  </section>
+<!-- Card header -->
+<div class="rv-head">
+  <div class="rv-head__icon"><mat-icon>checklist</mat-icon></div>
+  <div>
+    <h2 class="rv-head__title">Revisión del pedido</h2>
+    <p class="rv-head__sub">Confirma que todo esté correcto antes de finalizar.</p>
+  </div>
 </div>
 
-<div class="actions">
-  <button class="btn ghost" (click)="back()">Atras</button>
-  <button class="btn success" [disabled]="submitting" (click)="confirm()">
-    {{ submitting ? 'Confirmando...' : 'Confirmar pedido' }}
+<!-- Review blocks -->
+<div class="rv-blocks">
+
+  <!-- Contacto -->
+  <div class="rv-block">
+    <div class="rv-block__head">
+      <div class="rv-block__icon-wrap"><mat-icon>person</mat-icon></div>
+      <span class="rv-block__title">Contacto</span>
+      <a class="rv-block__edit" routerLink="/checkout/contact">
+        <mat-icon>edit</mat-icon> Editar
+      </a>
+    </div>
+    <div class="rv-block__body">
+      <p class="rv-block__name">{{ state.snapshot.contact?.firstName }} {{ state.snapshot.contact?.lastName }}</p>
+      <p class="rv-block__detail">{{ state.snapshot.contact?.email || '-' }}</p>
+      <p class="rv-block__detail" *ngIf="state.snapshot.contact?.phone">{{ state.snapshot.contact?.phone }}</p>
+      <p class="rv-block__detail" *ngIf="state.snapshot.contact?.nit">NIT: {{ state.snapshot.contact?.nit }}</p>
+    </div>
+  </div>
+
+  <!-- Envío -->
+  <div class="rv-block">
+    <div class="rv-block__head">
+      <div class="rv-block__icon-wrap rv-block__icon-wrap--blue"><mat-icon>local_shipping</mat-icon></div>
+      <span class="rv-block__title">Envío</span>
+      <a class="rv-block__edit" routerLink="/checkout/shipping">
+        <mat-icon>edit</mat-icon> Editar
+      </a>
+    </div>
+    <div class="rv-block__body">
+      <p class="rv-block__detail">{{ formattedShippingAddress() }}</p>
+      <p class="rv-block__badge">{{ shippingMethodLabel() || '-' }}</p>
+      <p class="rv-block__detail" *ngIf="state.snapshot.shippingAddress?.references">
+        Ref: {{ state.snapshot.shippingAddress?.references }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Pago -->
+  <div class="rv-block">
+    <div class="rv-block__head">
+      <div class="rv-block__icon-wrap rv-block__icon-wrap--purple"><mat-icon>credit_card</mat-icon></div>
+      <span class="rv-block__title">Pago</span>
+      <a class="rv-block__edit" routerLink="/checkout/payment">
+        <mat-icon>edit</mat-icon> Editar
+      </a>
+    </div>
+    <div class="rv-block__body">
+      <p class="rv-block__detail">{{ paymentLabel() }}</p>
+      <p class="rv-block__detail rv-block__detail--muted">
+        {{ state.snapshot.billingSameAsShipping ? 'Facturación igual a envío' : 'Facturación con dirección separada' }}
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Product list -->
+<div class="rv-items" *ngIf="(state.items$ | async) as items">
+  <h3 class="rv-items__title">
+    <mat-icon>inventory_2</mat-icon>
+    Productos ({{ items.length }})
+  </h3>
+  <ul class="rv-items__list">
+    <li class="rv-item" *ngFor="let item of items">
+      <div class="rv-item__img-wrap">
+        <img class="rv-item__img" [src]="item.image" [alt]="item.name" />
+        <span class="rv-item__qty">{{ item.qty }}</span>
+      </div>
+      <div class="rv-item__body">
+        <p class="rv-item__name">{{ item.name }}</p>
+        <p class="rv-item__brand" *ngIf="item.brand">{{ item.brand }}</p>
+      </div>
+      <span class="rv-item__price">Q{{ (item.price * item.qty) | number:'1.2-2' }}</span>
+    </li>
+  </ul>
+
+  <!-- Totals -->
+  <div class="rv-totals">
+    <div class="rv-totals__row">
+      <span>Subtotal</span>
+      <span>Q{{ state.subtotal$ | async | number:'1.2-2' }}</span>
+    </div>
+    <div class="rv-totals__row" *ngIf="(state.discount$ | async) as disc">
+      <span class="rv-totals__disc-label">
+        <mat-icon>check_circle</mat-icon> Descuento
+      </span>
+      <span class="rv-totals__disc-val">−Q{{ disc | number:'1.2-2' }}</span>
+    </div>
+    <div class="rv-totals__row">
+      <span>Envío</span>
+      <span *ngIf="(state.shipping$ | async) === 0" class="rv-totals__free">Gratis</span>
+      <span *ngIf="(state.shipping$ | async) !== 0">Q{{ state.shipping$ | async | number:'1.2-2' }}</span>
+    </div>
+    <div class="rv-totals__sep"></div>
+    <div class="rv-totals__row rv-totals__row--total">
+      <span>Total</span>
+      <span>Q{{ state.total$ | async | number:'1.2-2' }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Membership upsell -->
+<div class="rv-upsell" *ngIf="!isMember && (potentialSavings$ | async) as savings">
+  <div class="rv-upsell__icon-wrap"><mat-icon>percent</mat-icon></div>
+  <div class="rv-upsell__body">
+    <p class="rv-upsell__text">
+      ¿Sabías que podés ahorrar <strong>Q{{ savings }}</strong> en este pedido con membresía Premium?
+    </p>
+    <a class="rv-upsell__link" routerLink="/memberships/plans">Ver planes</a>
+  </div>
+</div>
+
+<!-- Unavailable items panel -->
+<div class="rv-unavailable" *ngIf="unavailableItems.length">
+  <div class="rv-unavailable__header">
+    <mat-icon class="rv-unavailable__icon">warning</mat-icon>
+    <h3>Algunos productos no están disponibles</h3>
+  </div>
+  <p class="rv-unavailable__desc">Los siguientes productos ya no tienen inventario suficiente:</p>
+  <ul class="rv-unavailable__list">
+    <li *ngFor="let item of unavailableItems" class="rv-unavailable__item">
+      <span>{{ item.name }}</span>
+      <span>x{{ item.qty }} — Q{{ item.lineTotal | number:'1.2-2' }}</span>
+    </li>
+  </ul>
+  <p class="rv-unavailable__adjusted">
+    Total sin esos productos: <strong>Q{{ adjustedTotal | number:'1.2-2' }}</strong>
+  </p>
+  <div class="rv-unavailable__actions">
+    <button class="rv-btn rv-btn--ghost" (click)="goToCart()">Volver al carrito</button>
+    <button class="rv-btn rv-btn--primary" [disabled]="removingItems" (click)="continueWithoutUnavailable()">
+      {{ removingItems ? 'Eliminando...' : 'Continuar sin ellos' }}
+    </button>
+  </div>
+</div>
+
+<!-- Error -->
+<p class="rv-error" *ngIf="errorMsg">{{ errorMsg }}</p>
+
+<!-- Actions -->
+<div class="rv-actions" *ngIf="!unavailableItems.length">
+  <button class="rv-btn rv-btn--ghost" (click)="back()" [disabled]="submitting">
+    <mat-icon>arrow_back</mat-icon>
+    Atrás
+  </button>
+  <button class="rv-btn rv-btn--primary" [disabled]="submitting" (click)="confirm()">
+    <mat-icon *ngIf="!submitting">lock</mat-icon>
+    <span class="rv-spinner" *ngIf="submitting"></span>
+    {{ submitting ? 'Confirmando...' : 'Confirmar Pedido · Q' }}
+    <ng-container *ngIf="!submitting">{{ state.total$ | async | number:'1.2-2' }}</ng-container>
   </button>
 </div>
-
-<p class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</p>

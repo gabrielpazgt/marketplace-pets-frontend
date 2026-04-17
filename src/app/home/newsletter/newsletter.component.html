@@ -1,0 +1,49 @@
+<section class="hn-newsletter">
+  <div class="hn-newsletter__decor" aria-hidden="true"></div>
+
+  <div class="hs-container hn-newsletter__inner" mpFadeIn>
+    <div class="hn-newsletter__icon-wrap" aria-hidden="true">
+      <mat-icon>pets</mat-icon>
+    </div>
+
+    <h2 class="hn-newsletter__title">Recibí novedades y ofertas exclusivas</h2>
+    <p class="hn-newsletter__sub">
+      Suscribite y enterate primero de nuevos productos, promociones y tips de bienestar
+      para tu mascota. Sin spam, solo lo bueno.
+    </p>
+
+    <ng-container *ngIf="!submitted; else thanks">
+      <form class="hn-newsletter__form" (ngSubmit)="onSubmit()" novalidate>
+        <input
+          class="hn-newsletter__input"
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="Tu correo electrónico"
+          required
+          aria-label="Correo electrónico"
+        />
+        <button class="hn-newsletter__btn" type="submit">
+          Suscribirme
+        </button>
+      </form>
+      <p class="hn-newsletter__disclaimer">
+        Sin spam. Cancelá cuando quieras. Respetamos tu privacidad.
+      </p>
+    </ng-container>
+
+    <ng-template #thanks>
+      <p class="hn-newsletter__thanks">
+        <mat-icon>check_circle</mat-icon>
+        ¡Listo! Te avisaremos cuando haya novedades.
+      </p>
+    </ng-template>
+
+    <div class="hn-newsletter__trust">
+      <div *ngFor="let t of trust" class="hn-trust-item">
+        <mat-icon>{{ t.icon }}</mat-icon>
+        <span>{{ t.label }}</span>
+      </div>
+    </div>
+  </div>
+</section>

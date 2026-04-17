@@ -4,7 +4,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TimeoutError } from 'rxjs';
 import { take, timeout } from 'rxjs/operators';
 import { AppHttpError } from '../../core/models/http.models';
-import { AuthService } from '../services/auth.service';
+import { AuthService, AuthUser } from '../services/auth.service';
+import { AuthApiService } from '../services/auth-api.service';
+
+const OPS_ROLES = ['admin', 'operator', 'superadmin'];
+const OPS_ROUTE  = '/gx-ops';
 
 @Component({
   standalone: false,
@@ -15,6 +19,7 @@ import { AuthService } from '../services/auth.service';
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   hide = true;
+  remember = false;
   submitting = false;
   submitAttempted = false;
   errorMsg = '';
@@ -24,7 +29,8 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private route: ActivatedRoute,
-    private auth: AuthService
+    private auth: AuthService,
+    private authApi: AuthApiService,
   ) {}
 
   ngOnInit(): void {
@@ -54,12 +60,17 @@ export class LoginComponent implements OnInit {
 
   get passwordError(): string {
     if (!this.shouldShowControlError(this.passwordCtrl)) return '';
-    if (this.passwordCtrl.hasError('required')) return 'Ingresa tu contrasena.';
-    return 'Contrasena invalida.';
+    if (this.passwordCtrl.hasError('required')) return 'Ingresa tu contraseña.';
+    return 'Contraseña inválida.';
   }
 
   togglePasswordVisibility(): void {
     this.hide = !this.hide;
+  }
+
+  loginWithGoogle(): void {
+    sessionStorage.setItem('oauth_provider', 'google');
+    window.location.href = this.authApi.getOAuthUrl('google');
   }
 
   login(): void {
@@ -90,10 +101,13 @@ export class LoginComponent implements OnInit {
         timeout(15000)
       )
       .subscribe({
-        next: () => {
+        next: (user: AuthUser) => {
           window.clearTimeout(uiSafeguard);
           this.submitting = false;
-          this.router.navigateByUrl(this.returnUrl);
+          const destination = OPS_ROLES.includes(user.role?.type ?? '')
+            ? OPS_ROUTE
+            : this.returnUrl;
+          this.router.navigateByUrl(destination);
         },
         error: (error: unknown) => {
           window.clearTimeout(uiSafeguard);
@@ -119,7 +133,7 @@ export class LoginComponent implements OnInit {
     }
 
     if (appError.status === 400 || appError.status === 401) {
-      return 'Correo/usuario o contrasena incorrectos. Intenta nuevamente.';
+      return 'Correo/usuario o contraseña incorrectos. Intenta nuevamente.';
     }
 
     return appError.message || 'No se pudo iniciar sesion. Intentalo nuevamente.';

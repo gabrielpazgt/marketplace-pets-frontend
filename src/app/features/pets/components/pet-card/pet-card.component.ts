@@ -1,12 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import {
-  Pet,
-  SPECIES_LABEL,
-  SIZE_LABEL,
-  SEX_LABEL,
-  LIFESTAGE_LABEL,
-  ACTIVITY_LABEL,
-} from '../../models/pet.models';
+import { Pet, SEX_LABEL, SPECIES_LABEL } from '../../models/pet.models';
 
 @Component({
   standalone: false,
@@ -21,34 +14,47 @@ export class PetCardComponent {
   @Output() remove = new EventEmitter<Pet>();
 
   speciesLabel = SPECIES_LABEL;
-  sizeLabel = SIZE_LABEL;
   sexLabel = SEX_LABEL;
-  lifeLabel = LIFESTAGE_LABEL;
-  actLabel = ACTIVITY_LABEL;
 
-  emoji(species: Pet['species']): string {
-    const map: Record<NonNullable<Pet['species']>, string> = {
-      dog: 'DOG',
-      cat: 'CAT',
-      bird: 'BIRD',
-      fish: 'FISH',
-      reptile: 'REP',
-      'small-pet': 'SMALL',
-      other: 'PET',
+  get coverImage(): string {
+    if (this.pet?.avatarUrl) {
+      return this.pet.avatarUrl;
+    }
+
+    const map: Record<string, string> = {
+      dog: 'assets/images/pets/dog.png',
+      cat: 'assets/images/pets/cat.png',
+      bird: 'assets/images/pets/bird.png',
+      fish: 'assets/images/pets/other_pet.png',
+      reptile: 'assets/images/pets/tortuga.png',
+      'small-pet': 'assets/images/pets/hamster.png',
+      other: 'assets/images/pets/other_pet.png',
     };
-    return map[species];
+
+    return map[this.pet?.species || 'other'] || map['other'];
   }
 
-  ageText(age?: number): string | null {
-    if (age === undefined) return null;
-    if (age === 0) return 'Cachorro';
-    if (age === 1) return '1 ano';
-    return `${age} anos`;
+  get hasCustomPhoto(): boolean {
+    return Boolean(this.pet?.avatarUrl);
   }
 
-  computedColor(name: string): string {
-    let h = 0;
-    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
-    return `hsl(${h}deg 80% 60%)`;
+  get ageLabel(): string | null {
+    const age = this.pet?.ageYears;
+    if (age === undefined || age === null) return null;
+    if (age <= 0) return 'Menos de 1 año';
+    if (age === 1) return '1 año';
+    return `${age} años`;
+  }
+
+  get subtitle(): string {
+    const species = this.speciesLabel[this.pet.species];
+    return this.pet.breed ? `${species} · ${this.pet.breed}` : species;
+  }
+
+  get weightLabel(): string | null {
+    if (this.pet.weightKg === undefined || this.pet.weightKg === null || this.pet.weightKg === 0) {
+      return null;
+    }
+    return `${this.pet.weightKg} kg`;
   }
 }

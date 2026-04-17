@@ -4,6 +4,7 @@ export interface Category {
   slug: string;
   name: string;
   image: string; // ruta absoluta o relativa dentro de assets/
+  count?: number;
 }
 
 @Component({
@@ -17,21 +18,31 @@ export class CategoriesComponent implements OnInit, OnChanges {
   /** Si quieres sobreescribir desde fuera, puedes pasar un array. Si no, se usan los defaults. */
   @Input() categories: Category[] | null | undefined;
 
-  /** Carpeta base de imágenes (por si la cambias a futuro) */
-  @Input() basePath = 'assets/images/categories';
+  /** Carpeta base de imágenes */
+  @Input() basePath = 'assets/home';
 
   /** Datos que realmente se pintan (o defaults si no llegó nada) */
   data: Category[] = [];
 
-  /** Nombres de archivos por defecto (los que dijiste que ya tienes) */
+  /** Nombres de archivos disponibles en assets/home/ */
   private readonly fileMap = {
-    perros: 'dogs.png',
-    gatos: 'cats.png',
-    higiene: 'bath.png',
-    snacks: 'snacks.png',
-    juguetes: 'toys.png', 
-    accesorios: 'accesories.png'
+    perros:   'dogs.webp',
+    gatos:    'cats.webp',
+    aves:     'bird.webp',
+    reptiles: 'reptile.webp',
+    peces:    'fish.webp',
+    roedores: 'hamster.webp',
   } as const;
+
+  /** Mapa slug → webp local curado: tiene prioridad sobre cualquier URL de la API */
+  private readonly SLUG_IMAGE: Record<string, string> = {
+    'perros':   'assets/home/dogs.webp',
+    'gatos':    'assets/home/cats.webp',
+    'aves':     'assets/home/bird.webp',
+    'reptiles': 'assets/home/reptile.webp',
+    'peces':    'assets/home/fish.webp',
+    'roedores': 'assets/home/hamster.webp',
+  };
 
   ngOnInit(): void {
     this.data = this.resolveData(this.categories);
@@ -48,21 +59,21 @@ export class CategoriesComponent implements OnInit, OnChanges {
     const incoming = (input ?? []).filter(Boolean) as Category[];
 
     if (incoming.length) {
-      // Normaliza rutas: si no empiezan con 'assets/', antepone basePath
+      // Si el slug tiene imagen local curada, la usa; si no, normaliza la URL de la API
       return incoming.map(c => ({
         ...c,
-        image: this.normalizeImage(c.image)
+        image: this.SLUG_IMAGE[c.slug] ?? this.normalizeImage(c.image)
       }));
     }
 
-    // Defaults locales (autosuficiente)
+    // Defaults locales — perros y gatos primeros para mayor prominencia
     return [
-      { slug: 'perros',     name: 'Perros',     image: `${this.basePath}/${this.fileMap.perros}` },
-      { slug: 'gatos',      name: 'Gatos',      image: `${this.basePath}/${this.fileMap.gatos}` },
-      { slug: 'higiene',    name: 'Higiene',    image: `${this.basePath}/${this.fileMap.higiene}` },
-      { slug: 'snacks',     name: 'Snacks',     image: `${this.basePath}/${this.fileMap.snacks}` },
-      { slug: 'juguetes',   name: 'Juguetes',   image: `${this.basePath}/${this.fileMap.juguetes}` },
-      { slug: 'accesorios', name: 'Accesorios', image: `${this.basePath}/${this.fileMap.accesorios}` },
+      { slug: 'perros',   name: 'Perros',               image: `${this.basePath}/${this.fileMap.perros}` },
+      { slug: 'gatos',    name: 'Gatos',                image: `${this.basePath}/${this.fileMap.gatos}` },
+      { slug: 'aves',     name: 'Aves',                 image: `${this.basePath}/${this.fileMap.aves}` },
+      { slug: 'reptiles', name: 'Reptiles',             image: `${this.basePath}/${this.fileMap.reptiles}` },
+      { slug: 'peces',    name: 'Peces y acuario',      image: `${this.basePath}/${this.fileMap.peces}` },
+      { slug: 'roedores', name: 'Roedor y pequeña m.',  image: `${this.basePath}/${this.fileMap.roedores}` },
     ];
   }
 
